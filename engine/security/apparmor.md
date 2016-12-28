@@ -4,26 +4,15 @@ keywords: AppArmor, security, docker, documentation
 title: AppArmor security profiles for Docker
 ---
 
-AppArmor (Application Armor) is a Linux security module that protects an
-operating system and its applications from security threats. To use it, a system
-administrator associates an AppArmor security profile with each program. Docker
-expects to find an AppArmor policy loaded and enforced.
+AppArmor (Application Armor) 是用于保护操作系统和应用程序不受安全威胁的Linux安全模块。系统管理员可以为每个程序关联对应的AppArmor profile配置。Docker可以找到并使用配置好的AppArmor策略。
 
-Docker automatically loads container profiles. The Docker binary installs
-a `docker-default` profile in the `/etc/apparmor.d/docker` file. This profile
-is used on containers, _not_ on the Docker Daemon.
+Docker会自动加载容器的AppArmor配置。Docker会在`/etc/apparmor.d/docker`目录下安装一个`docker-default` profile。要注意的是这个文件用于配置容器的安全策略，而非Docker Daemon的安全策略。
 
-A profile for the Docker Engine daemon exists but it is not currently installed
-with the `deb` packages. If you are interested in the source for the daemon
-profile, it is located in
-[contrib/apparmor](https://github.com/docker/docker/tree/master/contrib/apparmor)
-in the Docker Engine source repository.
+现在使用`deb`包安装Docker的时候并不会安装Daemon所对应的AppArmor profile，如果你对Daemon的AppArmor profile感兴趣，可以在Docker Engine的源码仓库里找到[contrib/apparmor](https://github.com/docker/docker/tree/master/contrib/apparmor)
 
-## Understand the policies
+## 理解policies
 
-The `docker-default` profile is the default for running containers. It is
-moderately protective while providing wide application compatibility. The
-profile is the following:
+`docker-default` profile是运行容器是的默认profile，能兼容大多数的应用程序。Profile如下：
 
 ```
 #include <tunables/global>
@@ -57,52 +46,46 @@ profile docker-default flags=(attach_disconnected,mediate_deleted) {
 }
 ```
 
-When you run a container, it uses the `docker-default` policy unless you
-override it with the `security-opt` option. For example, the following
-explicitly specifies the default policy:
+当你启动一个容器，只要你没覆盖`security-opt`选项它使用`docker-default`策略，下面的例子明确的指定了默认的策略：
 
 ```bash
 $ docker run --rm -it --security-opt apparmor=docker-default hello-world
 ```
 
-## Load and unload profiles
+## 加载和下载profiles
 
-To load a new profile into AppArmor for use with containers:
+要为容器加载一个新的profile到Apparmor里：
 
 ```bash
 $ apparmor_parser -r -W /path/to/your_profile
 ```
-
-Then, run the custom profile with `--security-opt` like so:
+然后，通过`--security-opt`运行自定义的profile：
 
 ```bash
 $ docker run --rm -it --security-opt apparmor=your_profile hello-world
 ```
 
-To unload a profile from AppArmor:
+要从AppArmor里卸载profile：
 
 ```bash
-# stop apparmor
+# 停止AppArmor
 $ /etc/init.d/apparmor stop
-# unload the profile
+# 卸载profile
 $ apparmor_parser -R /path/to/profile
-# start apparmor
+# 启动AppArmor
 $ /etc/init.d/apparmor start
 ```
 
-### Resources for writing profiles
+### 学习资源
 
-The syntax for file globbing in AppArmor is a bit different than some other
-globbing implementations. It is highly suggested you take a look at some of the
-below resources with regard to AppArmor profile syntax.
+AppArmor中文件名通配的语法和其他文件名通配的实现略有区别，强烈建议你先阅读下面关于AppArmor profile语法的资源：
 
 - [Quick Profile Language](http://wiki.apparmor.net/index.php/QuickProfileLanguage)
 - [Globbing Syntax](http://wiki.apparmor.net/index.php/AppArmor_Core_Policy_Reference#AppArmor_globbing_syntax)
 
-## Nginx example profile
+## 示例：Nginx profile
 
-In this example, you create a custom AppArmor profile for Nginx. Below is the
-custom profile.
+在下面的例子里，你创建一个自定义的Nginx AppArmor profile，如下：
 
 ```
 #include <tunables/global>
@@ -173,34 +156,30 @@ profile docker-nginx flags=(attach_disconnected,mediate_deleted) {
 }
 ```
 
-1. Save the custom profile to disk in the
-`/etc/apparmor.d/containers/docker-nginx` file.
+1. 保存profile到`/etc/apparmor.d/containers/docker-nginx`文件。 你也可以选择其他文件路径。
 
-    The file path in this example is not a requirement. In production, you could
-    use another.
-
-2. Load the profile.
+2. 加载profile
 
     ```bash
     $ sudo apparmor_parser -r -W /etc/apparmor.d/containers/docker-nginx
     ```
 
-3. Run a container with the profile.
+3. 使用新创建的profile启动容器
 
-    To run nginx in detached mode:
+    在detached模式中运行Nginx：
 
     ```bash
     $ docker run --security-opt "apparmor=docker-nginx" \
         -p 80:80 -d --name apparmor-nginx nginx
     ```
 
-4. Exec into the running container
+4. 在容器里执行Exec
 
     ```bash
     $ docker exec -it apparmor-nginx bash
     ```
 
-5. Try some operations to test the profile.
+5. 通过一些操作测试新创建的profile
 
     ```bash
     root@6da5a2a930b9:~# ping 8.8.8.8
@@ -219,46 +198,37 @@ profile docker-nginx flags=(attach_disconnected,mediate_deleted) {
     bash: /bin/dash: Permission denied
     ```
 
+恭喜！你已经通过自定义的apparmor profile让部署的容器更加安全。
 
-Congrats! You just deployed a container secured with a custom apparmor profile!
+## 调试arrarmor
 
+你可以通过`dmesg`调试问题，通过`aa-status`校验已加载的profiles。
 
-## Debug AppArmor
+### 使用dmseg
 
-You can use `dmesg` to debug problems and `aa-status` check the loaded profiles.
+使用AppArmor的时候你可能会遇到一些问题，这里有一些帮你调试问题的小贴士。
 
-### Use dmesg
-
-Here are some helpful tips for debugging any problems you might be facing with
-regard to AppArmor.
-
-AppArmor sends quite verbose messaging to `dmesg`. Usually an AppArmor line
-looks like the following:
+AppArmor向`dmesg`发送详尽的信息，通常一行AppArmor日志类似下面这样：
 
 ```
 [ 5442.864673] audit: type=1400 audit(1453830992.845:37): apparmor="ALLOWED" operation="open" profile="/usr/bin/docker" name="/home/jessie/docker/man/man1/docker-attach.1" pid=10923 comm="docker" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
 ```
 
-In the above example, you can see `profile=/usr/bin/docker`. This means the
-user has the `docker-engine` (Docker Engine Daemon) profile loaded.
+在上面的例子里，你可以看到`profile=/usr/bin/docker`，它的意思是`docker-engine` profile已经加载了。
 
-> **Note:** On version of Ubuntu > 14.04 this is all fine and well, but Trusty
-> users might run into some issues when trying to `docker exec`.
+> **注意：** Ubuntu 14.04以上的版本可以正常工作。Ubuntu Trusty上使用`docker exec`可能会有问题。
 
-Look at another log line:
+再看看另外一行日志：
 
 ```
 [ 3256.689120] type=1400 audit(1405454041.341:73): apparmor="DENIED" operation="ptrace" profile="docker-default" pid=17651 comm="docker" requested_mask="receive" denied_mask="receive"
 ```
 
-This time the profile is `docker-default`, which is run on containers by
-default unless in `privileged` mode. This line shows that apparmor has denied
-`ptrace` in the container. This is exactly as expected.
+这次profile是`docker exec`，就是启动容器是默认使用的profile（除非你使用`privileged`模式）。这行日志显示在容器里`ptrace`操作被拒绝了，符合预期。
 
-### Use aa-status
+### 使用 aa-status
 
-If you need to check which profiles are loaded,  you can use `aa-status`. The
-output looks like:
+如果你想检查有哪些profiles被加载了，可以使用`aa-status`，输出如下
 
 ```bash
 $ sudo aa-status
@@ -290,22 +260,12 @@ apparmor module is loaded.
 0 processes are unconfined but have a profile defined.
 ```
 
-The above output shows that the `docker-default` profile running on various
-container PIDs is in `enforce` mode. This means AppArmor is actively blocking
-and auditing in `dmesg` anything outside the bounds of the `docker-default`
-profile.
+上面的输出说明`docker-default`运行在`enforce`模式，意味着AppArmor已经激活，正在阻止所有在`docker-default` profile之外的操作，并且审计到`dmesg`中。
 
-The output above also shows the `/usr/bin/docker` (Docker Engine daemon) profile
-is running in `complain` mode. This means AppArmor _only_ logs to `dmesg`
-activity outside the bounds of the profile. (Except in the case of Ubuntu
-Trusty, where some interesting behaviors are enforced.)
+上面的输出同样显示了 `/usr/bin/docker` profile运行在`complain`模式下，意味着AppArmor**仅仅**记录profile之外的操作，而非阻止。
 
-## Contribute Docker's AppArmor code
+## 向Docker's AppArmor贡献代码
 
-Advanced users and package managers can find a profile for `/usr/bin/docker`
-(Docker Engine Daemon) underneath
-[contrib/apparmor](https://github.com/docker/docker/tree/master/contrib/apparmor)
-in the Docker Engine source repository.
+高级用户和包管理员可以在Docker源码仓库下的[contrib/apparmor](https://github.com/docker/docker/tree/master/contrib/apparmor)里找到`/usr/bin/docker`的profile
 
-The `docker-default` profile for containers lives in
-[profiles/apparmor](https://github.com/docker/docker/tree/master/profiles/apparmor).
+容器默认的`docker-default` profile位于[profiles/apparmor](https://github.com/docker/docker/tree/master/profiles/apparmor).
