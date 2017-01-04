@@ -6,56 +6,48 @@ redirect_from:
 title: Use Supervisor with Docker
 ---
 
-> **Note**:
-> - **If you don't like sudo** then see [*Giving non-root
->   access*](../installation/binaries.md#giving-non-root-access)
+> **注意**:
+> - **如果你讨厌sudo** 请看 [*非管理员
+>   权限*](../installation/binaries.md#giving-non-root-access)
 
-Traditionally a Docker container runs a single process when it is launched, for
-example an Apache daemon or a SSH server daemon. Often though you want to run
-more than one process in a container. There are a number of ways you can
-achieve this ranging from using a simple Bash script as the value of your
-container's `CMD` instruction to installing a process management tool.
 
-In this example you're going to make use of the process management tool,
-[Supervisor](http://supervisord.org/), to manage multiple processes in a
-container. Using Supervisor allows you to better control, manage, and restart
-the processes inside the container. To demonstrate this we're going to install
-and manage both an SSH daemon and an Apache daemon.
+传统上，容器在启动时运行单个进程例如Apache守护进程或SSH服务器守护进程。通常，当你想运行在容器中有多个进程， 你有很多方法可以选择，从CMD指定Bash到安装一个京城管理工具。
 
-## Creating a Dockerfile
+在本例中，您将使用过程管理工具[Supervisor](http://supervisord.org/)来管理容器中的多个进程。使用Supervisor能更好的控制，管理和重启容器中多进程。 为了演示这个，我们要安装并管理SSH守护程序和Apache守护程序。
 
-Let's start by creating a basic `Dockerfile` for our new image.
+## 创建Dockerfile
+
+让我们开始为我们的新容器镜像创建一个基本的“Dockerfile”
+
 
 ```Dockerfile
 FROM ubuntu:16.04
 MAINTAINER examples@docker.com
 ```
 
-## Installing Supervisor
+## 安装 Supervisor
 
-You can now install the SSH and Apache daemons as well as Supervisor in the
-container.
+您需要在容器中安装SSH， Apache和Supervisor。
 
 ```Dockerfile
 RUN apt-get update && apt-get install -y openssh-server apache2 supervisor
 RUN mkdir -p /var/lock/apache2 /var/run/apache2 /var/run/sshd /var/log/supervisor
 ```
 
-The first `RUN` instruction installs the `openssh-server`, `apache2` and
-`supervisor` (which provides the Supervisor daemon) packages. The next `RUN`
-instruction creates four new directories that are needed to run the SSH daemon
-and Supervisor.
 
-## Adding Supervisor's configuration file
+第一个`RUN`指令安装`openssh-server`，`apache2`和`supervisor`（提供Supervisor守护程序）包。另一个“RUN”
+指令创建运行SSH守护程序所需的四个新目录和Supervisor。
 
-Now let's add a configuration file for Supervisor. The default file is called
-`supervisord.conf` and is located in `/etc/supervisor/conf.d/`.
+## 添加 Supervisor的配置文件
+
+现在让我们为Supervisor添加一个配置文件。将调用默认文件`supervisord.conf`，位于`/etc/supervisor/conf.d /`。
+
 
 ```Dockerfile
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ```
 
-Let's see what is inside the `supervisord.conf` file.
+查看`supervisord.conf`文件
 
 ```ini
 [supervisord]
@@ -68,33 +60,26 @@ command=/usr/sbin/sshd -D
 command=/bin/bash -c "source /etc/apache2/envvars && exec /usr/sbin/apache2 -DFOREGROUND"
 ```
 
-The `supervisord.conf` configuration file contains directives that configure
-Supervisor and the processes it manages. The first block `[supervisord]`
-provides configuration for Supervisor itself. The `nodaemon` directive is used,
-which tells Supervisor to run interactively rather than daemonize.
+`supervisord.conf'配置文件包含配置Supervisor的指令及其管理的进程。第一段`[supervisord]`指定自身的配置。使用`nodaemon`指令告诉Supervisor交互运行，而不是守护进程。
 
-The next two blocks manage the services we wish to control. Each block controls
-a separate process. The blocks contain a single directive, `command`, which
-specifies what command to run to start each process.
+后两段表明管理我们要控制的服务。每段控制一个单独的进程。每段都包含一个`command`,这个`command`用来启动收管理的进程。
 
-## Exposing ports and running Supervisor
 
-Now let's finish the `Dockerfile` by exposing some required ports and
-specifying the `CMD` instruction to start Supervisor when our container
-launches.
+## 公开端口和运行 Supervisor
+
+最后我们公开端口`22`和`80`，和指定容器启动时的`CMD`---- Supervisor。
 
 ```Dockerfile
 EXPOSE 22 80
 CMD ["/usr/bin/supervisord"]
 ```
 
-These instructions tell Docker that ports 22 and 80 are exposed  by the
-container and that the `/usr/bin/supervisord` binary should be executed when
-the container launches.
+以上指令告诉容器公开端口22和80，并且指定`/usr/bin/supervisord`二进制应该在容器启动时执行。
 
-## Building our image
 
-Your completed Dockerfile now looks like this:
+## 构建容器镜像
+
+完整的Dockerfile:
 
 ```Dockerfile
 FROM ubuntu:16.04
@@ -109,7 +94,7 @@ EXPOSE 22 80
 CMD ["/usr/bin/supervisord"]
 ```
 
-And your `supervisord.conf` file looks like this;
+并且`supervisord.conf`文件应该如下所示;
 
 ```ini
 [supervisord]
@@ -122,16 +107,15 @@ command=/usr/sbin/sshd -D
 command=/bin/bash -c "source /etc/apache2/envvars && exec /usr/sbin/apache2 -DFOREGROUND"
 ```
 
-
-You can now build the image using this command;
+你应该用下面的命令构建;
 
 ```bash
 $ docker build -t mysupervisord .
 ```
 
-## Running your Supervisor container
+## 运行Supervisor 容器
 
-Once you have built your image you can launch a container from it.
+一旦镜像创建成功，就可以创建容器了。
 
 ```bash
 $ docker run -p 22 -p 80 -t -i mysupervisord
@@ -143,8 +127,6 @@ $ docker run -p 22 -p 80 -t -i mysupervisord
 ...
 ```
 
-You launched a new container interactively using the `docker run` command.
-That container has run Supervisor and launched the SSH and Apache daemons with
-it. We've specified the `-p` flag to expose ports 22 and 80. From here we can
-now identify the exposed ports and connect to one or both of the SSH and Apache
-daemons.
+
+您使用`docker run`命令交互式启动了一个新容器。该容器运行Supervisor并启动SSH和Apache守护进程。我们已经指定了`-p'标志来显示端口22和80.从这里我们可以
+标识公开的端口并连接到SSH和Apache中的一个或两个守护进程。
