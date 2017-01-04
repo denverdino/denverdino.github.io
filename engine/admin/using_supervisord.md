@@ -128,5 +128,5 @@ $ docker run -p 22 -p 80 -t -i mysupervisord
 ```
 
 
-您使用`docker run`命令交互式启动了一个新容器。该容器运行Supervisor并启动SSH和Apache守护进程。我们已经指定了`-p'标志来显示端口22和80.从这里我们可以
-标识公开的端口并连接到SSH和Apache中的一个或两个守护进程。
+您使用`docker run`命令交互式启动了一个新容器。该容器运行Supervisor并启动SSH和Apache守护进程。我们已经指定了`-p'标志来显示端口22和80.我们可以从
+公开标识的端口访问SSH和Apache。
