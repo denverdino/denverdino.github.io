@@ -18,6 +18,7 @@ title: Create a base image
 你可以用它来构建Ubuntu的镜像。
 
 通过如下步骤，制作一个Ubuntu的基础镜像可以很简单：
+
     $ sudo debootstrap raring raring > /dev/null
     $ sudo tar -C raring -c . | docker import - raring
 
