@@ -7,128 +7,114 @@ redirect_from:
 title: Engine user guide
 ---
 
-This guide takes you through the fundamentals of using Docker Engine and
-integrating it into your environment. You'll learn how to use Engine to:
+本指南将带你了解下Docker Engine的基本知识和将Docker Engine部署到你的环境。你将学会如何使用
+Docker去：
+* Docker化你的应用。
+* 运行你自己的容器。
+* 构建Docker镜像。
+* 跟其他人分享你的Docker镜像。
+* 其他Docker相关知识
 
-* Dockerize your applications.
-* Run your own containers.
-* Build Docker images.
-* Share your Docker images with others.
-* And a whole lot more!
+本指南分为几大部分，这几部分将带领你学习Docker Engine的基本知识和其他支持Docker Engine的产品。
 
-This guide is broken into major sections that take you through learning the basics of Docker Engine and the other Docker products that support it.
+## Docker化应用程序："Hello world"
 
-## Dockerizing applications: A "Hello world"
+*我如何在容器中运行应用程序呢？*
 
-*How do I run applications inside containers?*
+Docker Engine提供了容器化的平台来赋能你的应用。学习如何Docker化你的应用和运行它们：
 
-Docker Engine offers a containerization platform to power your applications. To
-learn how to Dockerize applications and run them:
-
-Go to [Dockerizing Applications](../tutorials/dockerizing.md).
+访问[容器化应用程序](../tutorials/dockerizing.md)
 
 
-## Working with containers
+## 玩转容器
 
-*How do I manage my containers?*
-
-Once you get a grip on running your applications in Docker containers, you'll learn how to manage those containers. To find out
-about how to inspect, monitor and manage containers:
-
-Go to [Working with Containers](../tutorials/usingdocker.md).
-
-## Working with Docker images
-
-*How can I access, share and build my own images?*
-
-Once you've learnt how to use Docker it's time to take the next step and
-learn how to build your own application images with Docker.
-
-Go to [Working with Docker Images](../tutorials/dockerimages.md).
-
-## Networking containers
-
-Until now we've seen how to build individual applications inside Docker
-containers. Now learn how to build whole application stacks with Docker
-networking.
-
-Go to [Networking Containers](../tutorials/networkingcontainers.md).
-
-## Managing data in containers
-
-Now we know how to link Docker containers together the next step is
-learning how to manage data, volumes and mounts inside our containers.
-
-Go to [Managing Data in Containers](../tutorials/dockervolumes.md).
-
-## Managing metadata (labels) for Docker objects
-
-Labels are a mechanism for applying metadata to Docker objects, including:
-
-- Images
-- Containers
-- Local daemons
-- Volumes
-- Networks
-- Swarm nodes
-- Swarm services
+*如何管理我的容器*
 
 
-You can use labels to organize your images, record licensing information, annotate
-relationships between containers, volumes, and networks, or in any way that makes
-sense for your business or application.
+一旦你开始将你的应用程序运行于Docker 容器之上，你将学会如何管理那些容器。要掌握如何
+查看，监控以及管理容器：
 
-Go to [Managing Docker object labels](labels-custom-metadata.md).
+访问[Working with Containers](../tutorials/usingdocker.md)。
 
-## Docker products that complement Engine
+## 玩转Docker 镜像
 
-Often, one powerful technology spawns many other inventions that make that easier to get to, easier to use, and more powerful.  These spawned things share one common characteristic: they augment the central technology. The following Docker products expand on the core Docker Engine functions.
+*我如何能够访问，分享，构建我的镜像？*
+
+一旦你学会如何使用Docker，该是进入下一步，学习如何使用Docker打造属于自己的应用镜像的时候了。
+
+访问 [玩转镜像](../tutorials/dockerimages.md)
+
+## 容器网络互联
+
+直到目前为止，我们已经了解了如何在Docker容器中构建单个的应用程序。现在我们开始学习如何使用Docker网络
+来构建整个应用栈
+
+访问 [容器网络互联](../tutorials/networkingcontainers.md)。
+
+## 管理容器中的数据
+
+现在我们知道了如何让Docker容器通信，接下来我们学习如何在容器中管理数据，数据卷和挂载点
+
+访问[管理容器中的数据](../tutorials/dockervolumes.md) 
+
+## 管理Docker对象的元数据(标签)
+
+标签是用来将元数据应用到Docker 对象中的一种机制，这样的Docker对象包括：
+- 镜像
+- 容器
+- 本地Docker守护进程
+- 数据卷
+- 网络对象
+- Swarm 节点
+- Swarm 服务
+
+你可以使用标签来组织你的镜像，记录你的许可信息，注解容器，数据卷，网络对象之间的关系，或者其他对你的应用或业务有价值的信息。
+
+访问 [管理Docker对象标签](labels-custom-metadata.md)。
+
+## 补充Engine的Docker产品
+
+通常来说，一项强大的技术会衍生出许多其他的发明，这样的发明会使得这项技术更加容易获取，使用，更加强大。这些衍生的发明都有一个共同的特征：它增强了核心的技术。
+下面这些Docker的产品扩展了Docker Engine的功能。
 
 ### Docker Hub
 
-Docker Hub is the central hub for Docker. It hosts public Docker images
-and provides services to help you build and manage your Docker
-environment. To learn more:
+Docker Hub是Docker的中心枢纽。它提供了公共的Docker镜像和提供服务来帮助你构建和管理你的Docker环境。了解更多：
 
-Go to [Using Docker Hub](/docker-hub/).
+访问 [使用Docker Hub](/docker-hub/)
 
 ### Docker Machine
 
-Docker Machine helps you get Docker Engines up and running quickly. Machine
-can set up hosts for Docker Engines on your computer, on cloud providers,
-and/or in your data center, and then configure your Docker client to securely
-talk to them.
+Docker Machine 帮助你快速启动和运行Docker Engine。Docker Machine能在你的电脑，云提供商环境或者你的数据中心启动你的主机并且配置好Docker Engine，
+然后配置好你的Docker客户端，并且以安全的方式与Docker Engine通信。
 
+访问 [Docker Machine用户指南](/machine/)
 Go to [Docker Machine user guide](/machine/).
 
 ### Docker Compose
 
-Docker Compose allows you to define an application's components -- their containers,
-configuration, links and volumes -- in a single file. Then a single command
-will set everything up and start your application running.
+Docker Compose 允许你定义应用的组件 -- 它们的容器，配置，link，数据卷 -- 全部在一个文件中。然后
+一个命令就能做好各项准备并且启动你的应用程序。
 
-Go to [Docker Compose user guide](/compose/).
+访问 [Docker Compose用户指南](/compose/)。
 
 
 ### Docker Swarm
 
-Docker Swarm pools several Docker Engines together and exposes them as a single
-virtual Docker Engine. It serves the standard Docker API, so any tool that already
-works with Docker can now transparently scale up to multiple hosts.
+Docker Swarm 组合了多个Docker Engine并将其以一个虚拟Docker Engine的形式暴露出来。它像Docker Engine一样
+支持标准的Docker API。因此任何需要配合Docker使用的工具可以透明的扩展到多个主机。
 
-Go to [Docker Swarm user guide](/swarm/).
+访问 [Docker Swarm用户指南](/swarm/)。
 
-## Getting help
+## 获得帮助
 
-* [Docker homepage](https://www.docker.com/)
+* [Docker 官方首页](https://www.docker.com/)
 * [Docker Hub](https://hub.docker.com)
-* [Docker blog](https://blog.docker.com/)
-* [Docker documentation](/)
-* [Docker Getting Started Guide](../getstarted/index.md)
-* [Docker code on GitHub](https://github.com/docker/docker)
-* [Docker mailing
-  list](https://groups.google.com/forum/#!forum/docker-user)
-* Docker on IRC: irc.freenode.net and channel #docker
-* [Docker on Twitter](https://twitter.com/docker)
-* Get [Docker help](https://stackoverflow.com/search?q=docker) on
-  StackOverflow
+* [Docker 博客](https://blog.docker.com/)
+* [Docker 文档](/)
+* [Docker 入门指南](../getstarted/index.md)
+* [Docker GitHub项目地址](https://github.com/docker/docker)
+* [Docker 邮件列表](https://groups.google.com/forum/#!forum/docker-user)
+* Docker IRC: irc.freenode.net and channel #docker
+* [Docker Twitter账号](https://twitter.com/docker)
+* 在 StackOverflow 上获得 [Docker相关 帮助](https://stackoverflow.com/search?q=docker)
