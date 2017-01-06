@@ -1,11 +1,14 @@
 ---
 description: Lists the installation methods
-keywords: docker, engine, install, linux
+keywords:
+- docker
+- engine
+- install
+- linux
 title: Install Docker on Linux distributions
 ---
 
-Docker Engine is supported on several Linux distributions. Installation
-instructions are available for the following:
+Docker Engine目前支持多种Linux发行版。对应的安装说明如下：
 
 * [Arch Linux](archlinux.md)
 * [CentOS](centos.md)
@@ -18,6 +21,6 @@ instructions are available for the following:
 * [openSUSE and SUSE Linux Enterprise](SUSE.md)
 * [Ubuntu](ubuntulinux.md)
 
-If your linux distribution is not listed above, don't give up yet. To try out
-Docker on a distribution that is not listed above, go here: [Installation from
-binaries](../binaries.md).
+如果你的Linux发行版不在以上列表中，也不要担心。
+If your linux distribution is not listed above, don't give up yet. 如果你尝试安装Docker的Linux
+发行版并未出现在以上列表，请参考 [通过二进制安装](../binaries.md).

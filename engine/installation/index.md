@@ -8,9 +8,9 @@ redirect_from:
 title: Install Docker Engine
 ---
 
-Docker Engine is supported on Linux, Cloud, Windows, and macOS. Installation instructions are available for the following:
+Docker Engine支持在Linux，Cloud，Windows，macOS中安装，安装说明可以参考下列文章：
 
-## On Linux
+## Linux
 * [Arch Linux](linux/archlinux.md)
 * [CentOS](linux/centos.md)
 * [CRUX Linux](linux/cruxlinux.md)
@@ -23,22 +23,22 @@ Docker Engine is supported on Linux, Cloud, Windows, and macOS. Installation ins
 * [openSUSE and SUSE Linux Enterprise](linux/SUSE.md)
 * [Ubuntu](linux/ubuntulinux.md)
 
-If your linux distribution is not listed above, don't give up yet. To try out Docker on a distribution that is not listed above, go here: [Installation from binaries](binaries.md).
+如果你的linux版本不在上述列表中，也不要失望。想尝试在上述列表之外的linux版本中使用Docker，参见:[使用二进制文件安装](binaries.md)
 
-## On Cloud
-* [Choose how to Install](cloud/overview.md)
-* [Example: Manual install on a cloud provider](cloud/cloud-ex-aws.md)
-* [Example: Use Docker Machine to provision cloud hosts](cloud/cloud-ex-machine-ocean.md)
+## 云端
+* [安装指南](cloud/overview.md)
+* [示例：云提供商环境下安装指南](cloud/cloud-ex-aws.md)
+* [示例：使用Docker Machine在云主机中安装](cloud/cloud-ex-machine-ocean.md)
 
-## On macOS and Windows
+## macOS 与 Windows
 * [macOS](mac.md)
 * [Windows](windows.md)
 
-## The Docker Archives
-Instructions for installing prior releases of Docker can be found in the following docker archives:
-[Docker v1.7](/v1.7/), [Docker v1.6](/v1.6/), [Docker v1.5](/v1.5/), and [Docker v1.4](/v1.4/).
+## Docker归档
+更早版本的Docker安装说明，请见下面的docker归档：
+[Docker v1.7](/v1.7/), [Docker v1.6](/v1.6/), [Docker v1.5](/v1.5/), [Docker v1.4](/v1.4/).
 
-## Where to go after installing
-* [About Docker Engine](../index.md)
-* [Support](https://www.docker.com/support/)
-* [Training](https://training.docker.com//)
+## 安装完成后接下来可以去了解
+* [Docker Engine介绍](../index.md)
+* [支持](https://www.docker.com/support/)
+* [培训](https://training.docker.com//)

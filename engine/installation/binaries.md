@@ -4,17 +4,13 @@ keywords: binaries, installation, docker, documentation, linux
 title: Install Docker from binaries
 ---
 
-**This instruction set is meant for hackers who want to try out Docker
-on a variety of environments.**
+**这份说明主要供那些想在不同环境中体验Docker的hacker们参考**
 
-Before following these directions, you should really check if a packaged
-version of Docker is already available for your distribution. We have
-packages for many distributions, and more keep showing up all the time!
+在安装之前，请检查你的 Linux 发行版本是否有打包好的 Docker 安装包。我们已经发布了许多发行版包，这样会节省您很多时间。
 
-## Check runtime dependencies
+## 检查运行时的依赖关系
 
-To run properly, docker needs the following software to be installed at
-runtime:
+如果想要 Docker 正常运行，需要安装以下软件:
 
  - iptables version 1.4 or later
  - Git version 1.7 or later
@@ -27,84 +23,52 @@ runtime:
    [not](https://github.com/docker/docker/issues/3485)
    [sufficient](https://github.com/docker/docker/issues/4568))
 
-## Check kernel dependencies
+## 检查内核的依赖关系
 
-Docker in daemon mode has specific kernel requirements. For details,
-check your distribution in [*Installation*](index.md#on-linux).
+Docker 在守护进程模式中需要特定的内核支持。具体要求请参考[*安装说明*](index.md#on-linux).
 
-A 3.10 Linux kernel is the minimum requirement for Docker.
-Kernels older than 3.10 lack some of the features required to run Docker
-containers. These older versions are known to have bugs which cause data loss
-and frequently panic under certain conditions.
+Docker要求最低Linux版本为3.10。
+内核低于3.10的系统缺少一些特性来满足Docker容器运行要求，这些低版本系统在某些条件下有缺陷，如造成数据丢失或频繁报错。
 
-The latest minor version (3.x.y) of the 3.10 (or a newer maintained version)
-Linux kernel is recommended. Keeping the kernel up to date with the latest
-minor version will ensure critical kernel bugs get fixed.
+推荐使用版本号为（3.x.y）的 3.10 Linux 内核版本（或者更新的维护版本），保持内核的版本同步更新，这样能够保证内核的BUG已经被修复。
 
-> **Warning**:
-> Installing custom kernels and kernel packages is probably not
-> supported by your Linux distribution's vendor. Please make sure to
-> ask your vendor about Docker support first before attempting to
-> install custom kernels on your distribution.
+> **警告**:
+> Linux 版本发行商可能不支持安装自定义内核及软件包。请务必在安装自定义内核之前，先咨询发行商是否支持 Docker。
 
-> **Warning**:
-> Installing a newer kernel might not be enough for some distributions
-> which provide packages which are too old or incompatible with
-> newer kernels.
+> **警告**:
+> 一些发行版更新内核仍可能不满足需要，因为这些版本提供的软件包太老或者软件包与新内核不兼容。
 
-Note that Docker also has a client mode, which can run on virtually any
-Linux kernel (it even builds on macOS!).
+值得注意的是 Docker 可以以客户端模式存在，它几乎可以运行在任何的Linux内核（甚至 macOS）上。
 
-## Enable AppArmor and SELinux when possible
+## 开启 AppArmor 和 SELinux
 
-Please use AppArmor or SELinux if your Linux distribution supports
-either of the two. This helps improve security and blocks certain
-types of exploits. Your distribution's documentation should provide
-detailed steps on how to enable the recommended security mechanism.
+如果你的 Linux 发行版上支持 AppArmor 或 Selinux 请启用。这有助于提高安全性并阻止某些漏洞。请在发行版提供的文档中查看如何开启推荐的安全设置的详细操作。
 
-Some Linux distributions enable AppArmor or SELinux by default and
-they run a kernel which doesn't meet the minimum requirements (3.10
-or newer). Updating the kernel to 3.10 or newer on such a system
-might not be enough to start Docker and run containers.
-Incompatibilities between the version of AppArmor/SELinux user
-space utilities provided by the system and the kernel could prevent
-Docker from running, from starting containers or, cause containers to
-exhibit unexpected behaviour.
+某些 Linux 发行版默认开启了 AppArmor 或者 Selinux，但是它们的内核不符合安装 Docker 的最低要求（3.10或更高版本）。
+这种情况更新内核到3.10或者更高版本并不能保证Docker可在上面启动并运行容器。
+因为系统提供的AppArmor/SELinux用户空间实用工具版本同内核版本不兼容，这可能会阻止 Docker 的运行，容器的启动或者造成容器的意外退出。
 
-> **Warning**:
-> If either of the security mechanisms is enabled, it should not be
-> disabled to make Docker or its containers run. This will reduce
-> security in that environment, lose support from the distribution's
-> vendor for the system, and might break regulations and security
-> policies in heavily regulated environments.
+> **警告**:
+> 如果机器上开启了安全机制，不应该为了使用Docker和运行容器而禁用它们。
+> 这样做会降低系统安全性，失去发行版供应商的服务支持，并可能破坏严格监管环境下的管理和安全策略。
 
-## Get the Docker Engine binaries
+## 获取Docker Engine二进制文件
 
-You can download either the latest release binaries or a specific version. View
-the `docker/docker` [Releases page](https://github.com/docker/docker/releases).
+你可以下载最新版本或者特定版本的二进制版本。参见`docker/docker` [Releases page](https://github.com/docker/docker/releases).
 
-A group of download links is included at the bottom of the release notes for
-each version of Docker. You can use these links to download the source code
-archive for that release, binaries for supported platforms, and static binaries
-for unsupported Linux platforms. Use the links listed in the Downloads section
-to download the appropriate binaries.
+Docker每个版本的发布记录底部都会有一组下载链接。链接中包含了该版本的源代码地址、已支持平台的二进制安装文件地址和不在支持的Linux版本中的静态二进制文件地址。
+可以再下载章节中找到链接列表，找到合适的二进制文件来下载。
 
-### Limitations of Windows and macOS binaries
+### Windows 和 macOS 二进制文件的限制
 
-For Windows, the `i386` download contains a 32-bit client-only binary. The
-`x86_64` download contains both client and daemon binaries for 64-bit Windows
-Server 2016 and Windows 10 systems.
+对于Windows系统，`i386` 下载仅是一个32位客户端安装包。`x86_64` 下载文件中包含客户端和服务端安装文件，可以在64位Windows
+Server 2016 和 Windows 10 中使用.
 
-The macOS binary only contains a client. You cannot use it to run the `dockerd`
-daemon. If you need to run the daemon, install
-[Docker for Mac](/docker-for-mac/index.md) instead.
+macOS二进制文件仅包含客户端，你不能使用它来启用`dockerd`进程。如果要运行守护进程，请安装 [Docker for Mac](/docker-for-mac/index.md)
 
-### URL patterns for static binaries
+### 静态二进制文件的URL规则
 
-The URLs for released binaries are stable and follow a predictable pattern.
-Unfortunately, it is not possible to browse the releases in a directory
-structure. If you do not want to get the links from the release notes for a
-release, you can infer the URL for the binaries by using the following patterns:
+已经发布的二进制文件的URL是固定的并遵照一定的规则。目前还不支持目录结构查看。如果你不想在发布记录中查找下载链接，可以根据下面说明的规则拼出下载URL：
 
 | Description            | URL pattern                                                       |
 |------------------------|-------------------------------------------------------------------|
@@ -119,26 +83,24 @@ release, you can infer the URL for the binaries by using the following patterns:
 | Latest MacOS 64-bit   | `https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz` |
 | Specific version MacOS 64-bit | `https://get.docker.com/builds/Darwin/x86_64/docker-<version>.tgz` |
 
-For example, the stable URL for the Docker 1.11.0 64-bit static binary for Linux
-is `https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz`.
+例如，Docker 1.11.0 64-bit的Linux二进制安装文件地址为
+`https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz`.
 
-> **Note** These instructions are for Docker Engine 1.11 and up. Engine 1.10 and
-> under consists of a single binary, and instructions for those versions are
-> different. To install version 1.10 or below, follow the instructions in the
-> [1.10 documentation](https://docs.docker.com/v1.10/engine/installation/binaries/){:target="_blank"}.
 
-#### Verify downloaded files
+> **注意** These instructions are for Docker Engine 1.11 and up. Engine 1.10 and
+> 上述规则只适用于Docker Engine 1.11及以上版本。对于Engine 1.10及以下版本的二进制文件在一个包内，规则是不同的。
+> 安装1.10及以下版本请参考这些说明[1.10 documentation](https://docs.docker.com/v1.10/engine/installation/binaries/){:target="_blank"}.
 
-To verify the integrity of downloaded files, you can get an MD5 or SHA256
-checksum by adding `.md5` or `.sha256` to the end of the URL. For instance,
-to verify the `docker-1.11.0.tgz` link above, use the URL
-`https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz.md5` or
+#### 验证下载文件
+
+为了验证下载文件的完整性，你可以在URL后面添加`.md5` 或 `.sha256`来获取该文件的MD5值 或 SHA256值。
+例如，验证上面链接中的`docker-1.11.0.tgz`文件，可以使用URL
+`https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz.md5` 或
 `https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz.sha256`.
 
-## Install the Linux binaries
+## 安装Linux二进制文件
 
-After downloading, you extract the archive, which puts the binaries in a
-directory named `docker` in your current location.
+下载并解压后，当前目录下有一个名为`docker`的文件夹，二进制文件都在这个文件夹内
 
 ```bash
 $ tar -xvzf docker-latest.tgz
@@ -153,76 +115,60 @@ docker/docker-runc
 docker/dockerd
 ```
 
-Engine requires these binaries to be installed in your host's `$PATH`.
-For example, to install the binaries in `/usr/bin`:
+Engine要求这些二进制文件安装在主机的`$PATH`下。例如，安装到`/usr/bin`：
 
 ```bash
 $ mv docker/* /usr/bin/
 ```
 
-> **Note**: If you already have Engine installed on your host, make sure you
-> stop Engine before installing (`killall docker`), and install the binaries
-> in the same location. You can find the location of the current installation
-> with `dirname $(which docker)`.
+> **注意**: 如果你已经安装过Engine，请在安装前停掉Engine(`killall docker`)，并将文件安装在相同的位置。
+> 你可以使用`dirname $(which docker)`查看docker当前的安装位置
 
-### Run the Engine daemon on Linux
+### Linux中运行Engine daemon
 
-You can manually start the Engine in daemon mode using:
+你可以手动启动Engine，让其运行在守护进程模式：
 
 ```bash
 $ sudo dockerd &
 ```
 
-The GitHub repository provides samples of init-scripts you can use to control
-the daemon through a process manager, such as upstart or systemd. You can find
-these scripts in the <a href="https://github.com/docker/docker/tree/master/contrib/init">
+Git仓库中提供了一些初始化脚本示例，提供了使用诸如upstart和systemd的进程管理工具管理daemon的方法。
+脚本地址<a href="https://github.com/docker/docker/tree/master/contrib/init">
 contrib directory</a>.
 
-For additional information about running the Engine in daemon mode, refer to
-the [daemon command](../reference/commandline/dockerd.md) in the Engine command
-line reference.
+想要了解更多运行Engine守护进程模式的信息，参见Engine命令行参考中的[daemon command](../reference/commandline/dockerd.md)
 
-## Install the macOS binaries
+## macOS中二进制文件安装
 
-You can extract the downloaded archive either by double-clicking the downloaded
-`.tgz` or on the command line, using `tar -xvzf docker-1.11.0.tgz`. You can run
-the client binary from any location on your filesystem.
+双击下载的 `.tgz` 文件或通过命令行 `tar -xvzf docker-1.11.0.tgz` 来解压文件。你可以再任何位置运行客户端。
 
-## Install the Windows binary
+## Windows中安装二进制文件
 
-You can extract the downloaded archive by double-clicking the downloaded
-`.zip`. You can run the client binary from any location on your filesystem.
+双击下载的 `.zip` 文件来解压。你可以再任何位置运行客户端。
 
-## Run client commands without root access
+## 非root权限执行客户端命令
 
-On Linux, the `dockerd` daemon always runs as the root user and binds to a Unix
-socket instead of a TCP port. By default that Unix socket is owned by the
-`root` user. This means that by default, you need to use `sudo` to run `docker`
-commands.
+Linux中`dockerd` 守护进程由root用户运行并绑定一个Unix socket（来替代TCP端口）。
+默认的，这个Unix socket由 `root` 来管理，也就是说默认你要使用 `sudo` 来运行 `docker` 命令。
 
-If you (or your Docker installer) create a Unix group called `docker` and add
-users to it, the `dockerd` daemon will change the ownership of the Unix socket
-to be readable and writable by members of the `docker` group when the daemon
-starts. The `dockerd` daemon must always run as the root user, but you can run
-`docker` client commands, such as `docker run`, as a non-privileged user.
+如果你（或Docker安装者）创建一个叫 `docker` 的 Unix 群组，并且把用户加入到这个组中。
+当进程启动的时候，`docker` 群组将有 `dockerd` 进程Unix socket的读/写权限。
+`dockerd` 进程必须使用root用户运行，但是非root用户也可以使用 `docker` 客户端命令，如 `docker run`。
 
-> **Warning**:
-> Membership in the *docker* group (or the group specified with `-G`) is equivalent
-> to `root` access. See
-> [*Docker Daemon Attack Surface*](../security/security.md#docker-daemon-attack-surface) details.
+> **警告**:
+> *docker* 用户组 (或用 `-G` 指定的用户组) 同root等效。
+> 参见[*Docker Daemon Attack Surface*](../security/security.md#docker-daemon-attack-surface).
 
-## Upgrade Docker Engine
+## 更新Docker Engine
 
-Before you upgrade your manual installation of Docker Engine on Linux, first
-stop the docker daemon:
+Linux中升级你手动安装的 Docker Engine ,需要先停掉docker进程：
 
 ```bash
 $ killall dockerd
 ```
 
-After the Docker daemon stops, move the old binaries out of the way and follow
-the [regular installation steps](binaries.md#get-the-linux-binaries).
+Docker进程停止后，移除旧的安装文件并按着[步骤](binaries.md#get-the-linux-binaries)重新安装
 
-## Next steps
+## 接下来
 
-Continue with the [User Guide](../userguide/index.md).
+继续阅读[用户指南](../userguide/index.md).

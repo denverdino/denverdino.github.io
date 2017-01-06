@@ -6,43 +6,41 @@ redirect_from:
 title: Choose an installation method
 ---
 
-You can install Docker Engine on any cloud platform that runs an operating system (OS) that Docker supports. This includes many flavors and versions of Linux, along with Mac and Windows.
+你可以在使用Docker支持的操作系统的云平台上安装Docker Engine。这些系统可以是Linux的某个版本，Mac 或 Windows。
 
-You have two options for installing:
+你可以使用两种方式进行安装：
 
-* Manually install on the cloud (create cloud hosts, then install Docker Engine on them)
-* Use Docker Machine to provision cloud hosts
+* 在云端手动安装（创建云主机，然后安装Docker Engine）
+* 使用Docker Machine创建云主机
 
-## Manually install Docker Engine on a cloud host
+## 在云主机中手动安装Docker Engine
 
-To install on a cloud provider:
+安装步骤如下:
 
-1. Create an account with the cloud provider, and read cloud provider documentation to understand their process for creating hosts.
+1. 创建云服务账号，查阅创建主机的相关文档，了解创建过程。
 
-2. Decide which OS you want to run on the cloud host.
+2. 选择云主机的操作系统
 
-3. Understand the Docker prerequisites and install process for the chosen OS. See [Install Docker Engine](../index.md) for a list of supported systems and links to the install guides.
+3. 了解在该系统中安装Docker的要求和步骤. 可以在[安装Docker Engine](../index.md) 中查询支持的系统和安装指南.
 
-4. Create a host with a Docker supported OS, and install Docker per the instructions for that OS.
+4. 创建Docker支持操作系统的云主机，然后按着说明一步步在上面安装Docker.
 
-[Example (AWS): Manual install on a cloud provider](cloud-ex-aws.md) shows how to create an <a href="https://aws.amazon.com/" target="_blank"> Amazon Web Services (AWS)</a> EC2 instance, and install Docker Engine on it.
+[示例 (AWS): 手动在云服务商环境中安装](cloud-ex-aws.md) 中介绍了如何创建 <a href="https://aws.amazon.com/" target="_blank"> 亚马逊云服务 (AWS)</a> EC2 实例, 并在上面安装Docker Engine.
 
 
-## Use Docker Machine to provision cloud hosts
+## 使用Docker Machine创建云主机
 
-Docker Machine driver plugins are available for several popular cloud platforms, so you can use Machine to provision one or more Dockerized hosts on those platforms.
+Docker Machine插件提供了对多个流行的云平台的支持。你可以使用Machine在这些平台创建一台或多台安装好Docker环境的主机。
+使用Docker Machine，你可以用相同的接口创建云主机并在上面部署Docker Engine
+你可以使用 `docker-machine create` 命令创建，driver参数指定云服务商，此外还需要添加账号验证，安全验证及更多配置信息
 
-With Docker Machine, you can use the same interface to create cloud hosts with Docker Engine on them, each configured per the options you specify.
+[示例: 使用 Docker Machine 创建云主机](cloud-ex-machine-ocean.md) 提供一步步指导来安装 Docker Machine 及 创建安装Docker环境的 <a href="https://www.digitalocean.com/" target="_blank">Digital Ocean</a>主机.
 
-To do this, you use the `docker-machine create` command with the driver for the cloud provider, and provider-specific flags for account verification, security credentials, and other configuration details.
+## 继续阅读
+* [示例: 手动在云服务商环境中安装](cloud-ex-aws.md) (AWS EC2)
 
-[Example: Use Docker Machine to provision cloud hosts](cloud-ex-machine-ocean.md) walks you through the steps to set up Docker Machine and provision a Dockerized host on <a href="https://www.digitalocean.com/" target="_blank">Digital Ocean</a>).
+* [示例: 使用Docker Machine创建云主机](cloud-ex-machine-ocean.md) (Digital Ocean)
 
-## Where to go next
-* [Example: Manual install on a cloud provider](cloud-ex-aws.md) (AWS EC2)
+* 平台支持情况请查阅 [安装 Docker Engine](../index.md).
 
-* [Example: Use Docker Machine to provision cloud hosts](cloud-ex-machine-ocean.md) (Digital Ocean)
-
-* For supported platforms, see [Install Docker Engine](../index.md).
-
-* To get started with Docker post-install, see [Docker User Guide](../../userguide/intro.md).
+* 安装Docker完成后, 了解[Docker 用户指南](../../userguide/intro.md).

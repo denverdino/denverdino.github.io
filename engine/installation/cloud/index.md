@@ -11,6 +11,6 @@ redirect_from:
 title: Install Engine on cloud hosts
 ---
 
-* [Understand cloud install options and choose one](overview.md)
-* [Example: Use Machine to provision cloud hosts](cloud-ex-machine-ocean.md)
-* [Example: Manual install on a cloud provider](cloud-ex-aws.md)
+* [了解云端安装并选择一种方式进行安装](overview.md)
+* [示例: 使用 Machine 在云主机中安装](cloud-ex-machine-ocean.md)
+* [示例: 手动在云环境中安装](cloud-ex-aws.md)
