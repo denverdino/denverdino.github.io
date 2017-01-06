@@ -11,6 +11,7 @@ title: Docker 概述
  
 Docker 是一个用于开发、交付和运行应用的开放平台。Docker 允许你把你的应用从基础结构上分离出来，来实现快速的软件交付。使用 Docker，你可以像管理应用那样来管理基础环境。利用 Docker 的优势来快速交付、测试和部署代码，可以显著地减少从代码编写到生产环境上线的时间。
 
+
 ## Docker 平台是什么？
 
 Docker 提供了在容器（container）中打包应用并在一个宽松隔离环境中运行应用的能力。这种隔离性和安全性能够允许你在指定的宿主机上同时运行多个容器。由于容器的天生具有轻量级特性，而且没有额外的虚拟化管理程序的开销，在相同的硬件配置上，可以比运行虚拟机运行更多个容器。
@@ -27,6 +28,7 @@ _Docker Engine_ 是一个客户端-服务端架构应用，包含如下的几个
 
 * 服务器端是一个长时间运行的程序，称其为守护进程（daemon process）
 * REST API 是编程接口来告知守护进程做什么
+
 * 命令行接口（CLI）客户端
 
 ![Docker Engine Components Flow](article-img/engine-components-flow.png)
@@ -179,5 +181,13 @@ Docker Engine 组合名空间（namespaces），控制组（control groups）和
 - 阅读 [安装 Docker Engine ](installation/index.md#installation).
 - 亲身体验 [Docker 入门](getstarted/index.md) 教程
 - 查阅[Docker Engine 用户指南](userguide/index.md)中的示例和深入话题
+
+
+## 进一步学习
+- Read about [Installing Docker Engine](installation/index.md#installation).
+- Get hands-on experience with the [Get Started With Docker](getstarted/index.md)
+    tutorial.
+- Check out examples and deep dive topics in the
+    [Docker Engine User Guide](userguide/index.md).
 
 

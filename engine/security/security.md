@@ -1,270 +1,133 @@
----
-description: Review of the Docker Daemon attack surface
-keywords: Docker, Docker documentation,  security
-redirect_from:
+--- description: Review of the Docker Daemon attack surface keywords: Docker,
+Docker documentation,  security redirect_from:
 - /engine/articles/security/
-- /security/security/
-title: Docker security
----
+- /security/security/ title: Docker security ---
 
-There are four major areas to consider when reviewing Docker security:
+在审视Docker安全的时候要关注4个主要的问题：
 
- - the intrinsic security of the kernel and its support for
-   namespaces and cgroups;
- - the attack surface of the Docker daemon itself;
- - loopholes in the container configuration profile, either by default,
-   or when customized by users.
- - the "hardening" security features of the kernel and how they
-   interact with containers.
+ - 内核的固有，它支持的namespace和cgroup
+ - Docker daemon自身的攻击面
+ - 默认配置或者用户自定义配置的容器profile的漏洞
+ - 内核的安全加固特性及其和容器关系
 
 ## Kernel namespaces
 
-Docker containers are very similar to LXC containers, and they have
-similar security features. When you start a container with
-`docker run`, behind the scenes Docker creates a set of namespaces and control
-groups for the container.
+Docker containers are very similar to LXC containers, and they have similar
+security features. When you start a container with `docker run`, behind the
+scenes Docker creates a set of namespaces and control groups for the container.
 
-**Namespaces provide the first and most straightforward form of
-isolation**: processes running within a container cannot see, and even
-less affect, processes running in another container, or in the host
-system.
+Docker容器和LXC容器很相似，具有相似的安全特性。启动容器所用的`docker
+run`背后，是Docker为容器所创建的一组namespace和cgroup。
 
-**Each container also gets its own network stack**, meaning that a
-container doesn't get privileged access to the sockets or interfaces
-of another container. Of course, if the host system is setup
-accordingly, containers can interact with each other through their
-respective network interfaces — just like they can interact with
-external hosts. When you specify public ports for your containers or use
-[*links*](../userguide/networking/default_network/dockerlinks.md)
-then IP traffic is allowed between containers. They can ping each other,
-send/receive UDP packets, and establish TCP connections, but that can be
-restricted if necessary. From a network architecture point of view, all
-containers on a given Docker host are sitting on bridge interfaces. This
-means that they are just like physical machines connected through a
-common Ethernet switch; no more, no less.
+**Namespaces提供了第一种，也是最直接的一种隔离形式**:
+运行在一个容器里的进程看不到，也不会被其他容器或宿主机内的进程所影响。
 
-How mature is the code providing kernel namespaces and private
-networking? Kernel namespaces were introduced [between kernel version
-2.6.15 and
-2.6.26](http://man7.org/linux/man-pages/man7/namespaces.7.html).
-This means that since July 2008 (date of the 2.6.26 release
-), namespace code has been exercised and scrutinized on a large
-number of production systems. And there is more: the design and
-inspiration for the namespaces code are even older. Namespaces are
-actually an effort to reimplement the features of [OpenVZ](
-http://en.wikipedia.org/wiki/OpenVZ) in such a way that they could be
-merged within the mainstream kernel. And OpenVZ was initially released
-in 2005, so both the design and the implementation are pretty mature.
+**每个容器拥有自己的网络栈**,
+意味着容器不会获取另外一个容器的socket以及者网卡的特权访问。当然，如果宿主系统做了相应的配置，容器之间也能通过各自的网卡交互，正如你可以和外部主机交互一样。当你为容器指定公共端口亦或是使用[*links*](../userguide/networking/default_network/dockerlinks.md)，容器之间就可以通过IP通信，它们可以ping彼此，发送/接收UDP包，建立TCP连接。如果需要，也可以限制容器之间的通信。从网络架构的角度，同一台宿主机上的Docker容器接入了网桥设备，恰恰就像接入了以太网交换机的物理机。
+
+实现内核namespace和私有网络的代码有多成熟呢？内核namespace[在内核版本2.6.15和2.6.26之间](http://man7.org/linux/man-pages/man7/namespaces.7.html)引入，意味着自从2008年7月（2.6.26的发布时间），namespace的代码就在大量的生产系统里接收考验。另外，namespace的灵感和设计比代码还要早。Namespace实际上重新实现了[OpenVZ](
+http://en.wikipedia.org/wiki/OpenVZ)的特性，以合并到内核主线里。OpenVZ在2005年就发布了，所以namespace设计和实现都已经很成熟。
 
 ## Control groups
 
-Control Groups are another key component of Linux Containers. They
-implement resource accounting and limiting. They provide many
-useful metrics, but they also help ensure that each container gets
-its fair share of memory, CPU, disk I/O; and, more importantly, that a
-single container cannot bring the system down by exhausting one of those
-resources.
+Linux容器的另外一个关键组件是Control Group，实现资源计数和限制。Control
+Group提供了很多有用的计量，同时确保每个容器公平的共享内存、CPU、磁盘IO，更重要的是，单个容器不会因为耗尽某项资源导致系统挂掉。
 
-So while they do not play a role in preventing one container from
-accessing or affecting the data and processes of another container, they
-are essential to fend off some denial-of-service attacks. They are
-particularly important on multi-tenant platforms, like public and
-private PaaS, to guarantee a consistent uptime (and performance) even
-when some applications start to misbehave.
+它们的存在不是为了阻止容器访问其他容器内进程和数据，而是避免系统受到DoS攻击。在诸如公有云和私有云PaaS这类多租户平台上尤其重要，在某些程序存在恶意行为的情况下也能保证系统的正常运行。
 
-Control Groups have been around for a while as well: the code was
-started in 2006, and initially merged in kernel 2.6.24.
+Control Group也早已存在：代码起始于2006，最早合并到2.6.24版本的内核。
 
-## Docker daemon attack surface
+## Docker daemon的攻击面
 
-Running containers (and applications) with Docker implies running the
-Docker daemon. This daemon currently requires `root` privileges, and you
-should therefore be aware of some important details.
+使用Docker运行容器的隐含前提是你得运行Docker
+daemon。目前daemon需要`root`权限，所以你得关注一些重要的细节。
 
-First of all, **only trusted users should be allowed to control your
-Docker daemon**. This is a direct consequence of some powerful Docker
-features. Specifically, Docker allows you to share a directory between
-the Docker host and a guest container; and it allows you to do so
-without limiting the access rights of the container. This means that you
-can start a container where the `/host` directory will be the `/` directory
-on your host; and the container will be able to alter your host filesystem
-without any restriction. This is similar to how virtualization systems
-allow filesystem resource sharing. Nothing prevents you from sharing your
-root filesystem (or even your root block device) with a virtual machine.
+首先，**只允许受信任的用户控制Docker
+daemon**，很容易从Docker强大的功能里得出这个结论。尤其是Docker允许你在宿主机和容器之间共享目录，还可以不限制容器的访问权限。你甚至可以把宿主机`/`目录挂载到容器的`/host`目录，容器内可以无任何限制的修改宿主机文件系统。这点和虚拟化系统所支持的文件系统资源共享很相似，没有什么能阻止你给虚拟机共享根文件系统。
 
-This has a strong security implication: for example, if you instrument Docker
-from a web server to provision containers through an API, you should be
-even more careful than usual with parameter checking, to make sure that
-a malicious user cannot pass crafted parameters causing Docker to create
-arbitrary containers.
+一个很重要的安全提示：如果你通过Web服务器用API启动Docker容器，尤其要注意参数校验，以确保不能传入精心构造的参数来创建任意容器。
 
-For this reason, the REST API endpoint (used by the Docker CLI to
-communicate with the Docker daemon) changed in Docker 0.5.2, and now
-uses a UNIX socket instead of a TCP socket bound on 127.0.0.1 (the
-latter being prone to cross-site request forgery attacks if you happen to run
-Docker directly on your local machine, outside of a VM). You can then
-use traditional UNIX permission checks to limit access to the control
-socket.
+因此，在Docker 0.5.2时REST API端点从127.0.0.1改成了使用Unix socket。
+后者允许使用传统的Unix权限检查限制对控制socket的访问。
 
-You can also expose the REST API over HTTP if you explicitly decide to do so.
-However, if you do that, being aware of the above mentioned security
-implication, you should ensure that it will be reachable only from a
-trusted network or VPN; or protected with e.g., `stunnel` and client SSL
-certificates. You can also secure them with [HTTPS and
-certificates](https.md).
+如果真的需要，你也可以通过HTTP暴露REST
+API。不过在这样做的时候，要意识到前面提到的安全风险，并确保只暴露到受信任的网络或者VPN里，或者通过例如`stunnel`和客户端SSL证书保护，参考[HTTPS和certificates](https.md)
 
-The daemon is also potentially vulnerable to other inputs, such as image
-loading from either disk with 'docker load', or from the network with
-'docker pull'. As of Docker 1.3.2, images are now extracted in a chrooted
-subprocess on Linux/Unix platforms, being the first-step in a wider effort
-toward privilege separation. As of Docker 1.10.0, all images are stored and
-accessed by the cryptographic checksums of their contents, limiting the
-possibility of an attacker causing a collision with an existing image.
+daemon也有潜在的缺陷，比如通过`docker load`从磁盘加载镜像，或者通过`docker
+pull`从网络加载镜像。在Linux/Unix平台上，Docker
+1.3.2，镜像在chrooted之后的子进程里解压，这是安全加固的第一步。在Docker
+1.10.0，所有镜像可以根据内容摘要存储和访问，限制了可能存在的修改现有镜像攻击。
 
-Eventually, it is expected that the Docker daemon will run restricted
-privileges, delegating operations well-audited sub-processes,
-each with its own (very limited) scope of Linux capabilities,
-virtual network setup, filesystem management, etc. That is, most likely,
-pieces of the Docker engine itself will run inside of containers.
+最终，期望做到限制Docker
+daemon的特权，把一些操作代理到具有良好审计的子进程里，每个自己成有自己有限的Linux
+capabilities：虚拟网络设置，文件系统管理等等。这种方式更像是让Docker
+Engine的每一块运行在一个容器里。
 
-Finally, if you run Docker on a server, it is recommended to run
-exclusively Docker in the server, and move all other services within
-containers controlled by Docker. Of course, it is fine to keep your
-favorite admin tools (probably at least an SSH server), as well as
-existing monitoring/supervision processes, such as NRPE and collectd.
+如果你在服务器上运行Docker，建议在服务器上只运行Docker，其他服务移到容器里，通过Docker控制。当然，可以保留你喜欢的管理工具（可能至少有SSH服务），还有监控和管理进程，比如NRPE和collectd
 
-## Linux kernel capabilities
+## Linux内核capabilities
 
-By default, Docker starts containers with a restricted set of
-capabilities. What does that mean?
+默认情况下，Docker以有限的capabilities集启动容器，什么意思呢？
 
-Capabilities turn the binary "root/non-root" dichotomy into a
-fine-grained access control system. Processes (like web servers) that
-just need to bind on a port below 1024 do not have to run as root: they
-can just be granted the `net_bind_service` capability instead. And there
-are many other capabilities, for almost all the specific areas where root
-privileges are usually needed.
+Capabilities把原来`root/非root`的二元划分改成了细粒度的访问控制系统。只需要绑定1024一下端口的进程不需要用root运行：只需要授予`net_bind_service`
+capability。还有很多其他的capabilities，对应大多数通常需要root权限的地方。
 
-This means a lot for container security; let's see why!
+这对容器安全意义重大，我们来看看为什么！
 
-Your average server (bare metal or virtual machine) needs to run a bunch
-of processes as root. Those typically include SSH, cron, syslogd;
-hardware management tools (e.g., load modules), network configuration
-tools (e.g., to handle DHCP, WPA, or VPNs), and much more. A container is
-very different, because almost all of those tasks are handled by the
-infrastructure around the container:
+服务器上（物理机或者虚拟机）上需要以root权限运行大量进程，典型情况下包括SSH、cron、syslogd、硬件管理工具(例如加载模块)、网络配置工具（例如处理DHCP，WPA或者VPN）等等。容器非常不一样，因为几乎全部任务都由容器相关的工具处理：
 
- - SSH access will typically be managed by a single server running on
-   the Docker host;
- - `cron`, when necessary, should run as a user
-   process, dedicated and tailored for the app that needs its
-   scheduling service, rather than as a platform-wide facility;
- - log management will also typically be handed to Docker, or by
-   third-party services like Loggly or Splunk;
- - hardware management is irrelevant, meaning that you never need to
-   run `udevd` or equivalent daemons within
-   containers;
- - network management happens outside of the containers, enforcing
-   separation of concerns as much as possible, meaning that a container
-   should never need to perform `ifconfig`,
-   `route`, or ip commands (except when a container
-   is specifically engineered to behave like a router or firewall, of
-   course).
+ - SSH访问运行在Docker宿主机上，被单一服务管理
+ - `cron` 必要的时候作为用户进程运行，服务于需要定时的程序，而不是作为系统层工具
+ - 日志管理也可以交给Docker管理，或者采用第三方服务，比如Loggly或者Splunk
+ - 硬件管理很独立，你可以在容器里运行`udevd`或者等价的服务。
+ - 网络管理发生在容器之外，强制尽可能分离关注点。容器永远不要执行`ifconfig`,
+   `route`或者`ip`命令（除非容器专门用于特殊情况，比如路由，防火墙）
 
-This means that in most cases, containers will not need "real" root
-privileges *at all*. And therefore, containers can run with a reduced
-capability set; meaning that "root" within a container has much less
-privileges than the real "root". For instance, it is possible to:
+这意味着多数情况下，容器**根本**不需要""真正的"root权限"，因此，容器可以在削减capability情况下运行。也意味着容器内的root比真正的root权限少。例如可能存在：
 
- - deny all "mount" operations;
- - deny access to raw sockets (to prevent packet spoofing);
- - deny access to some filesystem operations, like creating new device
-   nodes, changing the owner of files, or altering attributes (including
-   the immutable flag);
- - deny module loading;
- - and many others.
+ - 拒绝所有“mount”操作。
+ - 拒绝访问原始socket（防止伪造数据包）
+ - 拒绝一些文件系统操作，如创建新设备节点，改变文件所有者，或者修改属性
+ - 拒绝加载模块
+ - 其他。。。
 
-This means that even if an intruder manages to escalate to root within a
-container, it will be much harder to do serious damage, or to escalate
-to the host.
+这意味着即使攻击者在容器里提权成root，也很难做严重的破坏或者逃逸到宿主机。
 
-This won't affect regular web apps; but malicious users will find that
-the arsenal at their disposal has shrunk considerably! By default Docker
-drops all capabilities except [those
-needed](https://github.com/docker/docker/blob/master/oci/defaults_linux.go#L62-L77),
-a whitelist instead of a blacklist approach. You can see a full list of
-available capabilities in [Linux
-manpages](http://man7.org/linux/man-pages/man7/capabilities.7.html).
+这不影响常规web应用，但是恶意用户会发现他们的武器效果严重缩水！默认情况下Docker只保留了[]如下的capabilities](https://github.com/docker/docker/blob/master/oci/defaults_linux.go#L62-L77)。全部capabilities列表在[这里](http://man7.org/linux/man-pages/man7/capabilities.7.html)
 
-One primary risk with running Docker containers is that the default set
-of capabilities and mounts given to a container may provide incomplete
-isolation, either independently, or when used in combination with
-kernel vulnerabilities.
+运行Docker容器的一个主要风险是，给容器的默认capabilities集合以及mounts可能导致不完全的隔离。
 
-Docker supports the addition and removal of capabilities, allowing use
-of a non-default profile. This may make Docker more secure through
-capability removal, or less secure through the addition of capabilities.
-The best practice for users would be to remove all capabilities except
-those explicitly required for their processes.
+Docker支持添加或者移除capabilities，允许使用非默认profile，移除capabilities可以让容器更安全，添加capabilities则降低了安全性。最佳实践是移除所有capabilities，只保留真正需要的。
 
-## Other kernel security features
+## 其他内核安全特性
 
-Capabilities are just one of the many security features provided by
-modern Linux kernels. It is also possible to leverage existing,
-well-known systems like TOMOYO, AppArmor, SELinux, GRSEC, etc. with
-Docker.
+Capabilities只是现代Linux内核众多安全特性中的一个，也可以配置Docker使用现有的众所周知的安全系统：比如TOMOYO，AppArmor，SELinux，GRSEC等
 
-While Docker currently only enables capabilities, it doesn't interfere
-with the other systems. This means that there are many different ways to
-harden a Docker host. Here are a few examples.
+因为Docker目前只启用了capabilities，不影响其他组件，所以可以用很多其他方式加固Docker宿主机。下面是几个例子：
+ - 你可以运行patch了GRSEC和PAX的内核。它们增加了很多安全校验，包括编译时和运行时。它们还可以抵御很多攻击，多亏有了类似地址随机化技术。不需要特定于Docker的配置，这些安全特性都是系统范围的，和容器无关。
+ - 如果你的发行版包含Docker容器安全模型的模板，你可以立即使用。例如，我们提供了AppArmor和SELinux策略的模板。这些模板提供了额外的安全。
+ - 你可以用你喜欢的访问控制机制定义自己的策略。
 
- - You can run a kernel with GRSEC and PAX. This will add many safety
-   checks, both at compile-time and run-time; it will also defeat many
-   exploits, thanks to techniques like address randomization. It doesn't
-   require Docker-specific configuration, since those security features
-   apply system-wide, independent of containers.
- - If your distribution comes with security model templates for
-   Docker containers, you can use them out of the box. For instance, we
-   ship a template that works with AppArmor and Red Hat comes with SELinux
-   policies for Docker. These templates provide an extra safety net (even
-   though it overlaps greatly with capabilities).
- - You can define your own policies using your favorite access control
-   mechanism.
+很多第三方工具可以增强Docker容器，例如特殊的网络拓扑或者共享文件系统，你可以找些工具加固Docker容器安全性而不影响Docker核心。
 
-Just like there are many third-party tools to augment Docker containers
-with e.g., special network topologies or shared filesystems, you can
-expect to see tools to harden existing Docker containers without
-affecting Docker's core.
+Docker
+1.10直接支持用户命名空间，这个特性允许容器内的root用户映射成外部的非uid-0用户，可以降低容器逃逸造成的危害。可以用，但默认没有启用。 参考[daemon命令](../reference/commandline/dockerd.md#daemon-user-namespace-options) 以获取这个特性的更多信息.  更多关于Docker里用户命名空间实现的信息参考 <a href="https://integratedcode.us/2015/10/13/user-namespaces-have-arrived-in-docker/" target="_blank">这个</a>.
 
-As of Docker 1.10 User Namespaces are supported directly by the docker
-daemon. This feature allows for the root user in a container to be mapped
-to a non uid-0 user outside the container, which can help to mitigate the
-risks of container breakout. This facility is available but not enabled
-by default.
+## 结论
 
-Refer to the [daemon command](../reference/commandline/dockerd.md#daemon-user-namespace-options)
-in the command line reference for more information on this feature.
-Additional information on the implementation of User Namespaces in Docker
-can be found in <a href="https://integratedcode.us/2015/10/13/user-namespaces-have-arrived-in-docker/" target="_blank">this blog post</a>.
+Docker容器默认就很安全，尤其是你注意在容器里用非特权用户运行进程。
 
-## Conclusions
+你可以通过启用AppArmor，SELinux，GRSEC或者你喜欢的加固方案，提供额外的安全层。
 
-Docker containers are, by default, quite secure; especially if you take
-care of running your processes inside the containers as non-privileged
-users (i.e., non-`root`).
+最后但同样重要的，如果你在其他容器系统里看到了有趣的安全特性，这些简单的内核特性
+可能已经在Docker里实现了。我们欢迎用户提交issues，pull requests，以及通过邮件列
+表沟通。
 
-You can add an extra layer of safety by enabling AppArmor, SELinux,
-GRSEC, or your favorite hardening solution.
+## 相关信息
 
-Last but not least, if you see interesting security features in other
-containerization systems, these are simply kernels features that may
-be implemented in Docker as well. We welcome users to submit issues,
-pull requests, and communicate via the mailing list.
+* [使用可信镜像](../security/trust/index.md)
+* [Docker的Seccomp安全profiles](../security/seccomp.md)
+* [Docker的AppArmor安全profiles](../security/apparmor.md)
+* [容器安全(2014)](https://medium.com/@ewindisch/on-the-security-of-containers-2c60ffe25a9e)
+* [Docker swarm mode overlay网络安全模型](../userguide/networking/overlay-security-model.md)
 
-## Related Information
-
-* [Use trusted images](../security/trust/index.md)
-* [Seccomp security profiles for Docker](../security/seccomp.md)
-* [AppArmor security profiles for Docker](../security/apparmor.md)
-* [On the Security of Containers (2014)](https://medium.com/@ewindisch/on-the-security-of-containers-2c60ffe25a9e)
-* [Docker swarm mode overlay network security model](../userguide/networking/overlay-security-model.md)

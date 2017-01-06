@@ -4,25 +4,23 @@ keywords: trust, security, notary, deployment
 title: Deploying Notary Server with Compose
 ---
 
-The easiest way to deploy Notary Server is by using Docker Compose. To follow the procedure on this page, you must have already [installed Docker Compose](/compose/install.md).
+最简单的部署Notary Server方式是通过Docker Compose。遵循本页的步骤，你需要先 [安装 Docker Compose](/compose/install.md).
 
-1. Clone the Notary repository
+1. 克隆  Notary 仓库
 
         git clone git@github.com:docker/notary.git
 
-2. Build and start Notary Server with the sample certificates.
+2. 用示例证书构建和启动Notary Server.
 
         docker-compose up -d
 
 
-    For more detailed documentation about how to deploy Notary Server see the [instructions to run a Notary service](/notary/running_a_service.md) as well as https://github.com/docker/notary for more information.
-3. Make sure that your Docker or Notary client trusts Notary Server's certificate before you try to interact with the Notary server.
+    了解更多关于部署Notary Server请参见 [instructions to run a Notary service](/notary/running_a_service.md) 或者 https://github.com/docker/notary
+3. 在你尝试和Notary server交互前，确保你的Docker或 Notary 客户端信任 Notary Server的证书。
 
-See the instructions for [Docker](../../reference/commandline/cli.md#notary) or
-for [Notary](https://github.com/docker/notary#using-notary) depending on which one you are using.
+根据你的需要，查看关于 [Docker](../../reference/commandline/cli.md#notary) 或者
+ [Notary](https://github.com/docker/notary#using-notary)的说明 。
 
-## If you want to use Notary in production
+## 如果你希望在生产环境使用Notary
 
-Please check back here for instructions after Notary Server has an official
-stable release. To get a head start on deploying Notary in production see
-https://github.com/docker/notary.
+请在Notary Server有一个官方稳定版后回来检查操作说明。想抢先看如何在生产环境部署Notary，可以查看https://github.com/docker/notary。
