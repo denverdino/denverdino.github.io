@@ -1,16 +1,16 @@
 ---
-description: Lists the installation methods
-keywords: Docker install
+description: 安装方式列表
+keywords: Docker 安装
 redirect_from:
 - /installation/
 - /engine/installation/linux/frugalware/
 - /engine/installation/frugalware/
-title: Install Docker Engine
+title: 安装 Docker Engine
 ---
 
-Docker Engine is supported on Linux, Cloud, Windows, and macOS. Installation instructions are available for the following:
+Docker Engine 支持 Linux, Cloud, Windows 与 macOS, 安装说明适用于以下各项:
 
-## On Linux
+## Linux
 * [Arch Linux](linux/archlinux.md)
 * [CentOS](linux/centos.md)
 * [CRUX Linux](linux/cruxlinux.md)
@@ -23,22 +23,37 @@ Docker Engine is supported on Linux, Cloud, Windows, and macOS. Installation ins
 * [openSUSE and SUSE Linux Enterprise](linux/SUSE.md)
 * [Ubuntu](linux/ubuntulinux.md)
 
-If your linux distribution is not listed above, don't give up yet. To try out Docker on a distribution that is not listed above, go here: [Installation from binaries](binaries.md).
+如果你的 linux 发行版不在其中, 请不要立刻放弃, 试试看: [从二进制文件安装 docker](binaries.md).
 
-## On Cloud
-* [Choose how to Install](cloud/overview.md)
-* [Example: Manual install on a cloud provider](cloud/cloud-ex-aws.md)
-* [Example: Use Docker Machine to provision cloud hosts](cloud/cloud-ex-machine-ocean.md)
 
-## On macOS and Windows
-* [macOS](mac.md)
-* [Windows](windows.md)
+## macOS 与 Windows
 
-## The Docker Archives
-Instructions for installing prior releases of Docker can be found in the following docker archives:
-[Docker v1.7](/v1.7/), [Docker v1.6](/v1.6/), [Docker v1.5](/v1.5/), and [Docker v1.4](/v1.4/).
+* [Docker for Mac](/docker-for-mac/)
+* [Docker for Windows](/docker-for-windows/)
 
-## Where to go after installing
-* [About Docker Engine](../index.md)
-* [Support](https://www.docker.com/support/)
-* [Training](https://training.docker.com//)
+
+## 云端
+
+你可以使用 Docker Cloud 来自动配置和管理你的云实例:
+
+* [Amazon Web 服务安装指南](link-aws.md)
+* [DigitalOcean 安装指南](link-do.md)
+* [Microsoft Azure 安装指南](link-azure.md)
+* [Packet 安装指南](link-packet.md)
+* [SoftLayer 安装指南](link-softlayer.md)
+* [Use the Docker Cloud Agent to Bring your Own Host](byoh.md)
+
+如果您希望手工管理您的云实例, 可以使用官方 Docker 版本:
+
+* [Docker for AWS](/docker-for-aws/)
+* [Docker for Azure](/docker-for-azure/)
+
+
+## 以前的版本  
+
+以前版本的 Docker 的安装说明可以在 [Docker 归档](/docsarchive/) 中找到.
+
+
+## 开始使用
+
+在设置好 Docker 之后, 请在 [Docker 入门](/engine/getstarted/) 开始学习基础知识.

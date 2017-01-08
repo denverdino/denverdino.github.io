@@ -6,43 +6,38 @@ redirect_from:
 title: Use PowerShell DSC
 ---
 
-Windows PowerShell Desired State Configuration (DSC) is a configuration
-management tool that extends the existing functionality of Windows PowerShell.
-DSC uses a declarative syntax to define the state in which a target should be
-configured. More information about PowerShell DSC can be found at
+Windows PowerShell Desired State Configuration (DSC)是一种配置管理工具，可扩展Windows PowerShell的现有功能。DSC使用声明性语法来定义配置应该处于的状态。有关PowerShell DSC的详细信息，请参见
 [http://technet.microsoft.com/en-us/library/dn249912.aspx](http://technet.microsoft.com/en-us/library/dn249912.aspx).
 
-## Requirements
+## 前提条件
 
-To use this guide you'll need a Windows host with PowerShell v4.0 or newer.
 
-The included DSC configuration script also uses the official PPA so
-only an Ubuntu target is supported. The Ubuntu target must already have the
-required OMI Server and PowerShell DSC for Linux providers installed. More
-information can be found at [https://github.com/MSFTOSSMgmt/WPSDSCLinux](https://github.com/MSFTOSSMgmt/WPSDSCLinux).
-The source repository listed below also includes PowerShell DSC for Linux
-installation and init scripts along with more detailed installation information.
+要使用本指南，您需要具有PowerShell v4.0或更高版本的Windows主机。
 
-## Installation
+因为所包含的DSC配置脚本也使用官方PPA，所以目前也支持Ubuntu。Ubuntu主机上必须已经需要安装了OMI Server和PowerShell DSC for Linux。更多的信息请查看[https://github.com/MSFTOSSMgmt/WPSDSCLinux](https://github.com/MSFTOSSMgmt/WPSDSCLinux)。下面的github代码库也包括了PowerShell DSC for Linux的安装方法和初始化脚本。
 
-The DSC configuration example source is available in the following repository:
-[https://github.com/anweiss/DockerClientDSC](https://github.com/anweiss/DockerClientDSC). It can be cloned with:
+
+## 安装
+
+
+DSC配置示例源代码位于以下存储库中:
+[https://github.com/anweiss/DockerClientDSC](https://github.com/anweiss/DockerClientDSC). 可以通过下面的方法下载代码:
 
     $ git clone https://github.com/anweiss/DockerClientDSC.git
 
-## Usage
+## 使用方法
 
-The DSC configuration utilizes a set of shell scripts to determine whether or
-not the specified Docker components are configured on the target node(s). The
-source repository also includes a script (`RunDockerClientConfig.ps1`) that can
-be used to establish the required CIM session(s) and execute the
-`Set-DscConfiguration` cmdlet.
+DSC配置使用一组shell脚本来确定是否在目标节点上配置指定的Docker组件。示例源代码库还包括一个脚本（`RunDockerClientConfig.ps1`），
+这个脚本用于建立所需的CIM会话并执行
 
-More detailed usage information can be found at
+`Set-DscConfiguration` cmdlet。
+
+
+更多信息请查看
 [https://github.com/anweiss/DockerClientDSC](https://github.com/anweiss/DockerClientDSC).
 
-### Install Docker
-The Docker installation configuration is equivalent to running:
+### 安装Docker
+Docker安装步骤:
 
 ```
 apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys\
@@ -53,68 +48,64 @@ apt-get update
 apt-get install docker-engine
 ```
 
-Ensure that your current working directory is set to the `DockerClientDSC`
-source and load the DockerClient configuration into the current PowerShell
-session
+确保您当前的工作目录设置为“DockerClientDSC”源并将DockerClient配置加载到当前的PowerShell中会话
 
 ```powershell
 . .\DockerClient.ps1
 ```
 
-Generate the required DSC configuration .mof file for the targeted node
+为目标节点生成所需的DSC配置文件.mof
 
 ```powershell
 DockerClient -Hostname "myhost"
 ```
 
-A sample DSC configuration data file has also been included and can be modified
-and used in conjunction with or in place of the `Hostname` parameter:
+利用DSC可以指定，修改配置，比如主机名
+
 
 ```powershell
 DockerClient -ConfigurationData .\DockerConfigData.psd1
 ```
 
-Start the configuration application process on the targeted node
+在指定机器上运行配置程序
 
 ```powershell
 .\RunDockerClientConfig.ps1 -Hostname "myhost"
 ```
 
-The `RunDockerClientConfig.ps1` script can also parse a DSC configuration data
-file and execute configurations against multiple nodes as such:
+`RunDockerClientConfig.ps1`脚本还可以解析DSC配置数据文件并对多个节点执行配置:
 
 ```powershell
 .\RunDockerClientConfig.ps1 -ConfigurationData .\DockerConfigData.psd1
 ```
 
-### Images
-Image configuration is equivalent to running: `docker pull [image]` or
+### 容器镜像
+镜像配置等同于: `docker pull [image]` 或者
 `docker rmi -f [IMAGE]`.
 
-Using the same steps defined above, execute `DockerClient` with the `Image`
-parameter and apply the configuration:
+使用和上面的相同步骤，执行`DockerClient`命令并结合`Image`参数:
 
 ```powershell
 DockerClient -Hostname "myhost" -Image "node"
 .\RunDockerClientConfig.ps1 -Hostname "myhost"
 ```
 
-You can also configure the host to pull multiple images:
+可以下载多个容器镜像:
 
 ```powershell
 DockerClient -Hostname "myhost" -Image "node","mongo"
 .\RunDockerClientConfig.ps1 -Hostname "myhost"
 ```
 
-To remove images, use a hashtable as follows:
+请用如下散列表，删除容器镜像:
 
 ```powershell
 DockerClient -Hostname "myhost" -Image @{Name="node"; Remove=$true}
 .\RunDockerClientConfig.ps1 -Hostname $hostname
 ```
 
-### Containers
-Container configuration is equivalent to running:
+### 容器  
+容器配置等同于:
 
 ```
 docker run -d --name="[containername]" -p '[port]' -e '[env]' --link '[link]'\
@@ -125,10 +116,7 @@ or
 ```
 docker rm -f [containername]
 ```
-
-To create or remove containers, you can use the `Container` parameter with one
-or more hashtables. The hashtable(s) passed to this parameter can have the
-following properties:
+要创建或删除容器，您可以使用一个“Container”参数以及一个或多个哈希表。传递给此参数的散列表可以具有以下属性：
 
 - Name (required)
 - Image (required unless Remove property is set to `$true`)
@@ -138,21 +126,20 @@ following properties:
 - Command
 - Remove
 
-For example, create a hashtable with the settings for your container:
+例如， 为你的容器创建以下配置：
 
 ```powershell
 $webContainer = @{Name="web"; Image="anweiss/docker-platynem"; Port="80:80"}
 ```
 
-Then, using the same steps defined above, execute
-`DockerClient` with the `-Image` and `-Container` parameters:
+再用与上面相同的步骤，执行`DockerClient`命令，这个命令需要跟着`-Image` and `-Container`
 
 ```powershell
 DockerClient -Hostname "myhost" -Image node -Container $webContainer
 .\RunDockerClientConfig.ps1 -Hostname "myhost"
 ```
 
-Existing containers can also be removed as follows:
+删除已有容器:
 
 ```powershell
 $containerToRemove = @{Name="web"; Remove=$true}
@@ -160,8 +147,7 @@ DockerClient -Hostname "myhost" -Container $containerToRemove
 .\RunDockerClientConfig.ps1 -Hostname "myhost"
 ```
 
-Here is a hashtable with all of the properties that can be used to create a
-container:
+这里有一个用来创建容器的例子：
 
 ```powershell
 $containerProps = @{Name="web"; Image="node:latest"; Port="80:80"; `

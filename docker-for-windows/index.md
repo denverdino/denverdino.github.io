@@ -1,6 +1,6 @@
 ---
-description: Getting Started
-keywords: windows, beta, alpha, tutorial
+description: 入门
+keywords: windows, beta, alpha, 教程
 redirect_from:
 - /winkit/getting-started/
 - /winkit/
@@ -8,128 +8,114 @@ redirect_from:
 - /windows/started/
 - /docker-for-windows/started/
 - /installation/windows/
-title: Get started with Docker for Windows
+- /engine/installation/windows/
+title: Docker for Windows 入门
 ---
 
-Welcome to Docker for Windows!
+欢迎来到 Docker for Windows!
 
-Please read through these topics on how to get started. To **give us your feedback** on your experience with the app and report bugs or problems, log in to our [Docker for Windows forum](https://forums.docker.com/c/docker-for-windows).
+请阅读这些有关如何开始的主题. 如果要针对关于您使用该应用的体验、发现的错误或问题**向我们提供反馈**, 请登录 [Docker for Windows 论坛](https://forums.docker.com/c/docker-for-windows).
 
->**Already have Docker for Windows?** If you already have Docker for Windows installed, and are ready to get started, skip over to the [Getting Started with Docker](/engine/getstarted/index.md) tutorial.
+>**已经拥有 Docker for Windows?** 如果您已经安装了 Docker for Windows 并准备开始入门, 可以直接跳过到 [Docker 入门](/engine/getstarted/index.md)教程.
 
-## Download Docker for Windows
+## 下载 Docker for Windows
 
-If you have not already done so, please install Docker for Windows. You can download installers from the stable or beta channel.  For more about stable and beta channels, see the [FAQs](faqs.md#questions-about-stable-and-beta-channels).
+如果还没有 Docker for Windows, 请现在安装. 您可以从稳定版或测试版通道获得安装程序, 要了解更多关于稳定与测试版本的信息, 参见 [FAQs](faqs.md#questions-about-stable-and-beta-channels).
 
 <table style="width:100%">
   <tr>
-    <th style="font-size: x-large; font-family: arial">Stable channel</th>
-    <th style="font-size: x-large; font-family: arial">Beta channel</th>
+    <th style="font-size: x-large; font-family: arial">稳定版</th>
+    <th style="font-size: x-large; font-family: arial">测试版</th>
   </tr>
   <tr valign="top">
-    <td width="50%">This installer is fully baked and tested, and comes with the latest GA version of Docker Engine. <br><br>This is the best channel to use if you want a reliable platform to work with. <br><br>These releases follow a version schedule with a longer lead time than the betas, synched with Docker Engine releases and hotfixes.
+    <td width="50%">该安装程序已完全稳定并经过测试, 搭载了最新公开版本的 Docker Engine.<br><br>如果您希望工作在一个可靠的平台, 这是最佳的通道.<br><br>稳定版的发布遵循比测试版更长交付时间的版本计划, 与 Docker Engine 的发布与修补程序同步.
     </td>
-    <td width="50%">This installer offers cutting edge features and comes with the experimental version of Docker Engine, which is described in the <a href="https://github.com/docker/docker/tree/master/experimental" target="_blank">Docker Experimental Features README</a> on GitHub.<br><br>This is the best channel to use if you want to experiment with features we are working on as they become available, and can weather some instability and bugs. This channel is a continuation of the beta program, where you can provide feedback as the apps evolve. Releases are typically more frequent than for stable, often one or more per month.</td>
+    <td width="50%">该安装程序提供了先进的功能, 搭载了实验版本的 Docker Engine, 在 <a href="https://github.com/docker/docker/tree/master/experimental" target="_blank">Docker 试验性功能自述文件</a>中有描述.<br><br>这是体验我们正在开发中的功能的最佳通道, 但可能不稳定或存在问题. 该通道是测试版计划的延续, 您可以随着应用的发展提供反馈. 测试版的发布一般比稳定版频繁, 通常是每个月一次或多次.</td>
   </tr>
   <tr valign="top">
   <td width="50%">
-  <a class="button darkblue-btn" href="https://download.docker.com/win/stable/InstallDocker.msi">Get Docker for Windows (stable)</a><br><br>
-  <a href="https://download.docker.com/win/stable/InstallDocker.msi.sha256sum"><font color="#BDBDBD" size="-1">Download checksum: InstallDocker.msi SHA256</font></a>
+  <a class="button darkblue-btn" href="https://download.docker.com/win/stable/InstallDocker.msi">获取 Docker for Windows (稳定版)</a><br><br>
+  <a href="https://download.docker.com/win/stable/InstallDocker.msi.sha256sum"><font color="#BDBDBD" size="-1">下载校验和: InstallDocker.msi SHA256</font></a>
   </td>
   <td width="50%">
-  <a class="button darkblue-btn" href="https://download.docker.com/win/beta/InstallDocker.msi">Get Docker for Windows (beta)</a><br><br>
-  <a href="https://download.docker.com/win/beta/InstallDocker.msi.sha256sum"><font color="#BDBDBD" size="-1">Download checksum: InstallDocker.msi SHA256</font></a>
+  <a class="button darkblue-btn" href="https://download.docker.com/win/beta/InstallDocker.msi">获取 Docker for Windows (测试版)</a><br><br>
+  <a href="https://download.docker.com/win/beta/InstallDocker.msi.sha256sum"><font color="#BDBDBD" size="-1">下载校验和: InstallDocker.msi SHA256</font></a>
   </td>
   </tr>
 </table>
 
->**Important Notes:**
+>**重要信息:**
 >
->- Docker for Windows requires 64bit Windows 10 Pro, Enterprise and Education
->  (1511 November update, Build 10586 or later) and Microsoft Hyper-V. Please
->  see [What to know before you install](index.md#what-to-know-before-you-install)
->  for a full list of prerequisites.
+>- Docker for Windows 需要 64 位的 Windows 10 专业版, 企业版和教育版
+>  (1511 十一月累计更新, Build 10586 或更新版本) 与 Microsoft Hyper-V. 请参见
+>  [安装前须知](index.md#what-to-know-before-you-install) 获得完整的必备列表.
 >
->- You can switch between beta and stable versions, but you must have only one
->   app installed at a time. Also, you will need to save images and export
->  containers you want to keep before uninstalling the current version before
->  installing another. For more about this, see the
->  [FAQs about beta and stable channels](faqs.md#questions-about-stable-and-beta-channels).
+>- 您可以在测试与稳定版本之间切换, 但一次只能有一个应用程序的安装. 此外, 在卸载当前版本、安装另一个版本之前,
+>  您需要保存镜像并导出希望保留的容器. 阅读
+>  [关于测试与稳定版通道的问题解答](faqs.md#questions-about-stable-and-beta-channels) 以获取更多信息.
 
-##  What to know before you install
+##  安装前须知
 
-* **README FIRST for Docker Toolbox and Docker Machine users**: Docker for Windows requires Microsoft Hyper-V to run. After Hyper-V is enabled,
-VirtualBox will no longer work, but any VirtualBox VM images will remain.
-VirtualBox VMs created with `docker-machine` (including the `default` one
-typically created during Toolbox install) will no longer start. These VMs cannot
-be used side-by-side with Docker for Windows. However, you can still use
-`docker-machine` to manage remote VMs.
+* **Docker Toolbox 与 Docker Machine 用户请先阅读**: Docker for Windows 运行需要 Microsoft Hyper-V, 在 Hyper-V 启用后,
+VirtualBox 将不再工作, 但任何 VirtualBox 虚拟机镜像都将被保留.
+`docker-machine` 创建的 VirtualBox 虚拟机 (包括通常在 Toolbox 安装期间创建的 `default`)将不再启动.
+这些虚拟机不能与 Docker for Windows 并行使用, 但您仍可使用 `docker-machine` 管理远程虚拟机.
 <p />
-* The current version of Docker for Windows runs on 64bit Windows 10 Pro, Enterprise and Education (1511 November update, Build 10586 or later). In the future we will support more versions of Windows 10.
+* 当前版本的 Docker for Windows 在 64 位的 Windows 10 专业版, 企业版与教育版上运行 (1511 十一月累计更新, Build 10586 或更新版本). 未来我们将支持更多版本的 Windows 10.
 <p />
-* Containers and images created with Docker for Windows are shared between all user accounts on machines where it is installed. This is because all
-Windows accounts will use the same VM to build and run containers. In the
-future, Docker for Windows will better isolate user content.
+* Docker for Windows 创建的容器和镜像在设备的所有用户账户间共享, 这是因为所有的 Windows 账户在编译和运行容器时使用相同的虚拟机. 在将来, Docker for Windows 会更好的隔离用户内容.
 <p />
-* The Hyper-V package must be enabled for Docker for Windows to work. The Docker for Windows installer will enable it for you, if needed. (This requires a
-reboot). If your system does not satisfy these requirements, you can install
-[Docker Toolbox](/toolbox/overview.md), which uses Oracle Virtual Box instead of
-Hyper-V.
+* 为了让 Docker for Windows 正常工作, 必须启用 Hyper-V 程序包. Docker for Windows 安装程序在需要时将为你启用 (此操作要求重新启动). 如果您的系统不满足要求, 可以安装
+[Docker Toolbox](/toolbox/overview.md), 它使用了 Oracle Virtual Box 来取代 Hyper-V.
 <p />
-* Virtualization must be enabled. Typically, virtualization is enabled by default. (Note that this is different from having Hyper-V enabled.) For more
-detail see [Virtualization must be
-enabled](troubleshoot.md#virtualization-must-be-enabled) in Troubleshooting.
+* 必须启用虚拟化. 通常虚拟化是默认启用的. (请注意, 这与 Hyper-V 启用不同.) 更多信息请参见疑难解答中的[必须启用虚拟化](troubleshoot.md#virtualization-must-be-enabled).
 <p />
-* **What the Docker for Windows install includes**: The installation provides [Docker Engine](https://docs.docker.com/engine/userguide/intro/), Docker CLI client, [Docker Compose](https://docs.docker.com/compose/overview/), and [Docker Machine](https://docs.docker.com/machine/overview/).
+* **Docker for Windows 安装中包含**: [Docker Engine](https://docs.docker.com/engine/userguide/intro/), Docker CLI 客户端, [Docker Compose](https://docs.docker.com/compose/overview/) 和 [Docker Machine](https://docs.docker.com/machine/overview/).
 
-### About Windows containers and Windows Server 2016
+### 关于 Windows 容器与 Windows Server 2016
 
-Looking for information on using Windows containers?
+正查找使用 Windows 容器的信息?
 
-* [Getting Started with Windows Containers (Lab)](https://github.com/docker/labs/blob/master/windows/windows-containers/README.md)
-provides a tutorial on how to set up and run Windows containers on Windows 10 or
-with Windows Server 2016. It shows you how to use a MusicStore application with
-Windows containers.
+* [Windows 容器 (实验室) 入门](https://github.com/docker/labs/blob/master/windows/windows-containers/README.md)
+提供了如何在 Windows 10 与 Windows Server 2016 中安装和运行 Windows 容器的入门, 文中展示了如何在 Windows 容器中使用 MusicStore 应用.
 <p />
-* [Setup - Windows Server 2016 (Lab)](https://github.com/docker/labs/blob/master/windows/windows-containers/Setup-Server2016.md) specifically describes environment setup.
+* [Setup - Windows Server 2016 (Lab)](https://github.com/docker/labs/blob/master/windows/windows-containers/Setup-Server2016.md) 具体描述了环境设置.
 <p />
-* [Switch
-between Windows and Linux containers (Beta
-feature)](index.md#switch-between-windows-and-linux-containers-beta-feature) describes the Linux / Windows containers toggle in Docker for Windows and points you to the tutorial mentioned above.
+* [在 Windows 与 Linux 容器中切换 (测试功能)](index.md#switch-between-windows-and-linux-containers-beta-feature)描述了在 Docker for Windows 中切换 Linux / Windows 容器, 并指向上述教程.
 <p />
-* Docker Container Platform for Windows Server 2016 [articles and blog posts](https://www.docker.com/microsoft) on the Docker website
+* Docker 网站上的 Windows Server 2016 的 Docker 容器平台 [文章与博文](https://www.docker.com/microsoft)
 
-## Step 1. Install Docker for Windows
+## 步骤 1. 安装 Docker for Windows
 
-1. Double-click `InstallDocker.msi` to run the installer.
+1. 双击 `InstallDocker.msi` 运行安装程序.
 
-    If you haven't already downloaded the installer (`InstallDocker.msi`), you can get it [**here**](https://download.docker.com/win/stable/InstallDocker.msi). It typically downloads to your `Downloads folder`, or you can run it from the recent downloads bar at the bottom of your web browser.
+    如果尚未下载安装程序 (`InstallDocker.msi`), 您可以在[**此处**](https://download.docker.com/win/stable/InstallDocker.msi)获取. 此文件通常下载到您的`下载`文件夹, 您也可以从浏览器底部的最近下载栏中运行.
 
-2. Follow the install wizard to accept the license, authorize the installer, and proceed with the install.
+2. 按照安装向导接受许可证, 授权安装程序, 然后继续安装.
 
-    You will be asked to authorize `Docker.app` with your system password during the install process. Privileged access is needed to install networking components, links to the Docker apps, and manage the Hyper-V VMs.
+    在安装过程中, 系统会要求您输入系统密码授权 `Docker.app`, 在安装网络组件, 连接到 Docker 应用与管理 Hyper-V 虚拟机时需要访问特权.
 
-3. Click **Finish** on the setup complete dialog to launch Docker.
+3. 单击安装完成对话框的 **Finish** 按钮来启动 Docker.
 
-    ![Install complete>](images/installer-finishes.png)
+    ![安装完成>](images/installer-finishes.png)
 
-## Step 2. Start Docker for Windows
+## 步骤 2. 启动 Docker for Windows
 
-When the installation finishes, Docker starts automatically.
+当安装完成后, Docker 自动启动.
 
-The whale in the status bar indicates that Docker is running, and accessible from a terminal.
+状态栏的鲸鱼图标表示 Docker 正在运行, 并可以从终端访问.
 
-If you just installed the app, you also get a popup success message with suggested next steps, and a link to this documentation.
+如果你刚刚安装了应用程序, 将会弹出包含下一步建议以及本文档链接的成功消息.
 
-![Install success](images/win-install-success-popup.png)
+![安装完成](images/win-install-success-popup.png)
 
-When initialization is complete, select **About Docker** from the notification area icon to verify that you have the latest version.
+初始化完成后, 从通知区域图标中选择 **关于 Docker** 以验证您是否具有最新版本.
 
-Congratulations! You are up and running with Docker for Windows.
+恭喜! 您正在使用 Docker for Windows 运行.
 
-## Step 3. Check versions of Docker Engine, Compose, and Machine
+## 步骤 3. 检查 Docker Engine, Compose 与 Machine 的版本
 
-Start your favorite shell (`cmd.exe`, PowerShell, or other) to check your versions of `docker` and `docker-compose`, and verify the installation.
+打开您最爱的 Shell (`cmd.exe`, PowerShell 等) 来检查 `docker` 与 `docker-compose` 的版本, 并验证安装.
 
       PS C:\Users\samstevens> docker --version
       Docker version 1.12.0, build 8eab29e, experimental
@@ -140,20 +126,20 @@ Start your favorite shell (`cmd.exe`, PowerShell, or other) to check your versio
       PS C:\Users\samstevens> docker-machine --version
       docker-machine version 0.8.0, build b85aac1
 
-## Step 4. Explore the application and run examples
+## 步骤 4. 探索应用, 运行示例
 
-The next few steps take you through some examples. These are just suggestions for ways to experiment with Docker on your system, check version information, and make sure `docker` commands are working properly.
+接下来的几个步骤带你完成一些示例, 这些只是建议在您的系统上实验 Docker 的方法, 请检查版本信息, 确保 `docker` 命令正常工作.
 
-1. Open a shell (`cmd.exe`, PowerShell, or other).
+1. 打开一个 shell (`cmd.exe`, PowerShell 等).
 
-2. Run some Docker commands, such as `docker ps`, `docker version`, and `docker info`.
+2. 运行一些 Docker 命令, 例如 `docker ps`, `docker version` 和 `docker info`.
 
-    Here is the output of `docker ps` run in a powershell. (In this example, no containers are running yet.)
+    此处是 `docker ps` 在 powershell 中运行的输出. (在本示例中, 尚未运行任何容器)
 
           PS C:\Users\samstevens> docker ps
           CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 
-    Here is an example of command output for  `docker version`.
+    此处是 `docker version` 命令输出的示例.
 
           PS C:\Users\Vicky> docker version
           Client:
@@ -174,7 +160,7 @@ The next few steps take you through some examples. These are just suggestions fo
           OS/Arch:      linux/amd64
           Experimental: true
 
-    Here is an example of command output for  `docker info`.
+    此处是 `docker info` 命令输出的示例.
 
           PS C:\Users\Vicky> docker info
           Containers: 0
@@ -213,9 +199,9 @@ The next few steps take you through some examples. These are just suggestions fo
           Insecure Registries:
           127.0.0.0/8
 
-    >**Note:** The outputs above are examples. Your output for commands like `docker version` and `docker info` will vary depending on your product versions (e.g., as you install newer versions).
+    >**注意:** 以上输出仅供示例, 类似 `docker version` 与 `docker info` 命令的输出取决于您的产品版本 (例如, 当您安装较新的版本).
 
-3.  Run `docker run hello-world` to test pulling an image from Docker Hub and starting a container.
+3.  运行 `docker run hello-world` 以测试从 Docker Hub 拉取镜像并启动容器.
 
           PS C:\Users\samstevens> docker run hello-world
 
@@ -228,7 +214,7 @@ The next few steps take you through some examples. These are just suggestions fo
           3. The Docker daemon created a new container from that image which runs the executable that produces the output you are currently reading.
           4. The Docker daemon streamed that output to the Docker client, which sent it to your terminal.
 
-4. Try something more ambitious, and run an Ubuntu container in a Bash shell.
+4. 来点更了不起的, 在 Bash shell 中运行一个 Ubuntu 容器.
 
           $ docker run -it ubuntu bash
 
@@ -242,13 +228,13 @@ The next few steps take you through some examples. These are just suggestions fo
           Digest: sha256:4e85ebe01d056b43955250bbac22bdb8734271122e3c78d21e55ee235fc6802d
           Status: Downloaded newer image for ubuntu:latest
 
-    Type `exit` to stop the container and close the Bash shell.
+    输入 `exit` 以停止容器并关闭 Bash shell.
 
-5. For the pièce de résistance, start a Dockerized webserver with this command:
+5. 使用该命令来开启一个 Docker 化的 web 服务器:
 
           docker run -d -p 80:80 --name webserver nginx
 
-      This will download the `nginx` container image and start it. Here is the output of running this command in a powershell.
+      这将下载并启动 `nginx` 容器镜像, 这里是在 PowerShell 中运行该命令的输出.
 
           PS C:\Users\samstevens> docker run -d -p 80:80 --name webserver nginx
           Unable to find image 'nginx:latest' locally
@@ -262,13 +248,13 @@ The next few steps take you through some examples. These are just suggestions fo
           Status: Downloaded newer image for nginx:latest
           dfe13c68b3b86f01951af617df02be4897184cbf7a8b4d5caf1c3c5bd3fc267f
 
-6.  Point your web browser at `http://localhost` to display the start page.
+6.  在浏览器中访问 `http://localhost` 以显示开始页面.
 
-    (Since you specified the default HTTP port, it isn't necessary to append `:80` at the end of the URL.)
+    (由于您指定了默认的 HTTP 端口, 没有必要在 URL 的结尾加上 `:80`.)
 
-      ![Run nginx edge>](images/run-nginx.png)
+      ![运行 nginx>](images/run-nginx.png)
 
-7.  Run `docker ps` while your webserver is running to see details on the container.
+7.  在 web 服务器工作时运行 `docker ps` 以检视容器细节.
 
           PS C:\Users\samstevens> docker ps
           CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS
@@ -276,158 +262,137 @@ The next few steps take you through some examples. These are just suggestions fo
           dfe13c68b3b8        nginx               "nginx -g 'daemon off"   3 days ago          Up 45 seconds       0.0.0.0:80->80/tcp, 443/tc
           p   webserver
 
-8. Stop or remove containers and images.
+8. 停止或删除容器与镜像.
 
-    The `nginx` webserver will continue to run in the container on that port until you stop and/or remove the container. If you want to stop the webserver, type: `docker stop webserver` and start it again with `docker start webserver`.
+    `nginx` web 服务器会在您停止和 / 或删除容器前继续在容器中运行. 如果您要停止 web 服务器, 请输入 `docker stop webserver`, 可以使用 `docker start webserver` 再次启动它.
 
-    To stop and remove the running container with a single command, type: `docker rm -f webserver`. This will remove the container, but not the `nginx` image. You can list local images with `docker images`. You might want to keep some images around so that you don't have to pull them again from Docker Hub. To remove an image you no longer need, use `docker rmi <imageID>|<imageName>`. For example, `docker rmi nginx`.
+    要使用单个命令停止和删除正在运行的容器, 请键入: `docker rm -f webserver`. 这将删除容器而非 `nginx` 镜像. 您可以用 `docker images` 列出本地镜像. 您可能希望保留一些镜像, 这样就不必再从Docker Hub 中拉取它们. 要删除不再需要的镜像, 请使用 `docker rmi <imageID>|<imageName>`, `docker rmi nginx`.
 
-**Want more example applications?** - For more example walkthroughs that include setting up services and databases with Docker Compose, see [Example Applications](examples.md).
+**想要更多示例应用??** - 更多有关使用 Docker Compose 安装服务与数据库的示例, 请参见[示例应用程序](examples.md).
 
-## Set up tab completion in PowerShell
+## 在 PowerShell 中设置 tab 自动补全
 
-If you would like to have handy tab completion for Docker commands, you can install the <a href="https://github.com/samneirinck/posh-docker">posh-docker</a> PowerShell Module as follows.
+如果想要输入 Docker 命令时拥有 tab 自动补全的功能, 您可以安装 <a href="https://github.com/samneirinck/posh-docker">posh-docker</a> PowerShell 模块.
 
-1. Start an "elevated" PowerShell (i.e., run it as administrator).
+1. 开始一个"提升的" PowerShell (即作为管理员身份运行).
 
-    To do this, search for PowerShell, right-click, and choose **Run as administrator**.<br>
+    为此, 请搜索 PowerShell, 右键单击, 然后选择**以管理员身份运行**.<br>
 
-    ![Run PowerShell as administrator](images/PowerShell-as-admin.png)
+    ![以管理员身份运行 PowerShell](images/PowerShell-as-admin.png)
     <br><br>
-    When asked if you want to allow this app to make changes to your device, click **Yes**.
+    当系统询问您是否允许此应用更改设备时, 请点击**是**.
 
-2. Set the [script execution policy](https://msdn.microsoft.com/en-us/powershell/reference/5.1/microsoft.powershell.security/set-executionpolicy) to allow downloaded scripts signed by trusted publishers to run on your computer. To do so, type this at the PowerShell prompt.
+2. 配置[脚本执行策略](https://msdn.microsoft.com/en-us/powershell/reference/5.1/microsoft.powershell.security/set-executionpolicy)以允许下载的受信任发布者签名的脚本在您的计算机上运行, 为此, 请在 PowerShell 提示符键入:
     <br>
     `Set-ExecutionPolicy RemoteSigned`
     <br>
-    To check that the policy is set properly, run `get-executionpolicy`, which should return `RemoteSigned`.
+    要检查此策略是否被正确设置, 运行 `get-executionpolicy`, 应该返回 `RemoteSigned`.
     <br>
-3. To enable auto-completion of commands for the current PowerShell only, type:
+3. 要仅为当前 PowerShell 启用自动完成命令, 请键入:
 
     `Import-Module posh-docker`
 
-4. To make tab completion persistent across all PowerShell sessions, add the command to a `$PROFILE` by typing these commands at the PowerShell prompt.
+4. 要使 tab 自动补全在所有 PowerShell 会话中生效, 在 PowerShell 提示符下键入这些命令将命令添加到一个 `$PROFILE`.
 
         Install-Module -Scope CurrentUser posh-docker -Force
         Add-Content $PROFILE "`nImport-Module posh-docker"
 
-    This creates a `$PROFILE` if one does not already exist, and adds this line into the file:
+    如果 `$PROFILE` 不存在, 将被自动创建, 然后这一行被加入到文件中:
 
     `Import-Module posh-docker`
 
     <br>
-    To check that the file was properly created, or simply edit it manually, type this in PowerShell:
+    要检查文件是否已正确创建, 或者想手动编辑, 请在 PowerShell 中键入:
 
     `Notepad $PROFILE`
 
-Now, when you press tab after typing the first few letters, Docker commands such as `start`, `stop`, `run`, and their options, along with container and image names should now auto-complete.
+现在, 当您键入前几个字母后按 tab 键时, Docker 命令 (如 `start`, `stop`, `run`) 及其选项以及容器、镜像名称应该会自动补全.
 
-## Docker Settings
+## Docker 设置
 
-When Docker is running, the Docker whale is displayed in the system tray. If it is hidden, click the up arrow in the tray to show it.
+当 Docker 运行时, Docker 鲸鱼图标在系统托盘中显示. 如果已隐藏, 请单击托盘中的向上箭头.
 
-![Showing hidden apps in the system tray](images/whale-systray.png)
+![在系统托盘中显示隐藏的应用](images/whale-systray.png)
 
-To get a popup menu with application options, right-click the whale:
+要弹出包含应用程序选项的弹出菜单, 请右键单击鲸鱼:
 
-![Docker for Windows popup menu](images/config-popup-menu-win.png)
+![Docker for Windows 弹出菜单](images/config-popup-menu-win.png)
 
-The **Settings** dialogs provide options to allow Docker auto-start, automatically check for updates, share local drives with Docker containers, enable VPN compatibility, manage CPUs and memory Docker uses, restart Docker, or perform a factory reset.
+**设置**对话框提供了一些选项, 包括允许 Docker 自动启动, 自动检查更新, 与 Docker 容器共享本地驱动器, VPN, 管理 Docker 使用的 CPU 和内存, 重新启动 Docker, 恢复出厂设置.
 
-**Beta 26 and newer** include an option to switch between Windows and Linux conatiners. See [Switch between Windows and Linux containers (Beta feature)](index.md#switch-between-windows-and-linux-containers-beta-feature). This is not yet available on stable builds.
+**Beta 26 或更新版本**包括在 Windows 和 Linux 容器之间切换的选项, 请参阅[在 Windows 和 Linux 容器之间切换 (测试功能)](index.md#switch-between-windows-and-linux-containers-beta-feature). 目前该功能在稳定版本上不可用.
 
-![Beta 26 popup with switch for Windows or Linux containers](images/config-popup-menu-win-switch-containers.png)
-
-
-### General
-
-![Settings](images/settings-general.png)
-
-* **Start Docker when you log in** - Automatically start the Docker for Windows application upon Windows system login.
-
-* **Check for updates when the application starts** - Docker for Windows is set to automatically check for updates and notify you when an update is available. If an update is found, click **OK** to accept and install it (or cancel to keep the current version). Uncheck this option if you do not want notifications of version upgrades. You can still find out about updates manually by choosing **Check for Updates** from the menu.
-
-* **Send usage statistics** - You can set Docker for Windows to auto-send diagnostics, crash reports, and usage data. This information can help Docker improve the application and get more context for troubleshooting problems.
-
-    Uncheck any of the options to opt out and prevent auto-send of data. Docker may prompt for more information in some cases, even with auto-send enabled. Also, you can enable or disable these auto-reporting settings with one click on the information popup when you first start Docker.
-
-    ![Startup information](images/win-install-success-popup.png)
-
-### Shared Drives
-
-Share your local drives (volumes) with Docker for Windows, so that they are available to your containers.
-
-![Shared Drives](images/settings-shared-drives.png)
-
-You will be asked to provide your Windows system username and password (domain
-user) to apply shared drives. You can select an option to have Docker store the
-credentials so that you don't have to re-enter them every time.
-
-Permissions to access shared drives are tied to the credentials you provide
-here. If you run `docker` commands and tasks under a different username than the
-one used here to set up sharing, your containers will not have permissions to
-access the mounted volumes.
-
->**Tip:** In general, shared drives are only required for volume mounting [Linux
-containers](#switch-between-windows-and-linux-containers-beta-feature), and not
-for Windows containers. However, if the project lives outside of the `\Users`
-directory, you need to share the drive where the Dockerfile and volume are
-located even if you are using [Windows
-containers](#getting-started-with-windows-containers-beta-feature)). Runtime
-errors such as file not found or cannot start service may indicate shared drives
-are needed. (See also [Volume mounting requires shared drives for Linux containers and for any project directories outside of `C:\Users`](troubleshoot.md#volume-mounting-requires-shared-drives-for-linux-containers-and-for-any-project-directories-outside-of-cusers).)
-
-See also [Verify domain user has permissions for shared
-drives](troubleshoot.md#verify-domain-user-has-permissions-for-shared-drives-volumes)
-in Troubleshooting.
-
-#### Firewall rules for shared drives
-
-Shared drives require port 445 to be open between the host machine and the virtual
-machine that runs Linux containers.
-
->**Note**: In Docker for Windows Beta 29 and higher,
-Docker detects if port 445 is closed and shows the following message when you
-try to add a shared drive: ![Port 445 blocked](images/drive_sharing_firewall_blocked.png)
+![Beta 26 弹出的切换 Windows 或 Linux 容器选项](images/config-popup-menu-win-switch-containers.png)
 
 
-To share the drive, allow connections between the Windows host machine and the
-virtual machine in Windows Firewall or your third party firewall software. You
-do not need to open port 445 on any other network. By default, allow connections
-to 10.0.75.1 port 445 (the Windows host) from 10.0.75.2 (the virtual machine).
+### 一般
 
-### Advanced
+![一般](images/settings-general.png)
 
-![CPU and Memory settings](images/settings-cpu-ram.png)
+* **Start Docker when you log in (在登录时启动 Docker)** - 在 Windows 系统登录时自动启动 Docker for Windows.
 
-* **CPUs** - Change the number of processors assigned to the Linux VM.
+* **Check for updates when the application starts (应用程序启动时检查更新)** - Docker for Windows 设置为自动检查更新, 并在更新可用时通知您. 如果找到更新, 单击**确定**接受并安装 (或者取消并保留当前版本). 如果您不想得到版本升级通知, 请取消选中此选项. 您仍可以通过从菜单中选择**检查更新**来手动获取更新.
 
-* **Memory** - Change the amount of memory the Docker for Windows Linux VM uses.
+* **Send usage statistics (发送使用情况统计信息)** - 您可以设置让 Docker for Windows 自动发送诊断信息, 崩溃报告和使用数据, 这些信息可以帮助 Docker 改进应用并获得更多的上下文以解决问题.
 
-Please note, updating these settings requires a reconfiguration and reboot of the Linux VM. This will take a few seconds.
+    取消选中任何选项即可停用并阻止自动发送数据. 即使选择了自动发送, Docker 在某些情况下可能会提示更多信息. 此外, 在首次启动 Docker 时单击信息弹出窗口可以启用或禁用这些自动报告设置.
 
-### Network
+    ![启动信息](images/win-install-success-popup.png)
 
-You can configure Docker for Windows networking to work on a virtual private network (VPN).
+### 共享驱动器
 
-* **Internal Virtual Switch** - You can specify a network address translation (NAT) prefix and subnet mask to enable internet connectivity.
+与 Docker for Windows 共享您的本地驱动器 (卷), 使得本地驱动器在您的容器中可用.
 
-* **DNS Server** - You can configure the DNS server to use dynamic or static IP addressing.
+![共享驱动器](images/settings-shared-drives.png)
 
-![Network settings](images/settings-network.png)
+系统将要求您提供 Windows 系统用户名和密码 (域用户) 以启用共享驱动器, 您可以选择让 Docker 存储凭据, 这样您就不必每次都重新输入.
 
->**Note:** Some users reported problems connecting to Docker Hub on Docker for Windows stable version. This would manifest as an error when trying to run `docker` commands that pull images from Docker Hub that are not already downloaded, such as a first time run of `docker run hello-world`. If you encounter this, reset the DNS server to use the Google DNS fixed address: `8.8.8.8`. For more information, see [Networking issues](troubleshoot.md#networking-issues) in Troubleshooting.
+访问共享驱动器的权限与您在此处提供的凭据相关联. 如果您的用户名与设置共享的用户名不同, 运行 `docker` 命令和任务时您的容器将无权访问已装载的卷.
 
-Note that updating these settings requires a reconfiguration and reboot of the Linux VM.
+>**提示:** 一般来说, 只有 [Linux 容器](#switch-between-windows-and-linux-containers-beta-feature)挂载卷时需要共享驱动器卷挂载Linux容器, 而 Windows 容器不需要. 然而, 如果项目位于 `\Users` 之外, 即使正在使用 [Windows 容器](#getting-started-with-windows-containers-beta-feature), 您仍然需要共享 Dockerfile 与卷所在的驱动器. 诸如文件未找到或无法启动服务之类的运行时错误可能指示了需要共享驱动器. (另请参见 [Linux 容器, 以及任何位于 `C:\Users` 之外的项目的卷挂载需要共享驱动器](troubleshoot.md#volume-mounting-requires-shared-drives-for-linux-containers-and-for-any-project-directories-outside-of-cusers).)
 
-### Proxies
+另请参阅在疑难解答中的[验证域用户是否具有共享驱动器的权限](troubleshoot.md#verify-domain-user-has-permissions-for-shared-drives-volumes).
+ 
+#### 共享驱动器的防火墙规则
 
-Docker for Windows lets you configure HTTP/HTTPS Proxy Settings and automatically propagate these to Docker and to your containers.
-For example, if you set your proxy settings to `http://proxy.example.com`, Docker will use this proxy when pulling containers.
+共享驱动器需要在主机和运行 Linux 容器的虚拟机之间打开 445 端口.
 
-![Proxies](images/proxies.png)
+>**注意**: 在Docker for Windows Beta 29 及更高版本中, Docker 会检测 445 端口是否关闭, 并在尝试添加共享驱动器时提示如下信息: ![445 端口被阻止](images/drive_sharing_firewall_blocked.png)
 
-When you start a container, you will see that your proxy settings propagate into the containers. For example:
+要共享驱动器, 请在 Windows 防火墙或您的第三方防火墙软件中允许 Windows 主机和虚拟机之间的连接. 您不需要在任何其它网络上打开 445 端口. 默认情况下, 应允许从 10.0.75.2 (虚拟机) 到 10.0.75.1 的 445 端口 (Windows 主机) 的连接.
+
+### 高级
+
+![CPU 和内存设置](images/settings-cpu-ram.png)
+
+* **CPUs** - 更改分配给Linux 虚拟机的处理器数.
+
+* **Memory (内存)** - 更改 Docker for Windows 的 Linux 虚拟机使用的内存量.
+
+请注意, 更新这些设置需要重新配置与重启 Linux 虚拟机, 这将需要几秒钟.
+
+### 网络
+
+您可以将 Docker for Windows 的网络配置为在虚拟专用网络 (VPN) 上工作.
+
+* **Internal Virtual Switch (内部虚拟交换机)** - 您可以指定网络地址转换 (NAT) 前缀和子网掩码以启用 Internet 连接.
+
+* **DNS Server (DNS服务器)** - 您可以将 DNS 服务器配置为使用动态或静态 IP 地址.
+
+![网络设置](images/settings-network.png)
+
+>**注意:** 一些用户报告在 Docker for Windows 的稳定版本上存在与 Docker Hub 的连接问题, 这个问题表现为运行 `docker` 命令从 Docker Hub 拉取一个尚未下载的镜像 (例如第一次运行 `docker run hello-world`) 时发生错误. 如果遇到此问题, 请重设 DNS 服务器以使用 Google DNS 的固定地址: `8.8.8.8`. 有关更多信息, 请参阅故障排除中的[网络问题](troubleshoot.md#networking-issues).
+
+请注意, 更新这些设置需要重新配置和重启 Linux 虚拟机.
+
+### 代理
+
+Docker for Windows 允许您配置 HTTP/HTTPS 代理设置, 并自动传播配置到 Docker 和您的容器.
+例如, 如果您将代理设置为 `http://proxy.example.com`, Docker 将在拉取容器时使用此代理.
+
+![代理](images/proxies.png)
+
+当您启动容器时, 您将观察到代理设置传播到容器中, 例如:
 
 ```
 $ docker run -it alpine env
@@ -440,62 +405,63 @@ http_proxy=http://proxy.example.com:3128
 no_proxy=*.local, 169.254/16
 ```
 
-You can see from the above output that the `HTTP_PROXY`, `http_proxy` and `no_proxy` environment variables are set.
-When your proxy configuration changes, Docker restarts automatically to pick up the new settings.
-If you have containers that you wish to keep running across restarts, you should consider using [restart policies](/engine/reference/run/#restart-policies-restart)
+您可以从上面的输出中观察到 `HTTP_PROXY`, `http_proxy` 和 `no_proxy` 环境变量均已设置.
+当代理配置更改时, Docker 会自动重新启动以获取新设置.
+如果希望在重新启动时保持运行某些容器, 则应考虑使用[重新启动策略](/engine/reference/run/#restart-policies-restart)
 
-### Docker daemon
-You can configure options on the Docker daemon in the given JSON configuration file, and determine how your containers will run.
+### Docker 守护进程
 
-For a full list of options on the Docker daemon, see <a href="https://docs.docker.com/engine/reference/commandline/dockerd/" target="_blank">daemon</a> in the Docker Engine command line reference.
+您可以在给定的 JSON 配置文件中配置 Docker 守护进程的选项, 并确定容器的运行方式.
 
-![Docker Daemon](images/docker-daemon.png)
+有关 Docker 守护进程的完整选项列表, 请参阅 Docker Engine 命令行参考中的<a href="https://docs.docker.com/engine/reference/commandline/dockerd/" target="_blank">守护进程</a>.
 
-Note that updating these settings requires a reconfiguration and reboot of the Linux VM.
+![Docker 守护进程](images/docker-daemon.png)
 
-### Switch between Windows and Linux containers (Beta feature)
+请注意, 更新这些设置需要重新配置和重启 Linux 虚拟机.
 
-Starting with Beta 26, you can select which daemon (Linux or Windows) the Docker CLI talks to. Select **Switch to Windows containers** to toggle to Windows containers. Select **Switch to Linux containers**.
+### 在 Windows 和 Linux 容器之间切换 (测试版功能)
 
-Microsoft Developer Network has preliminary/draft information on Windows containers [here](https://msdn.microsoft.com/en-us/virtualization/windowscontainers/about/about_overview).
+从 Beta 26 版开始, 您可以选择 Docker CLI 会话的守护进程 (Linux 或 Windows), 选择 **Switch to Windows containers** 以切换到 Windows 容器, 选择 **Switch to Linux containers** 以切换到 Linux 容器.
 
-This feature is not yet available on stable builds.
+微软开发者网络的[这个地方](https://msdn.microsoft.com/en-us/virtualization/windowscontainers/about/about_overview)包含 Windows 容器的初步/草稿信息.
 
-See also [Shared Drives](#shared-drives)
+此功能在稳定版本中尚未提供.
 
-#### Getting started with Windows containers (Beta feature)
+另请参见[共享驱动器](#shared-drives)
 
-If you are interested in working with Windows containers, here are some guides to help you get started.
+#### Windows容器入门 (测试版功能)
 
-* [Build and Run Your First Windows Server Container (Blog Post)](https://blog.docker.com/2016/09/build-your-first-docker-windows-server-container/) gives a quick tour of how to build and run native Docker Windows containers on Windows 10 and Windows Server 2016 evaluation releases.
+如果您对使用 Windows 容器感兴趣, 以下是帮助您开始使用的一些指南.
 
-* [Getting Started with Windows Containers (Lab)](https://github.com/docker/labs/blob/master/windows/windows-containers/README.md) shows you how to use the [MusicStore](https://github.com/aspnet/MusicStore/blob/dev/README.md) application with Windows containers. The MusicStore is a standard .NET application and, [forked here to use containers](https://github.com/friism/MusicStore), is a good example of a multi-container application.
+* [构建和运行您的第一个 Windows Server 容器 (博客文章)](https://blog.docker.com/2016/09/build-your-first-docker-windows-server-container/) 提供了如何在 Windows 10 和 Windows Server 2016 评估版本上构建和运行本机 Docker Windows 容器的导览.
 
-  >**Disclaimer:** This lab is still in work, and is based off of the blog, but you can test and leverage the example walkthroughs now, if you want to start experimenting. Please checking back as the lab evolves.
+* [Windows 容器入门 (实验室)](https://github.com/docker/labs/blob/master/windows/windows-containers/README.md) 向您介绍如何在 Windows 容器中使用 [MusicStore](https://github.com/aspnet/MusicStore/blob/dev/README.md) 应用. MusicStore 是一个标准的 .NET 应用程序, [使用容器的 fork 版本](https://github.com/friism/MusicStore)是多容器应用程序的一个好例子.
 
-### Diagnose and Feedback
+  >**免责声明:** 这个实验室还在完成中, 并且是基于博客内容的, 但如果您希望开始体验, 现在就可以测试、利用例子来做演练. 请关注实验室的进展.
 
-If you encounter problems for which you do not find solutions in this documentation, searching [Docker for Windows issues on GitHub](https://github.com/docker/for-win/issues) already filed by other users, or on the [Docker for Windows forum](https://forums.docker.com/c/docker-for-windows), we can help you troubleshoot the log data.
+### 诊断和反馈
 
-Select **Upload a diagnostic**.
+如果您遇到了在本文档中找不到解决方案的问题, 请在 Docker for Windows GitHub 上的[问题页面](https://github.com/docker/for-win/issues)或 [Docker for Windows 论坛](https://forums.docker.com/c/docker-for-windows) 中搜寻其他用户已经提交的问题, 我们可以帮助您排除日志数据故障.
 
-This uploads (sends) the logs to Docker.
+选择 **Upload a diagnostic**.
 
-![Diagnose problems and Feedback](images/diagnose-feedback-id-win.png)
+这将日志上传 (发送) 给 Docker.
 
-To create a new issue directly on GitHub, open [Docker for Windows issues on GitHub](https://github.com/docker/for-win/issues) in your web browser and follow the instructions in the README. Click [New Issue](https://github.com/docker/for-win/issues/new) on that page to get a "create new issue" template prepopulated with sections for the ID and summary of your diagnostics, system and version details, description of expected and actual behavior, and steps to reproduce the issue.
+![诊断问题和反馈](images/diagnose-feedback-id-win.png)
 
-![issue template](images/diagnose-d4win-issues-template.png)
+要直接在 GitHub 上创建新问题, 请使用浏览器打开 GitHub上打开 [Docker for Windows issues on GitHub](https://github.com/docker/for-win/issues) 并 README 中的说明进行操作. 单击该页面上的 [New Issue](https://github.com/docker/for-win/issues/new) 以获取创建新问题的模板, 其中已经写好了诊断信息的 ID 和摘要, 系统与版本详细信息, 预期和实际行为的描述与重现问题的步骤的片段.
 
-### Reset
+![问题模板](images/diagnose-d4win-issues-template.png)
 
-![Reset](images/settings-reset.png)
+### 重启
 
-* **Restart Docker** - Shuts down and restarts the Docker application.
+![重启](images/settings-reset.png)
 
-* **Reset to Toolbox default machine content** - Imports containers and images from the existing Docker Toolbox machine named `default`. (This option is enabled only if you have Toolbox installed.) The VirtualBox VM will not be removed.
+* **Restart Docker (重启 Docker)** - 关闭并重启 Docker 应用程序.
 
-* **Reset to factory defaults** - Resets Docker to factory defaults. This is useful in cases where Docker stops working or becomes unresponsive.
+* **Reset to Toolbox default machine content (重置为 Toolbox 默认机器内容)** - 从名为 `default` 的现有 Docker Toolbox 机器中导入容器和映像. (该选项仅在 Toolbox 已安装时可用.) VirtualBox 虚拟机不会被删除.
+
+* **Reset to factory defaults (重置为出厂默认值)** - 将 Docker 重置为出厂默认值, 这在 Docker 停止工作或无响应的情况下很有用.
 
 <!-- ### Going back to Toolbox
 
@@ -503,22 +469,22 @@ If you want to go back to using Docker Toolbox, you have to disable the Hyper-V 
 
 [These instructions](https://msdn.microsoft.com/en-us/virtualization/hyperv_on_windows/quick_start/walkthrough_install), which explain how to *enable* Hyper-V, show you how to get to the on/off controls for the Hyper-V feature. -->
 
-## Where to go next
+## 下一步
 
-* Try out the [Getting Started with Docker](/engine/getstarted/index.md) tutorial.
+* 学习 [Docker 入门教程](/engine/getstarted/index.md).
 
-* Dig in deeper with [learn by example](/engine/tutorials/index.md) tutorials on building images, running containers, networking, managing data, and storing images on Docker Hub.
+* 深入了解在 Docker Hub 上构建镜像, 运行容器, 网络, 管理数据与存储镜像的[示例教程](/engine/tutorials/index.md).
 
-* See [Example Applications](examples.md) for example applications that include setting up services and databases in Docker Compose.
+* 参阅[示例应用程序](examples.md), 示例程序包含在 Docker Compose 中设置服务和数据库.
 
-* Interested in trying out the new [swarm mode](/engine/swarm/index.md) on Docker Engine v1.12?
+* 对在 Docker Engine v1.12 上试用新的 [Swarm 模式](/engine/swarm/index.md)感兴趣?
 
-    See [Get started with swarm mode](/engine/swarm/swarm-tutorial/index.md), a tutorial which includes specifics on how to leverage your Docker for Windows installation to run single and multi-node swarms.
+    请参阅[开始使用 Swarm 模式](/engine/swarm/swarm-tutorial/index.md), 这是介绍了如何利用 Docker for Windows 来运行单节点和多节点集群的教程.
 
-    Also, try out the Swarm examples in [docker labs](https://github.com/docker/labs/tree/master/swarm-mode/beginner-tutorial). Run the `bash script` and follow the accompanying [Docker Swarm Tutorial](https://github.com/docker/labs/blob/master/swarm-mode/beginner-tutorial/README.md). The script uses Docker Machine to create a multi-node swarm, then walks you through various Swarm tasks and commands.
+    此外, 在 [Docker 实验室](https://github.com/docker/labs/tree/master/swarm-mode/beginner-tutorial)中尝试 Swarm 示例. 运行 `bash script`脚本, 并跟着相应的 [Docker Swarm 教程](https://github.com/docker/labs/blob/master/swarm-mode/beginner-tutorial/README.md)来学习. 该脚本使用 Docker Machine 创建多节点集群, 并引导您完成各种 Swarm 任务和命令.
 
-* For a summary of Docker command line interface (CLI) commands, see [Docker CLI Reference Guide](/engine/reference/index.md).
+* 有关 Docker 命令行接口 (CLI) 命令的摘要, 请参阅 [Docker CLI参考指南](/engine/reference/index.md).
 
-* Check out the <a href="https://blog.docker.com/2016/06/docker-mac-windows-public-beta/">blog posts</a> on Docker for Mac and Docker for Windows public betas, and <a href="https://blog.docker.com/2016/03/docker-for-mac-windows-beta/">earlier posts</a> on the initial private beta.
+* 查看 Docker for Mac 和 Docker for Windows 公共 beta 版的<a href="https://blog.docker.com/2016/06/docker-mac-windows-public-beta/">博客文章</a>, 以及最初的私人测试版的<a href="https://blog.docker.com/2016/03/docker-for-mac-windows-beta/">更早版本</a>.
 
-* Please give feedback on your experience with the app and report bugs and problems by logging into our [Docker for Windows forum](https://forums.docker.com/c/docker-for-windows).
+* 请通过登录我们的 [Docker for Windows 论坛](https://forums.docker.com/c/docker-for-windows)提供您对应用程序的体验反馈并报告错误和问题.

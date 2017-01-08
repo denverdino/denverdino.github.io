@@ -3,19 +3,17 @@ description: Configure logging driver.
 keywords: docker, logging, driver, Fluentd
 redirect_from:
 title: Configure logging drivers
+---
 
+Docker支持多个日志记录机制。在启动“dockerd”守护程序时使用`--log-driver=VALUE`参数设置默认的日志记录
+驱动程序。您可以使用`--log-opt NAME=VALUE`参数来指定驱动程序的其他选项。
 
-Docker comes with support of multiple logging mechanisms. Use the
-`--log-driver=VALUE` when starting the `dockerd` daemon to set default logging
-driver. You can use the `--log-opt NAME=VALUE` flag to specify extra options for
-selected driver.
+容器可以有不同于Docker守护进程的日志驱动程序。在`docker run`时使用`--log-driver=VALUE`参数来配置容器的日志驱动程序。
 
-The container can have a different logging driver than the Docker daemon. Use
-the `--log-driver=VALUE` with the `docker run` command to configure the
-container's logging driver. If the `--log-driver` option is not set, containers
-use the daemon's default logging driver, which defaults to `json-file`. To check
-the default logging driver for your Docker daemon, search for `Logging Driver` in the
-output of the `docker info` command:
+如果没有设置`-log-driver`选项，容器
+使用守护程序的默认日志驱动程序，默认为`json-file`。
+
+如果要检查Docker守护程序的默认日志驱动程序，可以在`docker info`命令的输出在中搜索“Logging Driver”：
 
 ```bash
 $ docker info |grep Logging
@@ -23,33 +21,27 @@ $ docker info |grep Logging
 Logging Driver: json-file
 ```
 
-The following options are supported:
+支持以下选项：
 
-| Driver      | Description                                                                                                                   |
-|-------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `none`      | Disables any logging for the container. `docker logs` won't be available with this driver.                                    |
-| `json-file` | Default logging driver for Docker. Writes JSON messages to file.                                                              |
-| `syslog`    | Syslog logging driver for Docker. Writes log messages to syslog.                                                              |
-| `journald`  | Journald logging driver for Docker. Writes log messages to `journald`.                                                        |
-| `gelf`      | Graylog Extended Log Format (GELF) logging driver for Docker. Writes log messages to a GELF endpoint like Graylog or Logstash. |
-| `fluentd`   | Fluentd logging driver for Docker. Writes log messages to `fluentd` (forward input).                                          |
-| `awslogs`   | Amazon CloudWatch Logs logging driver for Docker. Writes log messages to Amazon CloudWatch Logs.                              |
-| `splunk`    | Splunk logging driver for Docker. Writes log messages to `splunk` using HTTP Event Collector.                                 |
-| `etwlogs`   | ETW logging driver for Docker on Windows. Writes log messages as ETW events.                                                  |
-| `gcplogs`   | Google Cloud Logging driver for Docker. Writes log messages to Google Cloud Logging.                                          |
-| `nats`      | NATS logging driver for Docker. Publishes log entries to a NATS server.                                                       |
+| 驱动 | 说明 |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| `none` | 禁用容器的任何日志记录。`docker logs`不能用于此驱动程序。 |
+| `json-file` | Docker的默认日志驱动程序。将JSON格式的日志写入文件。 |
+| `syslog` | Docker的Syslog日志驱动程序。将日志消息写入syslog。 |
+| `journald` | Docker的Journald日志记录驱动程序。将日志消息写入`journald`。 |
+| `gelf` | Docker的Graylog扩展日志格式（GELF）日志驱动程序。将日志消息写入GELF端点，如Graylog或Logstash。 |
+| `fluentd` | Docker的Fluentd日志驱动程序。将日志消息写入`fluentd`（正向输入）。 |
+| `awslogs` | Docker的Amazon CloudWatch Logs日志驱动程序。将日志消息写入Amazon CloudWatch Logs。 |
+| `splunk` | Docker的Splunk日志驱动程序。使用HTTP事件收集器将日志消息写入`splunk'。 |
+| `etwlogs` | Windows Docker的ETW日志驱动程序。将日志消息作为ETW事件写入。 |
+| `gcplogs` | Docker的Google Cloud Logging驱动程序。将日志消息写入Google Cloud Logging。 |
+| `nats` | Docker的NATS日志驱动程序。将日志条目发布到NATS服务器。 |
 
-The `docker logs` command is only available for the `json-file` and `journald`
-logging drivers.
+`docker logs`命令仅适用于`json-file`和`journald`日志驱动程序。
 
-The `labels` and `env` options add additional attributes for use with logging
-drivers that accept them. Each option takes a comma-separated list of keys. If
-there is a collision between `label` and `env` keys, the value of the `env`
-takes precedence.
+`labels`和`env`选项为日志驱动程序增加额外的属性。每个选项都是逗号分隔的键列表。如果在`label`和`env`的键之间有冲突，`env`的值优先。
 
-Specify attributes when you start the Docker daemon. For example, the following
-command starts the daemon with the `json-file` driver and includes additional
-attributes in the output.
+在启动Docker守护程序时指定属性。例如，以下命令使用`json-file`驱动程序启动守护程序并包括其他属性。
 
 ```bash
 $ dockerd --log-driver=json-file \
@@ -57,22 +49,21 @@ $ dockerd --log-driver=json-file \
           --log-opt env=foo,fizz
 ```
 
-This command runs a container with specific values for the `labels` or `env`.
+此命令运行具有特定`labels`或`env`的容器。
 
 ```bash
 $ docker run -dit --label foo=bar -e fizz=buzz alpine sh
 ```
 
-This adds additional fields to the log depending on the driver. If you use
-`json-file`, it might add the attributes as follows:
+这会根据驱动程序向日志中添加其他字段。如果你使用`json-file`，它可能添加的属性如下：
 
 ```json
 "attrs":{"fizz":"buzz","foo":"bar"}
 ```
 
-## json-file options
+## json-file选项
 
-The following logging options are supported for the `json-file` logging driver:
+`json-file'日志驱动程序支持以下选项：
 
 ```none
 --log-opt max-size=[0-9]+[kmg]
@@ -81,21 +72,16 @@ The following logging options are supported for the `json-file` logging driver:
 --log-opt env=env1,env2
 ```
 
-Logs that reach `max-size` are rolled over. You can set the size in
-kilobytes(k), megabytes(m), or gigabytes(g). eg `--log-opt max-size=50m`. If
-`max-size` is not set, then logs are not rolled over.
+达到`max-size`的日志会轮转。您可以设置千字节（k），兆字节（m）或千兆字节（g）。例如`--log-opt max-size=50m`。如果`max-size`未设置，则日志不会翻转。
 
-`max-file` specifies the maximum number of files that a log is rolled over
-before being discarded. eg `--log-opt max-file=100`. If `max-size` is not set,
-then `max-file` is not honored.
+`max-file`指定保留多少个日志文件。例如`--log-opt max-file=100`。如果没有设置`max-size`，那么`max-file`不生效。
 
-If `max-size` and `max-file` are set, `docker logs` only returns the log lines
-from the newest log file.
+如果设置了`max-size`和`max-file`，`docker logs`只返回最新日志文件中的日志。
 
 
-## syslog options
+## syslog选项
 
-The following logging options are supported for the `syslog` logging driver:
+`syslog'日志驱动程序支持以下日志记录选项：
 
 ```none
 --log-opt syslog-address=[tcp|udp|tcp+tls]://host:port
@@ -112,20 +98,15 @@ The following logging options are supported for the `syslog` logging driver:
 --log-opt labels=label1,label2,label3
 ```
 
-`syslog-address` specifies the remote syslog server address where the driver
-connects to. If not specified it defaults to the local unix socket of the
-running system. If transport is either `tcp` or `udp` and `port` is not
-specified it defaults to `514` The following example shows how to have the
-`syslog` driver connect to a `syslog` remote server at `192.168.0.42` on port
-`123`
+`syslog-address`指定驱动程序要连接的远程syslog服务器地址。如果没有指定，它默认为本地系统的unix socket。 如果指定了`tcp`或`udp`但`port`未指定，默认为`514`。
+
+以下示例显示如何让`syslog`驱动程序连接到192.168.0.42服务器，端口`123`
 
 ```bash
 $ docker run --log-driver=syslog --log-opt syslog-address=tcp://192.168.0.42:123
 ```
 
-The `syslog-facility` option configures the syslog facility. By default, the
-system uses the `daemon` value. To override this behavior, you can provide an
-integer of 0 to 23 or any of the following named facilities:
+`syslog-facility`选项配置syslog工具。 默认情况下，系统使用`daemon`值。 要覆盖此行为，您可以提供0到23的整数或任何以下名字：
 
 * `kern`
 * `user`
@@ -148,47 +129,30 @@ integer of 0 to 23 or any of the following named facilities:
 * `local6`
 * `local7`
 
-`syslog-tls-ca-cert` specifies the absolute path to the trust certificates
-signed by the CA. This option is ignored if the address protocol is not
-`tcp+tls`.
+`syslog-tls-ca-cert`指定由CA签名的信任证书的绝对路径。 如果地址协议不是`tcp + tls`，则忽略此选项。
 
-`syslog-tls-cert` specifies the absolute path to the TLS certificate file. This
-option is ignored if the address protocol is not `tcp+tls`.
+`syslog-tls-cert`指定TLS证书文件的绝对路径。 如果地址协议不是`tcp + tls`，则忽略此选项。
 
-`syslog-tls-key` specifies the absolute path to the TLS key file. This option
-is ignored if the address protocol is not `tcp+tls`.
+`syslog-tls-key`指定TLS密钥文件的绝对路径。 如果地址协议不是`tcp + tls`，则忽略此选项。
 
-`syslog-tls-skip-verify` configures the TLS verification. This verification is
-enabled by default, but it can be overridden by setting this option to `true`.
-This option is ignored if the address protocol is not `tcp+tls`.
+`syslog-tls-skip-verify`配置TLS验证。 此验证是默认开启的，但可以通过将此选项设置为“true”来覆盖。
+如果地址协议不是`tcp + tls`，则忽略此选项。
 
-`tag` configures a string that is appended to the APP-NAME in the syslog
-message. By default, Docker uses the first 12 characters of the container ID to
-tag log messages. Refer to the [log tag option documentation](log_tags.md) for
-customizing the log tag format.
+`tag`配置syslog日志中附加到APP-NAME后字符串。 默认情况下，Docker使用容器ID的前12个字符标记日志消息。 定制日志标记格式请参考[日志标签选项文档](log_tags.md) 。
 
-`syslog-format` specifies syslog message format to use when logging. If not
-specified it defaults to the local unix syslog format without hostname
-specification. Specify rfc3164 to perform logging in RFC-3164 compatible
-format. Specify rfc5424 to perform logging in RFC-5424 compatible format.
-Specify rfc5424micro to perform logging in RFC-5424 compatible format with
-microsecond timestamp resolution.
+`syslog-format`指定在记录时使用的syslog消息格式。 如果没有指定，默认为没有主机名的本地unix syslog格式规范。 指定rfc3164则以兼容RFC-3164的格式记录日志。 指定rfc5424以兼容RFC-5424的格式记录日志。 指定rfc5424micro以带微秒时间戳的兼容RFC-5424的格式记录日记。
 
-`env` is a comma-separated list of keys of environment variables. Used for
-advanced [log tag options](log_tags.md).
+`env`是逗号分隔的环境变量的键列表。 用于高级[日志标签选项](log_tags.md)。
 
-`labels` is a comma-separated list of keys of labels. Used for advanced [log
-tag options](log_tags.md).
+`labels`是逗号分隔的标签键列表。 用于高级[日志标签选项](log_tags.md)
 
-## journald options
+## journald选项
 
-The `journald` logging driver stores the container id in the journal's
-`CONTAINER_ID` field. For detailed information on working with this logging
-driver, see [the journald logging driver](journald.md) reference documentation.
+`journald`日志驱动程序将容器ID存储在日志的`CONTAINER_ID`字段中。 有关使用此日志驱动的详细信息，请参阅 [journald日志驱动](journald.md)参考文档。
 
-## GELF options
+## GELF选项
 
-The GELF logging driver supports the following options:
+GELF日志驱动程序支持以下选项：
 
 ```no-highlight
 --log-opt gelf-address=udp://host:port
@@ -199,10 +163,9 @@ The GELF logging driver supports the following options:
 --log-opt gelf-compression-level=1
 ```
 
-The `gelf-address` option specifies the remote GELF server address that the
-driver connects to. Currently, only `udp` is supported as the transport and you
-must specify a `port` value. The following example shows how to connect the
-`gelf` driver to a GELF remote server at `192.168.0.42` on port `12201`
+`gelf-address`选项指定驱动程序连接的远程GELF服务器地址。 目前，只支持`udp`选项且
+必须指定一个`port`值。 以下示例显示如何连接
+`gelf`驱动程序到`192.168.0.42`上的端口为`12201`的GELF远程服务器
 
 ```bash
 $ docker run -dit \
@@ -211,41 +174,33 @@ $ docker run -dit \
              alpine sh
 ```
 
-By default, Docker uses the first 12 characters of the container ID to tag log
-messages. Refer to the [log tag option documentation](log_tags.md) for
-customizing the log tag format.
+默认情况下，Docker使用容器ID的前12个字符来标记日志。 自定义日志标记格式请参考[日志标签选项文档](log_tags.md) 。
 
-The `labels` and `env` options are supported by the `gelf` logging
-driver. It adds additional key on the `extra` fields, prefixed by an
-underscore (`_`).
+`gelf`日志驱动程序支持`labels`和`env`选项。 它在`extra`字段上添加了额外键，前缀为
+下划线（`_`）。
 ```json
 // […]
 "_foo": "bar",
 "_fizz": "buzz",
 // […]
 ```
-The `gelf-compression-type` option can be used to change how the GELF driver
-compresses each log message. The accepted values are `gzip`, `zlib` and `none`.
-`gzip` is chosen by default.
 
-The `gelf-compression-level` option can be used to change the level of
-compresssion when `gzip` or `zlib` is selected as `gelf-compression-type`.
-Accepted value must be from -1 to 9 (BestCompression). Higher levels
-typically run slower but compress more. Default value is 1 (BestSpeed).
+`gelf-compression-type`选项可用于更改GELF驱动程序压缩日志消息的方式。 可接受的值是`gzip`，`zlib`和`none`。 默认情况下选择`gzip`。
 
-## Fluentd options
+当`gelf-compression-type`选择为`gzip`或`zlib`时，`gelf-compression-level`选项可以用来改变压缩级别。接受的值必须为-1到9（最高压缩）。 越高的值通常运行速度越慢，但压缩得更多。 默认值为1（最高速度）。
 
-You can use the `--log-opt NAME=VALUE` flag to specify these additional Fluentd
-logging driver options.
+## Fluentd选项
 
- - `fluentd-address`: specify `host:port` to connect [localhost:24224]
- - `tag`: specify tag for `fluentd` message
- - `fluentd-buffer-limit`: specify the maximum size of the fluentd log buffer [8MB]
- - `fluentd-retry-wait`: initial delay before a connection retry (after which it increases exponentially) [1000ms]
- - `fluentd-max-retries`: maximum number of connection retries before abrupt failure of docker [1073741824]
- - `fluentd-async-connect`: whether to block on initial connection or not [false]
+您可以使用`--log-opt NAME=VALUE`选项来指定Fluentd日志驱动程序的其他选项。
 
-For example, to specify both additional options:
+- `fluentd-address`：指定`host：port`来连接[localhost：24224]
+- `tag`：为`fluentd`消息指定标签
+- `fluentd-buffer-limit`：指定fluentd日志缓冲区的最大大小[8MB]
+- `fluentd-retry-wait`：连接重试之前的初始延迟（之后它按指数增加）[1000ms]
+- `fluentd-max-retries`：docker突然失败之前连接重试的最大数量[1073741824]
+- `fluentd-async-connect`：是否在初始连接时阻塞[false]
+
+例如，要指定两个附加选项：
 
 ```bash
 {% raw %}
@@ -256,15 +211,13 @@ $ docker run -dit \
              alpine sh
 {% endraw %}
 ```
+如果容器无法连接到指定地址上的Fluentd守护程序且'fluentd-async-connect'没有启用，容器会立即停止。 
 
-If cthe ontainer cannot connect to the Fluentd daemon on the specified address
-and `fluentd-async-connect` is not enabled, the container stops immediately. For
-detailed information about working with this logging driver, see [the fluentd
-logging driver](fluentd.md)
+有关使用此日志记录驱动程序的详细信息，请参阅[fluentd日志驱动](fluentd.md)
 
-## Amazon CloudWatch Logs options
+## Amazon CloudWatch Logs选项
 
-The Amazon CloudWatch Logs logging driver supports the following options:
+Amazon CloudWatch Logs日志记录驱动程序支持以下选项：
 
 ```none
 {% raw %}
@@ -275,34 +228,28 @@ The Amazon CloudWatch Logs logging driver supports the following options:
 {% endraw %}
 ```
 
-For detailed information about working with this logging driver, see
-[the awslogs logging driver](awslogs.md) reference documentation.
+有关使用此日志记录驱动程序的详细信息，请参阅[awslogs日志驱动](awslogs.md)。
 
-## Splunk options
+## Splunk选项
 
-The `splunk`` logging driver requires the following options:
+`splunk`日志记录驱动程序支持以下选项：
 
 ```none
 --log-opt splunk-token=<splunk_http_event_collector_token>
 --log-opt splunk-url=https://your_splunk_instance:8088
 ```
 
-For detailed information about working with the `splunk` logging driver, see the
-[Splunk logging driver](splunk.md) reference documentation.
+有关使用此日志记录驱动程序的详细信息，请参阅[splunk日志驱动](splunk.md)。
 
-## ETW logging driver options
+## ETW日志驱动选项
 
-The `etwlogs` logging driver forwards each log message as an ETW event. An ETW
-listener can then be created to listen for these events. This driver does not
-accept any options.
+`etwlogs`日志驱动程序将每个日志消息作为ETW事件转发。 可以创建ETW侦听器以侦听这些事件。 这个驱动不接受任何选项。
 
-The ETW logging driver is only available on Windows. For detailed information
-about working with this logging driver, see [the ETW logging driver](etwlogs.md)
-reference documentation.
+ETW日志记录驱动程序仅在Windows上可用。 有关使用此日志记录驱动程序的详细信息，请参阅[etw日志驱动](etwlogs.md)。
 
-## Google Cloud Logging options
+## Google Cloud Logging选项
 
-The Google Cloud Logging driver supports the following options:
+Google Cloud Logging驱动程式支持以下选项：
 
 ```none
 --log-opt gcp-project=<gcp_projext>
@@ -311,12 +258,11 @@ The Google Cloud Logging driver supports the following options:
 --log-opt log-cmd=true
 ```
 
-For detailed information about working with the Google Cloud logging driver, see
-the [Google Cloud Logging driver](gcplogs.md). reference documentation.
+有关使用Google Cloud Logging驱动程序的详细信息，请参阅[Google Cloud Logging驱动](gcplogs.md)。
 
-## NATS logging options
+## NATS日志选项
 
-The NATS logging driver supports the following options:
+NATS日志驱动程式支持以下选项：
 
 ```none
 --log-opt labels=<label1>,<label2>
@@ -331,5 +277,5 @@ The NATS logging driver supports the following options:
 --log-opt nats-tls-skip-verify="<value>"
 ```
 
-For detailed information, see [the NATS logging driver](nats.md) reference
-documentation.
+详细信息，请参阅[NATS日志驱动](nats.md) 。
+

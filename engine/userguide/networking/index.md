@@ -7,16 +7,12 @@ redirect_from:
 title: Docker container networking
 ---
 
-This section provides an overview of the default networking behavior that Docker
-Engine delivers natively. It describes the type of networks created by default
-and how to create your own, user-defined networks. It also describes the
-resources required to create networks on a single host or across a cluster of
-hosts.
 
-## Default Networks
+这一章会介绍Docker Engine原生提供的网络行为，包括默认会创建哪些网络以及怎样创建自己定制的网络，创建单个宿主机上的网络或者集群中跨宿主机的网络。
 
-When you install Docker, it creates three networks automatically. You can list
-these networks using the `docker network ls` command:
+## 默认网络
+
+当你安装好Docker之后， 它会自动的创建三个网络，你可以使用docker network ls命令列举这些3个网络：
 
 ```
 $ docker network ls
@@ -27,15 +23,9 @@ NETWORK ID          NAME                DRIVER
 cf03ee007fb4        host                host
 ```
 
-Historically, these three networks are part of Docker's implementation. When
-you run a container you can use the `--network` flag to specify which network you
-want to run a container on. These three networks are still available to you.
+最初，这3个网络是docker代码实现的一部分，你可以通过指定`--network`参数来指定容器启动(run)所在的网络。现在这三个网络还是同样可用的。
 
-The `bridge` network represents the `docker0` network present in all Docker
-installations. Unless you specify otherwise with the `docker run
---network=<NETWORK>` option, the Docker daemon connects containers to this network
-by default. You can see this bridge as part of a host's network stack by using
-the `ifconfig` command on the host.
+在所有的Docker安装版本中都会提供默认的`bridge`网络即`docker0`网络。如果你不指定`docker run --network=<NETWORK>`的话，Docker daemon 会默认将容器连接到这个网络。你可以通过`ifconfig`命令看到这个bridge是存在于宿主机(host)的网络栈中的。
 
 ```
 $ ifconfig
@@ -50,7 +40,7 @@ docker0   Link encap:Ethernet  HWaddr 02:42:47:bc:3a:eb
           RX bytes:1100 (1.1 KB)  TX bytes:648 (648.0 B)
 ```
 
-The `none` network adds a container to a container-specific network stack. That container lacks a network interface. Attaching to such a container and looking at its stack you see this:
+`none`网络会添加容器到一个容器自己的网络栈，然后这个容器会并没有网络接口。Attach到这样的容器上然后检查他的网络栈，会有这样的结果：
 
 ```
 $ docker attach nonenetcontainer
@@ -74,22 +64,15 @@ lo        Link encap:Local Loopback
 
 root@0cb243cd1293:/#
 ```
->**Note**: You can detach from the container and leave it running with `CTRL-p CTRL-q`.
+>**Note**: 你可以通过`CTRL-p CTRL-q` detach并离开容器终端。
 
-The `host` network adds a container on the hosts network stack. You'll find the
-network configuration inside the container is identical to the host.
+`host`网络添加一个容器到宿主机(host)的网络栈中，你会发现容器中的网络的配置是和宿主机(host)是一致的。
 
-With the exception of the `bridge` network, you really don't need to
-interact with these default networks. While you can list and inspect them, you
-cannot remove them. They are required by your Docker installation. However, you
-can add your own user-defined networks and these you can remove when you no
-longer need them. Before you learn more about creating your own networks, it is
-worth looking at the default `bridge` network a bit.
+除了`bridge`网络，你不需要直接的操作这些默认的网络。你可以查看他们的列表和详情，但你不能移除他们。因为他们是Docker所需要的。不过你可以添加自定义的网络以及当你不需要这个网络是删除自定义的网络。不过在你了解自定义网络之前，可以先稍微了解一下默认的`bridge`网络。
 
 
-### The default bridge network in detail
-The default `bridge` network is present on all Docker hosts. The `docker network inspect`
-command returns information about a network:
+### 默认bridge网络详解
+在所有的docker主机上都会提供默认的`bridge`网络。通过`docker network inspect`命令可以查看关于这个网络的信息：
 
 ```
 $ docker network inspect bridge
@@ -122,8 +105,7 @@ $ docker network inspect bridge
    }
 ]
 ```
-The Engine automatically creates a `Subnet` and `Gateway` to the network.
-The `docker run` command automatically adds new containers to this network.
+Docker Enging会自动的为这个网络创建`Subnet`和`Gateway`的配置。然后`docker run`命令会将新的容器添加到这个网络中。
 
 ```
 $ docker run -itd --name=container1 busybox
@@ -134,8 +116,7 @@ $ docker run -itd --name=container2 busybox
 
 94447ca479852d29aeddca75c28f7104df3c3196d7b6d83061879e339946805c
 ```
-
-Inspecting the `bridge` network again after starting two containers shows both newly launched containers in the network. Their ids show up in the "Containers" section of `docker network inspect`:
+启动两个容器之后再通过inspect这个`bridge`网络可以看到在这个网络中新加入的两个容器，可以在"Containers"中找到他们的容器`ID`：
 
 ```
 $ docker network inspect bridge
@@ -182,9 +163,9 @@ $ docker network inspect bridge
 ]
 ```
 
-The `docker network inspect` command above shows all the connected containers and their network resources on a given network. Containers in this default network are able to communicate with each other using IP addresses. Docker does not support automatic service discovery on the default bridge network. If you want to communicate with container names in this default bridge network, you must connect the containers via the legacy `docker run --link` option.
+上面的`docker network inspect`会展示这个网络上所有连接的容器以及他们的网络资源，在这个默认网络中的容器可以通过他们的IP互相通信。Docker在默认的bridge网络中不支持自动服务发现(automatic service discovery)。如果你需要在这个默认bridge网络中使用容器名进行通信，你必须通过过时(legacy)的`docker run --link`选项连接这些容器。
 
-You can `attach` to a running `container` and investigate its configuration:
+你可以`attach`到一个运行中的`container`然后查看他的网络配置：
 
 ```
 $ docker attach container1
@@ -209,8 +190,7 @@ lo        Link encap:Local Loopback
           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
 ```
 
-Then use `ping` to send three ICMP requests and test the connectivity of the
-containers on this `bridge` network.
+然后使用`ping`发送三次ICMP请求测试与这个默认`bridge`网络中与其他容器的联通性。
 
 ```
 root@0cb243cd1293:/# ping -w3 172.17.0.3
@@ -225,7 +205,7 @@ PING 172.17.0.3 (172.17.0.3): 56 data bytes
 round-trip min/avg/max = 0.074/0.083/0.096 ms
 ```
 
-Finally, use the `cat` command to check the `container1` network configuration:
+最后，用`cat`命令检查`container1`网络的配置：
 
 ```
 root@0cb243cd1293:/# cat /etc/hosts
@@ -238,7 +218,7 @@ ff00::0	ip6-mcastprefix
 ff02::1	ip6-allnodes
 ff02::2	ip6-allrouters
 ```
-To detach from a `container1` and leave it running use `CTRL-p CTRL-q`.Then, attach to `container2` and repeat these three commands.
+使用`CTRL-p CTRL-q` detach `container1`这个容器并保持它后台运行。然后attach到`container2`并重复上面3个命令。
 
 ```
 $ docker attach container2
@@ -282,31 +262,20 @@ ff02::1	ip6-allnodes
 ff02::2	ip6-allrouters
 ```
 
-The default `docker0` bridge network supports the use of port mapping and `docker run --link` to allow communications between containers in the `docker0` network. These techniques are cumbersome to set up and prone to error. While they are still available to you as techniques, it is better to avoid them and define your own bridge networks instead.
+默认的`docker0`bridge网络支持用`docker run --link`允许容器间直接通信，那些在技术设置上复杂并易于出现错误。虽然现在在技术上仍然可以使用它们，但是最好避免使用，并使用自定义网络替代这种方案。
 
-## User-defined networks
+## 用户自定义网络
 
-You can create your own user-defined networks that better isolate containers.
-Docker provides some default **network drivers** for creating these networks.
-You can create a new **bridge network**, **overlay network** or **MACVLAN
-network**. You can also create a **network plugin** or **remote network**
-written to your own specifications.
+你可以通过创建自定义网络以便更好的容器网络隔离，Docker为创建自定义网络提供了一些默认的 **network driver**。你可以创建一个新的 **bridge network**， **overlay network**或者**MACVLAN network**。或者你可以编写及创建一个 **network plugin** 或者 **remote network**。
 
-You can create multiple networks. You can add containers to more than one
-network. Containers can only communicate within networks but not across
-networks. A container attached to two networks can communicate with member
-containers in either network. When a container is connected to multiple
-networks, its external connectivity is provided via the first non-internal
-network, in lexical order.
+你也可以创建多个网络，可以把容器连接到不止一个网络中。容器仅可以同网络内的容器进行通信而不能跨网络通信。连接到两个网络中的容器可以分别同两个网络中其他容器进行通信。当一个容器连接到多个网络中时，他的与外部网络的连接会通过按名字排序的第一个非内部网络(non-internal network)提供。
 
-The next few sections describe each of Docker's built-in network drivers in
-greater detail.
 
-### A bridge network
+下面的几章会非常详细的介绍每个Docker内置的网络驱动。
 
-The easiest user-defined network to create is a `bridge` network. This network
-is similar to the historical, default `docker0` network. There are some added
-features and some old features that aren't available.
+### bridge 网络
+
+最简单的用户自定义网络就是创建一个`bridge`网络。这个网络类似于之前的，默认的`docker0`网络。有一些新加的特性以及废弃的老特性。
 
 ```
 $ docker network create --driver bridge isolated_nw
@@ -345,7 +314,7 @@ c5ee82f76de3        isolated_nw         bridge
 
 ```
 
-After you create the network, you can launch containers on it using  the `docker run --network=<NETWORK>` option.
+当创建完网络之后，你可以通过使用`docker run --network=<NETWORK>`选项指定容器运行在这个网络上。
 
 ```
 $ docker run --network=isolated_nw -itd --name=container3 busybox
@@ -379,39 +348,24 @@ $ docker network inspect isolated_nw
 ]
 ```
 
-The containers you launch into this network must reside on the same Docker host.
-Each container in the network can immediately communicate with other containers
-in the network. Though, the network itself isolates the containers from external
-networks.
+这些你在这个网络中启动的容器必须运行在同一个Docker主机上，每个在这个网络中的容器可以直接同其他容器进行通信。不过网络将容器同外部的网络隔离开。
 
 ![An isolated network](images/bridge_network.png)
 
-Within a user-defined bridge network, linking is not supported. You can
-expose and publish container ports on containers in this network. This is useful
-if you want to make a portion of the `bridge` network available to an outside
-network.
+在一个用户自定义网络中，是不支持link的。在这个网络中你可以expose和publish一个容器的端口，这个方案可以让你的自定义网络的一部分供外部网络访问。
 
 ![Bridge network](images/network_access.png)
 
-A bridge network is useful in cases where you want to run a relatively small
-network on a single host. You can, however, create significantly larger networks
-by creating an `overlay` network.
+如果你希望在单个机器上使用一个相对小的网络，bridge网络是非常有用的。然而，如果你需要一个相对大的网络，可以通过创建`overlay`的网络。
 
-### The `docker_gwbridge` network
+### `docker_gwbridge`网络
 
-The `docker_gwbridge` is a local bridge network which is automatically created by Docker
-in two different circumstances:
+`docker_gwbridge`在两种场景下自动创建的本地`bridge`网络：
 
-- When you initialize or join a swarm, Docker creates the `docker_gwbridge` network and
-  uses it for communication among swarm nodes on different hosts.
+- 当你初始化和加入一个swarm时， Docker会创建`docker_gwbridge`网络并通过它与别的宿主机上的swarm的节点通信。
+- 当容器的网络加入的网络不能提供外部网络连接时，Docker会额外的把容器连接到`docker_gwbridge`网络上，以保证容器的外部的网络连接或者连接其他的swarm节点。
 
-- When none of a container's networks can provide external connectivity, Docker connect
-  the container to the `docker_gwbridge` network in addition to the container's other
-  networks, so that the container can connect to external networks or other swarm nodes.
-
-You can create the `docker_gwbridge` network ahead of time if you need a custom configuration,
-but otherwise Docker creates it on demand. The following example creates the `docker_gwbridge`
-network with some custom options.
+如果你需要自定义`docker_gwbridge`，你可以预先手动创建`docker_gwbridge`网络。例如下面这个例子，通过自定义的参数创建`docker_gwbridge`:
 
 ```bash
 $ docker network create --subnet 172.30.0.0/16 \
@@ -420,20 +374,16 @@ $ docker network create --subnet 172.30.0.0/16 \
 			docker_gwbridge
 ```
 
-The `docker_gwbridge` network is always present when you use `overlay` networks.
+当使用`overlay`网络的话，也是会创建`docker_gwbridge`的。
 
-### An overlay network with Docker Engine swarm mode
+### 使用Docker Engine Swarm mode配置的overlay网络
 
-You can create an overlay network on a manager node running in swarm mode
-without an external key-value store. The swarm makes the overlay network
-available only to nodes in the swarm that require it for a service. When you
-create a service that uses the overlay network, the manager node automatically
-extends the overlay network to nodes that run service tasks.
+你可以在swarm mode的集群中的manager节点上创建overlay的网络而不需要额外的KV存储，swarm提供给需要overlay网络的服务所在的swarm节点overlay网络的联通，当你创建的一个服务使用到overlay网络的话，manager节点会自动的扩展overlay网络到每个运行这个服务的task的节点上。
 
-To learn more about running Docker Engine in swarm mode, refer to the
-[Swarm mode overview](../../swarm/index.md).
+想要了解更多关于swarm mode的内容，可以参考：
+[Swarm mode总览](../../swarm/index.md).
 
-The example below shows how to create a network and use it for a service from a manager node in the swarm:
+通过下面的例子演示下如何在swarm的manager节点上如何创建网络并在一个service钟使用它：
 
 ```bash
 # Create an overlay network `my-multi-host-network`.
@@ -451,55 +401,39 @@ $ docker service create --replicas 2 --network my-multi-host-network --name my-w
 716thylsndqma81j6kkkb5aus
 ```
 
-Overlay networks for a swarm are not available to containers started with
-`docker run` that don't run as part of a swarm mode service. For more
-information refer to [Docker swarm mode overlay network security model](overlay-security-model.md).
+直接通过`docker run`创建出的容器不能使用swarm的overlay网络，因为直接通过`docker run`创建出的容器不是归属于swarm mode service的，这个具体的信息可以参考[Docker Swarm mode网络Overlay网络模型](overlay-security-model.md) 以及 [挂载一个Swarm mode Service到Overlay网络](../../swarm/networking.md).
 
-See also [Attach services to an overlay network](../../swarm/networking.md).
+### 通过外部KV存储配置的overlay网络
+如果你不是通过swarm mode方式使用的Docker Engine，`overlay`网络需要一个可用的key-value存储的服务。目前Docker的`libkv`支持Consul，Etcd，和ZooKepper(分布式存储)，在创建网络之前，你必须安装以及配置你所选的key-value存储服务。然后你需要创建网络的Docker机器以及存储服务的机器必须能够互相通信。
 
-### An overlay network with an external key-value store
-
-If you are not using Docker Engine in swarm mode, the `overlay` network requires
-a valid key-value store service. Supported key-value stores include Consul,
-Etcd, and ZooKeeper (Distributed store). Before creating a network on this
-version of the Engine, you must install and configure your chosen key-value
-store service. The Docker hosts that you intend to network and the service must
-be able to communicate.
-
->**Note:** Docker Engine running in swarm mode is not compatible with networking
-with an external key-value store.
+>**Note:** 通过swarm mode方式运行的Docker Engine和通过外部KV存储的Docker Engine不兼容
 
 ![Key-value store](images/key_value.png)
 
-Each host in the network must run a Docker Engine instance. The easiest way to
-provision the hosts is with Docker Machine.
+网络中的每个宿主机必须运行有Docker engine实例，最简单的创建运行Docker engine实例的方法是使用Docker Machine。
 
 ![Engine on each host](images/engine_on_net.png)
 
-You should open the following ports between each of your hosts.
+你在主机之间需要打开下面这些端口。
 
-| Protocol | Port | Description           |
+| 协议 | 端口 | 描述           |
 |----------|------|-----------------------|
 | udp      | 4789 | Data plane (VXLAN)    |
 | tcp/udp  | 7946 | Control plane         |
 
-Your key-value store service may require additional ports.
-Check your vendor's documentation and open any required ports.
+你的Key-value存储服务可能需要额外的一些端口，可以检查服务提供者的文档然后打开需要的端口。
 
-If you are planning on creating an overlay network with encryption (`--opt encrypted`),
-you will also need to ensure protocol 50 (ESP) is open.
+如果你打算创建加密的overlay网络(`--opt encrypted`)，你还需要保证50(ESP)端口是打开的。
 
-Once you have several machines provisioned, you can use Docker Swarm to quickly
-form them into a swarm which includes a discovery service as well.
+一旦你有很多的机器创建出来，你可以使用包含发现服务的Docker Swarm快速的创建出一个集群。
 
-To create an overlay network, you configure options on  the `daemon` on each
-Docker Engine for use with `overlay` network. There are three options to set:
+为了创建overlay网络，你需要为每台机器上的Docker Engine的`daemon`配置`overlay`网络所需的选项。下面就是需要设置的三个选项。
 
 <table>
     <thead>
     <tr>
-        <th>Option</th>
-        <th>Description</th>
+        <th>参数</th>
+        <th>描述</th>
     </tr>
     </thead>
     <tbody>
@@ -518,76 +452,50 @@ Docker Engine for use with `overlay` network. There are three options to set:
     </tbody>
 </table>
 
-Create an `overlay` network on one of the machines in the swarm.
+在Swarm集群中的一个节点上创建`overlay`网络
 
     $ docker network create --driver overlay my-multi-host-network
 
-This results in a single network spanning multiple hosts. An `overlay` network
-provides complete isolation for the containers.
+这个的结果就是创建了一个跨越多个节点的网络。一个`overlay`网络为容器提供了完全的网络隔离。
 
 ![An overlay network](images/overlay_network.png)
 
-Then, on each host, launch containers making sure to specify the network name.
+然后在每台主机上，通过指定网络名启动容器。  
 
     $ docker run -itd --network=my-multi-host-network busybox
 
-Once connected, each container has access to all the containers in the network
-regardless of which Docker host the container was launched on.
+连接上之后，每个容器便可以可以互相访问这个网络中的其他容器，不管另外的容器是在那一台主机上。
 
 ![Published port](images/overlay-network-final.png)
 
-If you would like to try this for yourself, see the [Getting started for
-overlay](get-started-overlay.md).
+如果你想自己尝试下这个流程的话，可以参考[overlay网络入门](get-started-overlay.md).
 
-### Custom network plugin
+### 自定义网络插件（Custom network plugin）
 
-If you like, you can write your own network driver plugin. A network
-driver plugin makes use of Docker's plugin infrastructure. In this
-infrastructure, a plugin is a process running on the same Docker host as the
-Docker `daemon`.
+你可以编写自己的网络驱动，驱动是和Docker `daemon`运行在同一台主机上一个进程，并且由Docker `plugin`系统调用和使用。
 
-Network plugins follow the same restrictions and installation rules as other
-plugins. All plugins make use of the plugin API. They have a lifecycle that
-encompasses installation, starting, stopping and activation.
+网络插件和其他的Docker插件一样受到一些限制和安装规则。所有的插件使用Plugin API，有自己的生命周期，包含：安装，启动，停止，激活。
 
-Once you have created and installed a custom network driver, you use it like the
-built-in network drivers. For example:
+当你创建并安装了自定义的网络驱动是，你可以像内置的网络驱动一样使用它，例如：
 
     $ docker network create --driver weave mynet
 
-You can inspect it, add containers to and from it, and so forth. Of course,
-different plugins may make use of different technologies or frameworks. Custom
-networks can include features not present in Docker's default networks. For more
-information on writing plugins, see [Extending Docker](../../extend/legacy_plugins.md) and
-[Writing a network driver plugin](../../extend/plugins_network.md).
+你可以在这个网络上做查看(inspect)，添加删除容器等操作。当然，不同的驱动使用不同的技术和框架，所以自定义网络也会包含很多Docker默认网络没有的特性。如果需要了解更多关于编写插件的内容，可以参考[扩展Docker](../../extend/legacy_plugins.md) 和[编写自己的网络插件](../../extend/plugins_network.md).
 
-### Docker embedded DNS server
+### Docker内置DNS服务器(embedded DNS server)
 
-Docker daemon runs an embedded DNS server to provide automatic service discovery
-for containers connected to user defined networks. Name resolution requests from
-the containers are handled first by the embedded DNS server. If the embedded DNS
-server is unable to resolve the request it will be forwarded to any external DNS
-servers configured for the container. To facilitate this when the container is
-created, only the embedded DNS server reachable at `127.0.0.11` will be listed
-in the container's `resolv.conf` file. More information on embedded DNS server on
-user-defined networks can be found in the [embedded DNS server in user-defined networks](configure-dns.md)
+Docker damon 会为每个连接到自定义网络的容器运行一个内置的DNS服务提供自动的服务发现。域名解析的请求会首先被内置的DNS服务器拦截，如果内置的DNS服务器不能够解析这个请求，它才会转发到外部的容器配置的DNS服务器。以便于这个机制，容器的`resolv.conf`文件会将DNS服务器配置为`127.0.0.11`，既内置DNS服务器监听的地址。更多关于在自定义网络中的内置DNS服务器可以参考 [自定义网络中的内置DNS服务器](configure-dns.md)
 
 ## Links
 
-Before the Docker network feature, you could use the Docker link feature to
-allow containers to discover each other.  With the introduction of Docker networks,
-containers can be discovered by its name automatically. But you can still create
-links but they behave differently when used in the default `docker0` bridge network
-compared to user-defined networks. For more information, please refer to
-[Legacy Links](default_network/dockerlinks.md) for link feature in default `bridge` network
-and the [linking containers in user-defined networks](work-with-networks.md#linking-containers-in-user-defined-networks) for links
-functionality in user-defined networks.
+在Docker有这些网络特性之前，你需要使用Docker link的功能让容器间可以互相发现。有了Docker网络特性之后，容器可以通过容器名自动的互相发现。不过你可以继续使用link在自定义网络中，不过这个link的行为会和默认的`docker0` bridge网络上的行为不同。关于更多的信息和对比，可以参考：默认的`docker0`bridge上的[Legacy Links](default_network/dockerlinks.md) 行为
+和 [自定义网络的link](work-with-networks.md#linking-containers-in-user-defined-networks)自定义网络中的行为.
 
-## Related information
+## 相关链接
 
-- [Work with network commands](work-with-networks.md)
-- [Get started with multi-host networking](get-started-overlay.md)
-- [Managing Data in Containers](../../tutorials/dockervolumes.md)
-- [Docker Machine overview](/machine)
-- [Docker Swarm overview](/swarm)
-- [Investigate the LibNetwork project](https://github.com/docker/libnetwork)
+- [网络命令](work-with-networks.md)
+- [跨主机网络入门](get-started-overlay.md)
+- [管理容器的持久化数据](../../tutorials/dockervolumes.md)
+- [Docker Machine一览](/machine)
+- [Docker Swarm一览](/swarm)
+- [研究libnetwork项目](https://github.com/docker/libnetwork)

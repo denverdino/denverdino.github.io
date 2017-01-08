@@ -6,28 +6,25 @@ redirect_from:
 title: Use Chef
 ---
 
-> **Note**:
-> Please note this is a community contributed installation path.
+> **注意**:
+> 这是由社区贡献的
 
-## Requirements
+## 前提条件
 
-To use this guide you'll need a working installation of
-[Chef](https://www.chef.io/). This cookbook supports a variety of
-operating systems.
+请确保您已经安装了[Chef](https://www.chef.io/). 这个cookbook支持多种操作系统。
 
-## Installation
+## 安装
 
-The cookbook is available on the [Chef Supermarket](https://supermarket.chef.io/cookbooks/docker) and can be
-installed using your favorite cookbook dependency manager.
+可以在[Chef Supermarket](https://supermarket.chef.io/cookbooks/docker) 搜索到docker cookbook，并且通过你喜欢或者擅长的cookbook依赖工具下载。
 
-The source can be found on
-[GitHub](https://github.com/someara/chef-docker).
+源代码可以在
+[GitHub](https://github.com/someara/chef-docker)找到.
 
-Usage
+使用方法
 -----
-- Add ```depends 'docker', '~> 2.0'``` to your cookbook's metadata.rb
-- Use resources shipped in cookbook in a recipe, the same way you'd
-  use core Chef resources (file, template, directory, package, etc).
+- 在您cookbook的metadata.rb文件里添加```depends 'docker', '~> 2.0'```代码
+- 像使用其他Chef模块(file, template, directory, package等等)一样使用docker cookbook里的模块
+
 
 ```ruby
 docker_service 'default' do
@@ -45,18 +42,17 @@ docker_container 'an echo server' do
 end
 ```
 
-## Getting Started
-Here's a quick example of pulling the latest image and running a
-container with exposed ports.
+## 入门
+以下的例子是如何用Chef下载最新版本的`nginx`容器镜像并且运行容器。
 
 ```ruby
-# Pull latest image
+# 下载最新的容器镜像
 docker_image 'nginx' do
   tag 'latest'
   action :pull
 end
 
-# Run container exposing ports
+# 暴露`80`端口，并运行容器
 docker_container 'my_nginx' do
   repo 'nginx'
   tag 'latest'

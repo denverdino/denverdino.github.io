@@ -4,49 +4,45 @@ keywords: NATS, nats.io, messaging, docker, logging, driver
 title: NATS logging driver
 ---
 
-Docker logging driver for sending container the logs as events published to NATS in JSON format.
+Docker日志驱动程序，用于将日志作为以JSON格式发布到NATS的方式。
 
-## Usage
+## 使用
 
-You can configure the default logging driver by passing the `--log-driver`
-option to the Docker daemon:
+您可以通过传递`--log-driver`来配置默认日志驱动程序选项到Docker守护进程：
 
 ```bash
 $ dockerd --log-driver=nats
 ```
 
-You can set the logging driver for a specific container by using the
-`--log-driver` option to `docker run`:
+您可以通过使用为特定容器设置日志驱动程序`--log-driver`选项`docker run`：
 
 ```bash
 $ docker run --log-driver=nats ...
 ```
 
-This log driver does not implement a reader so it is incompatible with `docker logs`.
+这个日志驱动程序没有实现一个读取器，所以它与`docker logs`不兼容。
 
-## nats options
+## nats 选项
 
-You can use the `--log-opt NAME=VALUE` flag to customize the logging driver
-for NATS:
+您可以使用`--log-opt NAME = VALUE`标志来自定义日志记录驱动程序为NATS：
 
-| Option                      | Required | Description                                                                                                                                 |
+| 选项                      | 必须 | 描述                                                                                                                                 |
 |-----------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `labels`                    | optional | Comma-separated list of keys of labels, which should be included in message, if these labels are specified for container.                   |
-| `env`                       | optional | Comma-separated list of keys of environment variables, which should be included in message, if these variables are specified for container. |
-| `tag`                       | optional | Specify tag for message.  Refer to the [log tag option documentation](log_tags.md) for customizing the log tag format.                      |
-| `nats-servers`              | optional | NATS cluster nodes separated by commas. e.g. `nats://127.0.0.1:4222,nats://127.0.0.1:4223`. Defaults to `localhost:4222`                    |
-| `nats-max-reconnect`        | optional | Maximum attempts that the driver will try to connect before giving up. Defaults to infinite (`-1`)                                          |
-| `nats-subject`              | optional | Specific subject to which logs will be published. Defaults to using `tag` if not specified                                                  |
-| `nats-user`                 | optional | Specify user in case of authentication required                                                                                             |
-| `nats-pass`                 | optional | Specify password in case of authentication required                                                                                         |
-| `nats-token`                 | optional | Specify token in case of authentication required                                                                                           |
-| `nats-tls-ca-cert`          | optional | Specified the absolute path to the trust certificates signed by the CA                                                                      |
-| `nats-tls-cert`             | optional | Specifies the absolute path to the TLS certificate file                                                                                     |
-| `nats-tls-key`              | optional | Specifies the absolute path to the TLS key file                                                                                             |
-| `nats-tls-skip-verify`      | optional | Specifies whether to skip verification by setting it to `true`                                                                              |
+| `labels`                    | 可选 | 以逗号分隔的标签键列表，如果为容器指定这些标签，则应包含在消息中。                  |
+| `env`                       | 可选 | 以逗号分隔的环境变量的键列表，如果为容器指定这些变量，则应包含在消息中。|
+| `tag`                       | 可选 | 指定消息的标记。 有关定制日志标记格式的信息，请参阅[log tag选项文档](log_tags.md)。                      |
+| `nats-servers`              | 可选 |NATS集群节点之间用逗号分隔。 例如 `nats：//127.0.0.1：4222，nats：//127.0.0.1：4223`。 默认为`localhost：4222`      |            
+| `nats-max-reconnect`        | 可选 | 在放弃之前，驱动程序尝试连接的最大尝试次数。 默认为无限（`-1`）                                       |
+| `nats-subject`              | 可选 | 将发布日志的具体主题。 默认为使用`tag`（如果未指定）                                                 |
+| `nats-user`                 | 可选 |在需要验证的情况下指定用户                                                            |
+| `nats-pass`                 | 可选 | 在需要验证的情况下指定密码                                                                       |
+| `nats-token`                 | 可选 | 在需要验证的情况下指定令牌                                                          |
+| `nats-tls-ca-cert`          | 可选 |指定由CA签名的信任证书的绝对路径                                                            |
+| `nats-tls-cert`             | 可选 | 指定TLS证书文件的绝对路径                                                              |
+| `nats-tls-key`              | 可选 |指定TLS密钥文件的绝对路径                                                             |
+| `nats-tls-skip-verify`      | 可选 | 指定是否通过将验证设置为`true`来跳过验证                                                           |
 
-Below is an example usage of the driver for sending logs to a node in a
-NATS cluster to the `docker.logs` subject:
+下面是驱动程序用于将日志发送到节点的示例用法， NATS集群到`docker.logs`主题：
 
 ```bash
 $ docker run --log-driver=nats \
@@ -55,8 +51,8 @@ $ docker run --log-driver=nats \
              your/application
 ```
 
-By default, the tag is used as the subject for NATS, so it has to be a valid
-subject in case subject it is left unspecified:
+
+默认情况下，标记用作NATS的主题，因此它必须是有效的主题，如果主题未指定：
 
 ```bash
 {% raw %}
@@ -66,8 +62,7 @@ $ docker run --log-driver nats \
 {% endraw %}
 ```
 
-Secure connection to NATS using TLS can be customized by setting `tls://` scheme
-in the URI and absolute paths to the certs and key files:
+使用TLS的安全连接到NATS可以通过设置`tls：//'方案来定制在URI和绝对路径中的证书和密钥文件：
 
 ```bash
 docker run --log-driver nats \
@@ -78,7 +73,7 @@ docker run --log-driver nats \
            your/application
 ```
 
-Skip verify is enabled by default, in order to deactivate we can specify `nats-tls-skip-verify`:
+默认情况下启用跳过验证，为了停用，我们可以指定`nats-tls-skip-verify`：
 
 ```bash
   docker run --log-driver nats \

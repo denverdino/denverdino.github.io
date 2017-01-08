@@ -1,43 +1,39 @@
 ---
 description: Sharing data between 2 couchdb databases
 keywords: docker, example, package installation, networking, couchdb,  data volumes
-title: Dockerize a CouchDB service
+title: 容器内部署一个 CouchDB 服务
 ---
 
 > **Note**:
-> - **If you don't like sudo** then see [*Giving non-root
->   access*](../installation/binaries.md#giving-non-root-access)
+> - **如果你不喜欢sudo** 请看 [*使用非root
+>   权限*](../installation/binaries.md#giving-non-root-access)
 
-Here's an example of using data volumes to share the same data between
-two CouchDB containers. This could be used for hot upgrades, testing
-different versions of CouchDB on the same data, etc.
+我们会看到在两个CouchDB容器中使用数据卷同一份数据的例子，可以用来测试相同数据不同版本CouchDB的热升级。
 
-## Create first database
+## 创建第一个数据库
 
-Note that we're marking `/var/lib/couchdb` as a data volume.
+注意，我们创建`/var/lib/couchdb`目录作为数据据。
 
     $ COUCH1=$(docker run -d -p 5984 -v /var/lib/couchdb shykes/couchdb:2013-05-03)
 
-## Add data to the first database
+## 在第一个数据库中加入数据
 
-We're assuming your Docker host is reachable at `localhost`. If not,
-replace `localhost` with the public IP of your Docker host.
+我们假设你的docker主机可以通过`localhost`访问，如果不行，将`localhost`替换为你的docker主机的公网IP。
 
     $ HOST=localhost
     $ URL="http://$HOST:$(docker port $COUCH1 5984 | grep -o '[1-9][0-9]*$')/_utils/"
     $ echo "Navigate to $URL in your browser, and use the couch interface to add data"
 
-## Create second database
+## 创建第二个数据库
 
-This time, we're requesting shared access to `$COUCH1`'s volumes.
+这次，我们会请求`$COUCH1`数据卷的共享权限
 
     $ COUCH2=$(docker run -d -p 5984 --volumes-from $COUCH1 shykes/couchdb:2013-05-03)
 
-## Browse data on the second database
+## 在第二个数据库中浏览数据
 
     $ HOST=localhost
     $ URL="http://$HOST:$(docker port $COUCH2 5984 | grep -o '[1-9][0-9]*$')/_utils/"
     $ echo "Navigate to $URL in your browser. You should see the same data as in the first database"'!'
 
-Congratulations, you are now running two Couchdb containers, completely
-isolated from each other *except* for their data.
+恭喜，现在你已经启动了两个Couchdb容器，除了数据外，其他部分完全相互独立。

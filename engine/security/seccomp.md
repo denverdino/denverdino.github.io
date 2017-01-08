@@ -4,171 +4,119 @@ keywords: seccomp, security, docker, documentation
 title: Seccomp security profiles for Docker
 ---
 
-Secure computing mode (Seccomp) is a Linux kernel feature. You can use it to
-restrict the actions available within the container. The `seccomp()` system
-call operates on the seccomp state of the calling process. You can use this
-feature to restrict your application's access.
+安全计算模型(Seccomp)是Linux内核的一个特性。你可以用它限制容器内可以执行操作。系统调用`seccomp()`能操作调用进程的seccomp状态，你可以用这个特性限制你应用程序的行为。
 
-This feature is available only if Docker has been built with seccomp and the
-kernel is configured with `CONFIG_SECCOMP` enabled. To check if your kernel
-supports seccomp:
+
+仅当Docker构建的时候启用了seccomp，并且内核配置里开启了`CONFIG_SECCOMP`，要检查内核是否支持seccomp：
 
 ```bash
 $ cat /boot/config-`uname -r` | grep CONFIG_SECCOMP=
 CONFIG_SECCOMP=y
 ```
 
-> **Note**: seccomp profiles require seccomp 2.2.1 and are only
-> available starting with Debian 9 "Stretch", Ubuntu 16.04 "Xenial",
-> Fedora 22, CentOS 7 and Oracle Linux 7. To use this feature on Ubuntu 14.04, Debian Wheezy, or
-> Debian Jessie, you must download the [latest static Docker Linux binary](../installation/binaries.md).
-> This feature is currently *not* available on other distributions.
+> **注意**: seccomp profiles需要seccomp 2.2.1 而且操作系统要求Debian 9 "Stretch", Ubuntu 15.10 "Wily", Fedora 22, CentOS 7, Oracle Linux 7. 要在Ubuntu 14.04, Debian Wheezy或者Debian Jessie上使用此特性，你必须下载[最新版本静态编译的Linux Docker](../installation/binaries.md)。其他发行版还**不**支持这个特性。
 
-## Passing a profile for a container
+## 传给容器一个profile
 
-The default seccomp profile provides a sane default for running containers with
-seccomp and disables around 44 system calls out of 300+. It is moderately protective while providing wide application
-compatibility. The default Docker profile (found [here](https://github.com/docker/docker/blob/master/profiles/seccomp/default.json)) has a JSON layout in the following form:
+默认的seccomp profile广泛适用于多数容器，禁用了大约300多个系统调用中的44个，对大多数应用都够用了。默认的Docker profile具有如下形式的JSON结构：
 
 ```json
 {
 	"defaultAction": "SCMP_ACT_ERRNO",
-	"archMap": [
-		{
-			"architecture": "SCMP_ARCH_X86_64",
-			"subArchitectures": [
-				"SCMP_ARCH_X86",
-				"SCMP_ARCH_X32"
-			]
-		},
-		...
+	"architectures": [
+		"SCMP_ARCH_X86_64",
+		"SCMP_ARCH_X86",
+		"SCMP_ARCH_X32"
 	],
 	"syscalls": [
 		{
-			"names": [
-				"accept",
-				"accept4",
-				"access",
-				"alarm",
-				"alarm",
-				"bind",
-				"brk",
-				...
-				"waitid",
-				"waitpid",
-				"write",
-				"writev"
-			],
+			"name": "accept",
 			"action": "SCMP_ACT_ALLOW",
-			"args": [],
-			"comment": "",
-			"includes": {},
-			"excludes": {}
+			"args": []
 		},
 		{
-			"names": [
-				"clone"
-			],
+			"name": "accept4",
 			"action": "SCMP_ACT_ALLOW",
-			"args": [
-				{
-					"index": 1,
-					"value": 2080505856,
-					"valueTwo": 0,
-					"op": "SCMP_CMP_MASKED_EQ"
-				}
-			],
-			"comment": "s390 parameter ordering for clone is different",
-			"includes": {
-				"arches": [
-					"s390",
-					"s390x"
-				]
-			},
-			"excludes": {
-				"caps": [
-					"CAP_SYS_ADMIN"
-				]
-			}
+			"args": []
 		},
 		...
+	]
 }
 ```
 
-When you run a container, it uses the default profile unless you override
-it with the `security-opt` option. For example, the following explicitly
-specifies the default policy:
+如果你在启动容器时没有指定`security-opt`选项，就会使用默认的profile。下面的例子明确指定使用自定义的profile：
 
 ```
 $ docker run --rm -it --security-opt seccomp=/path/to/seccomp/profile.json hello-world
 ```
 
-### Significant syscalls blocked by the default profile
+### 默认profile屏蔽的重要系统调用
 
-Docker's default seccomp profile is a whitelist which specifies the calls that
-are allowed. The table below lists the significant (but not all) syscalls that
-are effectively blocked because they are not on the whitelist. The table includes
-the reason each syscall is blocked rather than white-listed.
+Docker默认的seccomp profile提供了一个允许的系统调用的白名单。下面的表格列出了不包含在白名单里的重要系统调用（不是全部）。表格里包含每个系统调用被禁止的原因。
+
 
 | Syscall             | Description                                                                                                                           |
 |---------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| `acct`              | Accounting syscall which could let containers disable their own resource limits or process accounting. Also gated by `CAP_SYS_PACCT`. |
-| `add_key`           | Prevent containers from using the kernel keyring, which is not namespaced.                                   |
-| `adjtimex`          | Similar to `clock_settime` and `settimeofday`, time/date is not namespaced.  Also gated by `CAP_SYS_TIME`    |
-| `bpf`               | Deny loading potentially persistent bpf programs into kernel, already gated by `CAP_SYS_ADMIN`.              |
-| `clock_adjtime`     | Time/date is not namespaced. Also gated by `CAP_SYS_TIME`.                                                   |
-| `clock_settime`     | Time/date is not namespaced. Also gated by `CAP_SYS_TIME`.                                                   |
-| `clone`             | Deny cloning new namespaces. Also gated by `CAP_SYS_ADMIN` for CLONE_* flags, except `CLONE_USERNS`.         |
-| `create_module`     | Deny manipulation and functions on kernel modules. Obsolete. Also gated by `CAP_SYS_MODULE`                  |
-| `delete_module`     | Deny manipulation and functions on kernel modules. Also gated by `CAP_SYS_MODULE`.                           |
-| `finit_module`      | Deny manipulation and functions on kernel modules. Also gated by `CAP_SYS_MODULE`.                           |
-| `get_kernel_syms`   | Deny retrieval of exported kernel and module symbols. Obsolete.                                              |
-| `get_mempolicy`     | Syscall that modifies kernel memory and NUMA settings. Already gated by `CAP_SYS_NICE`.                      |
-| `init_module`       | Deny manipulation and functions on kernel modules. Also gated by `CAP_SYS_MODULE`.                           |
-| `ioperm`            | Prevent containers from modifying kernel I/O privilege levels. Already gated by `CAP_SYS_RAWIO`.             |
-| `iopl`              | Prevent containers from modifying kernel I/O privilege levels. Already gated by `CAP_SYS_RAWIO`.             |
-| `kcmp`              | Restrict process inspection capabilities, already blocked by dropping `CAP_PTRACE`.                          |
-| `kexec_file_load`   | Sister syscall of `kexec_load` that does the same thing, slightly different arguments. Also gated by `CAP_SYS_BOOT`. |
-| `kexec_load`        | Deny loading a new kernel for later execution. Also gated by `CAP_SYS_BOOT`.                                 |
-| `keyctl`            | Prevent containers from using the kernel keyring, which is not namespaced.                                   |
-| `lookup_dcookie`    | Tracing/profiling syscall, which could leak a lot of information on the host. Also gated by `CAP_SYS_ADMIN`. |
-| `mbind`             | Syscall that modifies kernel memory and NUMA settings. Already gated by `CAP_SYS_NICE`.                      |
-| `mount`             | Deny mounting, already gated by `CAP_SYS_ADMIN`.                                                             |
-| `move_pages`        | Syscall that modifies kernel memory and NUMA settings.                                                       |
-| `name_to_handle_at` | Sister syscall to `open_by_handle_at`. Already gated by `CAP_SYS_NICE`.                                      |
-| `nfsservctl`        | Deny interaction with the kernel nfs daemon. Obsolete since Linux 3.1.                                       |
-| `open_by_handle_at` | Cause of an old container breakout. Also gated by `CAP_DAC_READ_SEARCH`.                                     |
-| `perf_event_open`   | Tracing/profiling syscall, which could leak a lot of information on the host.                                |
-| `personality`       | Prevent container from enabling BSD emulation. Not inherently dangerous, but poorly tested, potential for a lot of kernel vulns. |
-| `pivot_root`        | Deny `pivot_root`, should be privileged operation.                                                           |
-| `process_vm_readv`  | Restrict process inspection capabilities, already blocked by dropping `CAP_PTRACE`.                          |
-| `process_vm_writev` | Restrict process inspection capabilities, already blocked by dropping `CAP_PTRACE`.                          |
-| `ptrace`            | Tracing/profiling syscall, which could leak a lot of information on the host. Already blocked by dropping `CAP_PTRACE`. |
-| `query_module`      | Deny manipulation and functions on kernel modules. Obsolete.                                                  |
-| `quotactl`          | Quota syscall which could let containers disable their own resource limits or process accounting. Also gated by `CAP_SYS_ADMIN`. |
-| `reboot`            | Don't let containers reboot the host. Also gated by `CAP_SYS_BOOT`.                                           |
-| `request_key`       | Prevent containers from using the kernel keyring, which is not namespaced.                                    |
-| `set_mempolicy`     | Syscall that modifies kernel memory and NUMA settings. Already gated by `CAP_SYS_NICE`.                       |
-| `setns`             | Deny associating a thread with a namespace. Also gated by `CAP_SYS_ADMIN`.                                    |
-| `settimeofday`      | Time/date is not namespaced. Also gated by `CAP_SYS_TIME`.                                                    |
-| `stime`             | Time/date is not namespaced. Also gated by `CAP_SYS_TIME`.                                                    |
-| `swapon`            | Deny start/stop swapping to file/device. Also gated by `CAP_SYS_ADMIN`.                                       |
-| `swapoff`           | Deny start/stop swapping to file/device. Also gated by `CAP_SYS_ADMIN`.                                       |
-| `sysfs`             | Obsolete syscall.                                                                                             |
-| `_sysctl`           | Obsolete, replaced by /proc/sys.                                                                              |
-| `umount`            | Should be a privileged operation. Also gated by `CAP_SYS_ADMIN`.                                              |
-| `umount2`           | Should be a privileged operation. Also gated by `CAP_SYS_ADMIN`.                                              |
-| `unshare`           | Deny cloning new namespaces for processes. Also gated by `CAP_SYS_ADMIN`, with the exception of `unshare --user`. |
-| `uselib`            | Older syscall related to shared libraries, unused for a long time.                                            |
-| `userfaultfd`       | Userspace page fault handling, largely needed for process migration.                                          |
-| `ustat`             | Obsolete syscall.                                                                                             |
-| `vm86`              | In kernel x86 real mode virtual machine. Also gated by `CAP_SYS_ADMIN`.                                       |
-| `vm86old`           | In kernel x86 real mode virtual machine. Also gated by `CAP_SYS_ADMIN`.                                       |
+| `acct`              | 能让容器禁用自身的资源限制和进程计数。CAP_SYS_PACCT也会控制这个功能 |
+| `add_key`           | 阻止容器使用内核keyring。后者是内核唯一的，没有namespace化                                   |
+| `adjtimex`          | 类似`clock_settime` and `settimeofday`, 时间/日期namespace化                                  |
+| `bpf`               | 禁止加载潜在持久化bpf程序到内核里，同时要禁止`CAP_SYS_ADMIN`.              |
+| `clock_adjtime`     | 时间/日期没有按namespace隔离.                                                                                 |
+| `clock_settime`     | 时间/日期没有按namespace隔离.                                                                                 |
+| `clone`             | 禁止克隆一个新的namespace。 `CAP_SYS_ADMIN`也会控制这个功能        |
+| `create_module`     | 禁止操作内核模块                                                           |
+| `delete_module`     | 禁止操作内核模块。 同样由`CAP_SYS_MODULE`控制                           |
+| `finit_module`      | 禁止操作内核模块。 同样由`CAP_SYS_MODULE`控制               |
+| `get_kernel_syms`   | 禁止获取内核和模块暴露出的符号                                                        |
+| `get_mempolicy`     | 禁止修改内核内存好NUMA设置。`CAP_SYS_NIC`亦然                      |
+| `init_module`       | 禁止操作内核模块。 同样由`CAP_SYS_MODULE`控制                          |
+| `ioperm`            | 阻止容器修改内核I/O 权限等级。同样由 `CAP_SYS_RAWIO`控制           |
+| `iopl`              | 阻止容器修改内核I/O 权限等级。同样由 `CAP_SYS_RAWIO`控制           |
+| `kcmp`              | 限制进程自省capabilities, 也可以通过DROP `CAP_PTRACE`限制。                         |
+| `kexec_file_load`   | 类似`kexec_load`，参数不一样                   |
+| `kexec_load`        | 禁止加载新内核                                                               |
+| `keyctl`            | 阻止容器使用内核keyring。后者是内核唯一的，没有namespace化   |
+| `lookup_dcookie`    | Tracing/profiling系统调用, 这些操作可能导致泄露大量的宿主机信息。
+|
+| `mbind`             | 阻止能修改内核内存和NUMA设置的系统调用，也可以通过drop `CAP_SYS_NICE`                     |
+| `mount`             | 禁止容器挂载存储, 同样有`CAP_SYS_ADMIN`控制                                                            |
+| `move_pages`        | 阻止能修改内核内存和NUMA设置的系统调用                                                       |
+| `name_to_handle_at` | 类似`open_by_handle_at`                                   |
+| `nfsservctl`        | 阻止和内核里的nfs后台进程交互。                                                                |
+| `open_by_handle_at` | 导致内核逃逸. 也可以通过`CAP_DAC_READ_SEARCH`.                                     |
+| `perf_event_open`   | Tracing/profiling系统调用, 这些操作可能导致泄露大量的宿主机信息。                                |
+| `personality`       | 阻止容器启用BSD仿真，不是特别危险，但是没严格测试过，可能存在内核缺陷 |
+| `pivot_root`        | 禁止`pivot_root`                                                      |
+| `process_vm_readv`  | 限制进程内省的能力, 也可以通过Drop `CAP_PTRACE`                      |
+| `process_vm_writev` | 限制进程内省的能力, 也可以通过Drop `CAP_PTRACE`                       |
+| `ptrace`            | Tracing/profiling系统调用, 这些操作可能导致泄露大量的宿主机信息。 也可以通过Drop `CAP_PTRACE`. |
+| `query_module`      | 禁止操作内核模块                                                            |
+| `quotactl`          | 限制配额相关的系统调用（允许容器禁用自身的资源限制和进程计数），也可以通过Drop `CAP_SYS_ADMIN`. |
+| `reboot`            | 禁止容器重启机器。也可以通过Drop `CAP_SYS_BOOT`.                                           |
+| `request_key`       | 阻止容器使用内核keyring。后者是内核唯一的，没有namespace化                                    |
+| `set_mempolicy`     | 阻止能修改内核内存和NUMA设置的系统调用，也可以通过drop `CAP_SYS_NICE`                   |
+| `setns`             | 阻止给线程关联namespace，也可以通过Drop `CAP_SYS_ADMIN`.                                    |
+| `settimeofday`      | 时间/日期没有按namespace隔离                                               |
+| `stime`             | 时间/日期没有按namespace隔离                                              |
+| `swapon`            | 禁止启动或者停止文件以及设备的swap配置                                      |
+| `swapoff`           |  禁止启动或者停止文件以及设备的swap配置                            |
+| `sysfs`             | 废弃                                                                                             |
+| `_sysctl`           | 废弃，用/proc/sys替换
+|
+| `umount`            | 特权操作，也可以通过Drop `CAP_SYS_ADMIN`.                                              |
+| `umount2`           | 特权操作                                                                             |
+| `unshare`           | 禁止为进程创建新的namespace
+|
+| `uselib`            | 共享库相关的系统调用，很久不用了                                  |
+| `userfaultfd`       | 用户态页错误处理，进程迁移中广泛适用                                          |
+| `ustat`             |废弃                                                                                             |
+| `vm86`              | 内核x86实模式虚拟机，也可以通过Drop `CAP_SYS_ADMIN`.                                       |
+| `vm86old`           | 内核x86实模式虚拟机，也可以通过Drop `CAP_SYS_ADMIN`
+   |
 
-## Run without the default seccomp profile
+## 不使用默认的seccomp profile启动容器
 
-You can pass `unconfined` to run a container without the default seccomp
-profile.
+要启动容器并且不适用默认的seccomp profile，你可以在启动容器的时候传入`unconfined`参数
 
 ```
 $ docker run --rm -it --security-opt seccomp=unconfined debian:jessie \

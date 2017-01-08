@@ -6,12 +6,11 @@ redirect_from:
 title: Control and configure Docker with systemd
 ---
 
-Many Linux distributions use systemd to start the Docker daemon. This document
-shows a few examples of how to customize Docker's settings.
+许多Linux发行版使用systemd启动Docker守护程序。 这个文档显示了一些如何自定义Docker设置的示例。
 
-## Starting the Docker daemon
+## 启动 Docker守护进程
 
-Once Docker is installed, you will need to start the Docker daemon.
+一旦安装了Docker，您将需要启动Docker守护进程。
 
 ```bash
 $ sudo systemctl start docker
@@ -19,7 +18,7 @@ $ sudo systemctl start docker
 $ sudo service docker start
 ```
 
-If you want Docker to start at boot, you should also:
+如果您希望Docker在开机时启动，您还应该：
 
 ```bash
 $ sudo systemctl enable docker
@@ -27,23 +26,18 @@ $ sudo systemctl enable docker
 $ sudo chkconfig docker on
 ```
 
-## Custom Docker daemon options
+## 自定义Docker守护进程选项
 
-There are a number of ways to configure the daemon flags and environment variables
-for your Docker daemon.
+有多种方法为你的Docker守护进程配置标志和环境变量。
 
-The recommended way is to use a systemd drop-in file (as described in the <a
-target="_blank"
-href="https://www.freedesktop.org/software/systemd/man/systemd.unit.html">systemd.unit</a>
-documentation). These are local files named `<something>.conf` in the
-`/etc/systemd/system/docker.service.d` directory. This could also be
-`/etc/systemd/system/docker.service`, which also works for overriding the
-defaults from `/lib/systemd/system/docker.service`.
+推荐的方法是使用systemd插件文件（如<a
+target =“_ blank”
+href =“https://www.freedesktop.org/software/systemd/man/systemd.unit.html”> systemd.unit </a>
+文档）。 这些是名为`<something>.conf`的本地文件在`/etc/systemd/system/docker.service.d`目录。 这也可以是
+`/etc/systemd/system/docker.service`，它也可以覆盖
+在`/lib/systemd/system/docker.service`。
 
-However, if you had previously used a package which had an `EnvironmentFile`
-(often pointing to `/etc/sysconfig/docker`) then for backwards compatibility,
-you drop a file with a `.conf` extension into the
-`/etc/systemd/system/docker.service.d` directory including the following:
+但是，如果你以前使用过一个“EnvironmentFile”的包，它通常指向`/etc/sysconfig/docker`），那么为了向后兼容，你把一个带有`.conf'` 扩展名的文件放入`/etc/systemd/systemdocker.service.d`， 目录包括以下内容：
 
 ```conf
 [Service]
@@ -58,7 +52,7 @@ ExecStart=/usr/bin/dockerd $OPTIONS \
           $INSECURE_REGISTRY
 ```
 
-To check if the `docker.service` uses an `EnvironmentFile`:
+要检查`docker.service`是否启用可以使用`EnvironmentFile`：
 
 ```bash
 $ systemctl show docker | grep EnvironmentFile
@@ -66,7 +60,7 @@ $ systemctl show docker | grep EnvironmentFile
 EnvironmentFile=-/etc/sysconfig/docker (ignore_errors=yes)
 ```
 
-Alternatively, find out where the service file is located:
+或者，找出服务文件所在的位置：
 
 ```bash
 $ systemctl show --property=FragmentPath docker
@@ -78,18 +72,13 @@ $ grep EnvironmentFile /usr/lib/systemd/system/docker.service
 EnvironmentFile=-/etc/sysconfig/docker
 ```
 
-You can customize the Docker daemon options using override files as explained in
-the [HTTP Proxy example](systemd.md#http-proxy) below. The files located in
-`/usr/lib/systemd/system` or `/lib/systemd/system` contain the default options
-and should not be edited.
+您可以使用覆盖文件定制Docker守护进程选项，如使用下面的[HTTP代理示例](systemd.md＃http-proxy)。 文件位于`/usr/lib/systemd/system`或`/lib/systemd/system`包含默认选项并且不应该编辑。
 
-### Runtime directory and storage driver
+### 运行时目录和存储驱动程序
 
-You may want to control the disk space used for Docker images, containers
-and volumes by moving it to a separate partition.
+您可能想要控制用于Docker镜像，容器的磁盘空间和卷通过将其移动到单独的分区。
 
-In this example, we'll assume that your `docker.service` file looks something
-like:
+在这个例子中，我们假设你的`docker.service`文件看起来有些东西：
 
 ```conf
 [Unit]
@@ -122,9 +111,7 @@ KillMode=process
 WantedBy=multi-user.target
 ```
 
-This will allow us to add extra flags via a drop-in file (mentioned above) by
-placing a file containing the following in the `/etc/systemd/system/docker.service.d`
-directory:
+这将允许我们通过一个插入文件（如上所述）添加额外的标志.将包含以下内容的文件放在`/etc/systemd/ system/docker.service.d`中: 
 
 ```conf
 [Service]
@@ -132,11 +119,9 @@ ExecStart=
 ExecStart=/usr/bin/dockerd --graph="/mnt/docker-data" --storage-driver=overlay
 ```
 
-You can also set other environment variables in this file, for example, the
-`HTTP_PROXY` environment variables described below.
+您还可以在此文件中设置其他环境变量，例如，`HTTP_PROXY`环境变量描述如下。
 
-To modify the ExecStart configuration, specify an empty configuration followed
-by a new configuration as follows:
+要修改ExecStart配置，请指定空配置并且通过如下新配置：
 
 ```conf
 [Service]
@@ -144,62 +129,56 @@ ExecStart=
 ExecStart=/usr/bin/dockerd --bip=172.17.42.1/16
 ```
 
-If you fail to specify an empty configuration, Docker reports an error such as:
+如果无法指定空配置，Docker会报告错误，如：
 
 ```conf
 docker.service has more than one ExecStart= setting, which is only allowed for Type=oneshot services. Refusing.
 ```
 
-### HTTP proxy
+### HTTP 代理
 
-This example overrides the default `docker.service` file.
+此示例覆盖默认的“docker.service”文件
 
-If you are behind an HTTP proxy server, for example in corporate settings,
-you will need to add this configuration in the Docker systemd service file.
+如果您在HTTP代理服务器后面，例如在公司设置中，您将需要在Docker systemd服务文件中添加此配置。
 
-1.  Create a systemd drop-in directory for the docker service:
+1.  为docker服务创建一个systemd插件目录：
 
     ```bash
     $ mkdir /etc/systemd/system/docker.service.d
     ```
 
-2.  Create a file called `/etc/systemd/system/docker.service.d/http-proxy.conf`
-    that adds the `HTTP_PROXY` environment variable:
+2.  创建一个名为`/etc/systemd/system/docker.service.d/http-proxy.conf`的文件它添加了“HTTP_PROXY”环境变量：
 
     ```conf
     [Service]
     Environment="HTTP_PROXY=http://proxy.example.com:80/"
     ```
 
-3.  If you have internal Docker registries that you need to contact without
-    proxying you can specify them via the `NO_PROXY` environment variable:
+3.  如果你有内部Docker注册表，你需要联系没有代理可以通过`NO_PROXY`环境变量来指定它们：
 
     ```conf
     Environment="HTTP_PROXY=http://proxy.example.com:80/" "NO_PROXY=localhost,127.0.0.1,docker-registry.somecorporation.com"
     ```
 
-4.  Flush changes:
+4.  刷新改变:
 
     ```bash
     $ sudo systemctl daemon-reload
     ```
 
-5.  Verify that the configuration has been loaded:
+5.  验证配置是否已加载:
 
     ```bash
     $ systemctl show --property=Environment docker
     Environment=HTTP_PROXY=http://proxy.example.com:80/
     ```
-6.  Restart Docker:
+6.  重启 Docker:
 
     ```bash
     $ sudo systemctl restart docker
     ```
 
-## Manually creating the systemd unit files
+## 手动创建systemd单元文件
 
-When installing the binary without a package, you may want
-to integrate Docker with systemd. For this, simply install the two unit files
-(service and socket) from [the github
-repository](https://github.com/docker/docker/tree/master/contrib/init/systemd)
-to `/etc/systemd/system`.
+当没有二进制安装包，你可能想要将Docker与systemd集成。 为此，只需安装两个单元文件
+（服务和套接字）从[github存储库](https://github.com/docker/docker/tree/master/contrib/init/systemd)到`/etc/systemd/system`。

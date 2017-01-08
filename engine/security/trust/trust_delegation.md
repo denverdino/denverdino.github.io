@@ -4,21 +4,17 @@ keywords: trust, security, delegations, keys, repository
 title: Delegations for content trust
 ---
 
-Docker Engine supports the usage of the `targets/releases` delegation as the
-canonical source of a trusted image tag.
+Docker Engine 支持使用 `targets/releases` 代理作为一个信任的镜像tag的标准源。
 
-Using this delegation allows you to collaborate with other publishers without
-sharing your repository key (a combination of your targets and snapshot keys -
-please see "[Manage keys for content trust](trust_key_mng.md)" for more information).
-A collaborator can keep their own delegation key private.
+使用这个代理秘钥允许你和其他发布者合作，而不需要分享你的仓库秘钥（你的目标密码和快照秘钥的联合，
+请参见"[管理内容信任秘钥](trust_key_mng.md)" ).
+一个协作者可以保存他们自己的代理秘钥私有。
 
-The `targets/releases` delegation is currently an optional feature - in order
-to set up delegations, you must use the Notary CLI:
+`targets/releases` 代理目前是一个可选的特性 - 要使用代理，你必须使用Notary 命令行:
 
-1. [Download the client](https://github.com/docker/notary/releases) and ensure that it is
-available on your path
+1. [下载客户端](https://github.com/docker/notary/releases) 并确保在你的路径可用。
 
-2. Create a configuration file at `~/.notary/config.json` with the following content:
+2. 用以下内容创建配置文件 `~/.notary/config.json` :
 
 	```
 	{
@@ -29,25 +25,18 @@ available on your path
 	}
 	```
 
-	This tells Notary where the Docker Content Trust data is stored, and to use the
-	Notary server used for images in Docker Hub.
+	这个告诉Notary Docker内容安全数据存储在哪里, 并使用Docker Hub管理镜像使用的Notary server。
 
-For more detailed information about how to use Notary outside of the default
-Docker Content Trust use cases, please refer to the
-[the Notary CLI documentation](/notary/getting_started.md).
+更多详情信息关于如何使用Notary，超出了默认Doceker内容安全的用例场景，请参看
+[Notary 命令行文档](/notary/getting_started.md).
 
-Note that when publishing and listing delegation changes using the Notary client,
-your Docker Hub credentials are required.
+注意当发布和枚举代理使用Notary客户端时会有变化，Docker Hub的证书是需要的。
 
-## Generating delegation keys
+## 生成代理秘钥
 
-Your collaborator needs to generate a private key (either RSA or ECDSA)
-and give you the public key so that you can add it to the `targets/releases`
-delegation.
+你的协作者需要生产一个私钥（RSA或ECDSA），然后给你公钥，你可以把公钥加入到`targets/releases`代理。
 
-The easiest way to for them to generate these keys is with OpenSSL.
-Here is an example of how to generate a 2048-bit RSA portion key (all RSA keys
-must be at least 2048 bits):
+最简单的方式是通过OpenSSL为他们创建秘钥.这里是一个如何通过生成2048位RSA（所有的RSA秘钥都至少2048位）密码的示例。
 
 ```
 $ openssl genrsa -out delegation.key 2048
@@ -58,72 +47,50 @@ e is 65537 (0x10001)
 
 ```
 
-They should keep `delegation.key` private - this is what they will use to sign
-tags.
+他们需要保持 `delegation.key` 私有 - 这就是用来签名tag的。
 
-Then they need to generate an x509 certificate containing the public key, which is
-what they will give to you.  Here is the command to generate a CSR (certificate
-signing request):
+接下来他们需要生成一个包含公钥的x509证书，并把它给你。这里是生成CSR（证书签名请求）的命令：
 
 ```
 $ openssl req -new -sha256 -key delegation.key -out delegation.csr
 ```
 
-Then they can send it to whichever CA you trust to sign certificates, or they
-can self-sign the certificate (in this example, creating a certificate that is
-valid for 1 year):
+接下来他们可以把它发送给你用来签名证书的CA，或者他们自签名证书（这个示例里，创建一个有效期一年的证书）:
 
 ```
 $ openssl x509 -req -days 365 -in delegation.csr -signkey delegation.key -out delegation.crt
 ```
 
-Then they need to give you `delegation.crt`, whether it is self-signed or signed
-by a CA.
+接下来他们需要给你 `delegation.crt`,不管是自签名还是被CA签发。
 
-## Adding a delegation key to an existing repository
+## 给已有的仓库增加一个代理秘钥
 
-If your repository was created using a version of Docker Engine prior to 1.11,
-then before adding any delegations, you should rotate the snapshot key to the server
-so that collaborators will not require your snapshot key to sign and publish tags:
+如果你的仓库在Docker Engine 1.11之前创建，在增加任何代理前，你需要轮转服务端的快照秘钥，这样协助者不需要你的快照秘钥去签名和发布tag：
 
 ```
 $ notary key rotate docker.io/<username>/<imagename> snapshot -r
 ```
 
-This tells Notary to rotate a key for your particular image repository - note that
-you must include the `docker.io/` prefix.  `snapshot -r` specifies that you want
-to rotate the snapshot key specifically, and you want the server to manage it (`-r`
-stands for "remote").
+这个会告诉Notary去轮转你特定镜像仓库的秘钥 - 注意你必须包含`docker.io/`前缀。
+`snapshot -r`指明你希望轮转快照秘钥并且希望服务器去管理它(`-r`代表远程)。
 
-When adding a delegation, your must acquire
-[the PEM-encoded x509 certificate with the public key](#generating-delegation-keys)
-of the collaborator you wish to delegate to.
 
-Assuming you have the certificate `delegation.crt`, you can add a delegation
-for this user and then publish the delegation change:
+当添加一个代理，你必须从你希望代理的协作者获得一个PEM编码的x509证书以及公钥(trust_delegation.md#generating-delegation-keys)。
+
+假设你有`delegation.crt`的证书，你可以添加一个代理给这个用户，然后发布这个代理变化：
 
 ```
 $ notary delegation add docker.io/<username>/<imagename> targets/releases delegation.crt --all-paths
 $ notary publish docker.io/<username>/<imagename>
 ```
 
-The preceding example illustrates a request to add the delegation
-`targets/releases` to the image repository, if it doesn't exist.  Be sure to use
-`targets/releases` - Notary supports multiple delegation roles, so if you mistype
-the delegation name, the Notary CLI will not error.  However, Docker Engine
-supports reading only from `targets/releases`.
+上述的示例展示了添加代理`targets/releases`到镜像仓库的请求过程，如果它不存在的话。
+确保使用`targets/releases`- Notary支持多个代理角色，这样如果你搞错代理名称，Notary命令行也不会出错。
+不管怎样，Docker Engine支持只从`targets/releases`读取。
 
-It also adds the collaborator's public key to the delegation, enabling them to sign
-the `targets/releases` delegation so long as they have the private key corresponding
-to this public key.  The `--all-paths` flags tells Notary not to restrict the tag
-names that can be signed into `targets/releases`, which we highly recommend for
-`targets/releases`.
-
-Publishing the changes tells the server about the changes to the `targets/releases`
-delegation.
-
-After publishing, view the delegation information to ensure that you correctly added
-the keys to `targets/releases`:
+它也将协助者的公钥加入到代理，使得一旦拥有相对于公钥的私钥，他们可以对`targets/releases` 代理进行签名。
+发布这些变化可以告诉服务器关于对`targets/releases`代理的变化。
+发布完，可以查看代理信息来保证你正确地添加了秘钥到`targets/releases`：
 
 ```
 $ notary delegation list docker.io/<username>/<imagename>
@@ -133,17 +100,14 @@ $ notary delegation list docker.io/<username>/<imagename>
   targets/releases   "" <all paths>  729c7094a8210fd1e780e7b17b7bb55c9a28a48b871b07f65d97baf93898523a   1
 ```
 
-You can see the `targets/releases` with its paths and the key ID you just added.
+你可以看到 `targets/releases` 和它的路径以及你刚才添加的秘钥ID。
 
-Notary currently does not map collaborators names to keys, so we recommend
-that you add and list delegation keys one at a time, and keep a mapping of the key
-IDs to collaborators yourself should you need to remove a collaborator.
+Notary 目前没有映射协助者的名称到秘钥，所以我们推荐你一次一个地增加和罗列代理秘钥，并且自己维护一个秘钥ID和协助者的映射关系，便于你需要移除一个协作者。
 
-## Removing a delegation key from an existing repository
 
-To revoke a collaborator's permission to sign tags for your image repository, you must
-know the IDs of their keys, because you need to remove their keys from the
-`targets/releases` delegation.
+## 从存在的仓库移除一个代理秘钥
+
+要收回一个协助者对你镜像仓库签名的权限，你必须知道他们秘钥的ID，因为你需要从`targets/releases`代理移除他们的秘钥。
 
 ```
 $ notary delegation remove docker.io/<username>/<imagename> targets/releases 729c7094a8210fd1e780e7b17b7bb55c9a28a48b871b07f65d97baf93898523a
@@ -151,25 +115,21 @@ $ notary delegation remove docker.io/<username>/<imagename> targets/releases 729
 Removal of delegation role targets/releases with keys [729c7094a8210fd1e780e7b17b7bb55c9a28a48b871b07f65d97baf93898523a], to repository "docker.io/<username>/<imagename>" staged for next publish.
 ```
 
-The revocation will take effect as soon as you publish:
+一旦你发布，权限收回会生效:
 
 ```
 $ notary publish docker.io/<username>/<imagename>
 ```
 
-Note that by removing all the keys from the `targets/releases` delegation, the
-delegation (and any tags that are signed into it) is removed.  That means that
-these tags will all be deleted, and you may end up with older, legacy tags that
-were signed directly by the targets key.
+注意从`targets/releases`代理通过移除所有的秘钥，代理（和已经签名的tag）会被清除。
+这意味着这些tag都会被删除，而最终留下之前被目标秘钥直接签名的旧的、遗留的tag。
 
-## Removing the `targets/releases` delegation entirely from a repository
+## 从仓库完整移除`targets/releases`代理
 
-If you've decided that delegations aren't for you, you can delete the
-`targets/releases` delegation entirely. This also removes all the tags that
-are currently in `targets/releases`, however, and you may end up with older,
-legacy tags that were signed directly by the targets key.
+如果你已经决定这些代理没用，你可以完整删除`targets/releases`代理。这个也会移除所有当前在`targets/releases`中的tag，
+不管怎样，最终留下之前被目标秘钥直接签名的旧的、遗留的tag。
 
-To delete the `targets/releases` delegation:
+删除`targets/releases` 代理:
 
 ```
 $ notary delegation remove docker.io/<username>/<imagename> targets/releases
@@ -182,39 +142,34 @@ Forced removal (including all keys and paths) of delegation role targets/release
 $ notary publish docker.io/<username>/<imagename>
 ```
 
-## Pushing trusted data as a collaborator
+## 作为协助者上传信任数据
 
-As a collaborator with a private key that has been added to a repository's
-`targets/releases` delegation, you need to import the private key that you
-generated into Content Trust.
+作为协作者，拥有已经加入到仓库`targets/releases`代理的私钥，你需要导入这些你生成到内容信任的私钥。
 
-To do so, you can run:
+去做这件事，你可以运行:
 
 ```
 $ notary key import delegation.key --role user
 ```
 
-where `delegation.key` is the file containing your PEM-encoded private key.
+`delegation.key` 包含了你的PEM编码的私钥。
 
-After you have done so, running `docker push` on any repository that
-includes your key in the `targets/releases` delegation will automatically sign
-tags using this imported key.
+当你运行完命令，对任何包含`targets/releases`代理秘钥的仓库执行`docker push`，将会自动用导入的秘钥进行签名。
 
-## `docker push` behavior
+## `docker push` 行为
 
-When running `docker push` with Docker Content Trust, Docker Engine
-will attempt to sign and push with the `targets/releases` delegation if it exists.
-If it does not, the targets key will be used to sign the tag, if the key is available.
+当用Docker内容安全运行`docker push`, 
+如果`targets/releases`代理存在时，Docker Engine将会尝试签名并推送`targets/releases`代理。
+如果代理不存在，并且目标秘钥存在的话，目标秘钥会被用来加签tag。
 
-## `docker pull` and `docker build` behavior
+## `docker pull` 和 `docker build` 行为
 
-When running `docker pull` or `docker build` with Docker Content Trust, Docker
-Engine will pull tags only signed by the `targets/releases` delegation role or
-the legacy tags that were signed directly with the `targets` key.
+当用Docker内容安全运行 `docker pull` or `docker build` 时, Docker
+Engine 只会拉取通过`targets/releases` 代理角色签名的tag或者老的直接被目标秘钥签名的tag。
 
-## Related information
+## 相关信息
 
-* [Content trust in Docker](content_trust.md)
-* [Manage keys for content trust](trust_key_mng.md)
-* [Automation with content trust](trust_automation.md)
-* [Play in a content trust sandbox](trust_sandbox.md)
+* [Docker 内容信任](content_trust.md)
+* [管理内容信任秘钥](trust_key_mng.md)
+* [内容信任自动化](trust_automation.md)
+* [在内容信任沙箱中运行](trust_sandbox.md)

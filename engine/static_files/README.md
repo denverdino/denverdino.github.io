@@ -2,14 +2,13 @@
 published: false
 ---
 
-Static files dir
+静态文件目录
 ================
 
-Files you put in /static_files/ will be copied to the web visible /_static/
+放在/static_files/目录下面的文件会被自动拷贝到Web可视化目录/_static/中；
 
-Be careful not to override pre-existing static files from the template.
+注意不要覆盖模板中已存在的静态文件；
 
-Generally, layout related files should go in the /theme directory.
+一般来说，布局相关的文件都放在/theme目录下；
 
-If you want to add images to your particular documentation page. Just put them next to
-your .rst source file and reference them relatively.
+如果你想在自己的文档页面添加图片，只需要把他们放在.rst源文件并列的目录，并使用相对路径引用他们；
