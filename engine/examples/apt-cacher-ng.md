@@ -1,21 +1,18 @@
 ---
 description: Installing and running an apt-cacher-ng service
 keywords: docker, example, package installation, networking, debian,  ubuntu
-title: Dockerize an apt-cacher-ng service
+title: 容器内运行一个 apt-cacher-ng 服务
 ---
 
 > **Note**:
-> - **If you don't like sudo** then see [*Giving non-root
+> - **如果你不喜欢sudo** 你可以看 [*Giving non-root
 >   access*](../installation/binaries.md#giving-non-root-access).
-> - **If you're using macOS or docker via TCP** then you shouldn't use
->   sudo.
+> - **如果你用 macOS 或者 docker via TCP** 那么你不应该用
+>   sudo。
 
-When you have multiple Docker servers, or build unrelated Docker
-containers which can't make use of the Docker build cache, it can be
-useful to have a caching proxy for your packages. This container makes
-the second download of any package almost instant.
+当你有多台Docker服务，或者在一台容器上构建不相关的Docker容器，以至于无法使用Docker build的缓存。它可以被用于对你的安装包做一个缓存代理，对任何第二次下载的镜像所启动的容器，可以做到几乎瞬间启动。
 
-Use the following Dockerfile:
+用以下的Dockerfile:
 
     #
     # Build: docker build -t apt-cacher .
@@ -35,35 +32,30 @@ Use the following Dockerfile:
     EXPOSE      3142
     CMD     chmod 777 /var/cache/apt-cacher-ng && /etc/init.d/apt-cacher-ng start && tail -f /var/log/apt-cacher-ng/*
 
-To build the image using:
+用命令构建Docker镜像:
 
     $ docker build -t eg_apt_cacher_ng .
 
-Then run it, mapping the exposed port to one on the host
+然后运行它，对暴露的端口做一个宿主机上的映射：
 
     $ docker run -d -p 3142:3142 --name test_apt_cacher_ng eg_apt_cacher_ng
 
-To see the logfiles that are `tailed` in the default command, you can
-use:
+如果要看日志文件的`tailed`模式，你可以用：
 
     $ docker logs -f test_apt_cacher_ng
 
-To get your Debian-based containers to use the proxy, you have
-following options.  Note that you must replace `dockerhost` with the
-IP address or FQDN of the host running the `test_apt_cacher_ng`
-container.
+如果你的Debian基础容器想接入代理，你需要执行以下步骤。注意，你必须用运行`test_apt_cacher_ng`的主机的IP地址或者完整域名，替换`dockerhost`。 
 
-1. Add an apt Proxy setting
+1. 增加一个 apt Proxy 配置
    `echo 'Acquire::http { Proxy "http://dockerhost:3142"; };' >> /etc/apt/conf.d/01proxy`
-2. Set an environment variable:
+2. 设置一个环境变量：
    `http_proxy=http://dockerhost:3142/`
-3. Change your `sources.list` entries to start with
+3. 修改你的 `sources.list` 条目，开头是
    `http://dockerhost:3142/`
-4. Link Debian-based containers to the APT proxy container using `--link`
-5. Create a custom network of an APT proxy container with Debian-based containers.
+4. 用 `--link`参数，连接Debian基础容器到APT代理容器。
+5. 为你的Debian基础容器和APT代理容器。
 
-**Option 1** injects the settings safely into your apt configuration in
-a local version of a common base:
+**步骤 1** 通过在公共的base目录下，注入一个本地版本的配置文件，引入我们的配置：
 
     FROM ubuntu
     RUN  echo 'Acquire::http { Proxy "http://dockerhost:3142"; };' >> /etc/apt/apt.conf.d/01proxy
@@ -71,28 +63,23 @@ a local version of a common base:
 
     # docker build -t my_ubuntu .
 
-**Option 2** is good for testing, but will break other HTTP clients
-which obey `http_proxy`, such as `curl`, `wget` and others:
+**步骤 2** 很容易测试。但是会使其他使用了`http_proxy`变量的HTTP客户端失效，比如 `curl`, `wget` 等等：
 
     $ docker run --rm -t -i -e http_proxy=http://dockerhost:3142/ debian bash
 
-**Option 3** is the least portable, but there will be times when you
-might need to do it and you can do it from your `Dockerfile`
-too.
+**步骤 3** 是最容易的（least portable），但是需要一点时间。你也可以通过`Dockerfile` 执行它。 
 
-**Option 4** links Debian-containers to the proxy server using following command:
+**步骤 4** 使用以下命令，将Debian基础容器 连接到代理服务上:
 
     $ docker run -i -t --link test_apt_cacher_ng:apt_proxy -e http_proxy=http://apt_proxy:3142/ debian bash
 
-**Option 5** creates a custom network of APT proxy server and Debian-based containers:
+**步骤 5** 为你的Debian基础容器和APT代理容器：
 
     $ docker network create mynetwork
     $ docker run -d -p 3142:3142 --network=mynetwork --name test_apt_cacher_ng eg_apt_cacher_ng
     $ docker run --rm -it --network=mynetwork -e http_proxy=http://test_apt_cacher_ng:3142/ debian bash
 
-Apt-cacher-ng has some tools that allow you to manage the repository,
-and they can be used by leveraging the `VOLUME`
-instruction, and the image we built to run the service:
+Apt-cacher-ng有一些工具，可以帮助你管理你的仓库， 通过`VOLUME`指令和我们构建服务的镜像，我们可以使用他们：
 
     $ docker run --rm -t -i --volumes-from test_apt_cacher_ng eg_apt_cacher_ng bash
 
@@ -115,8 +102,7 @@ instruction, and the image we built to run the service:
 
     (Number nn: tag distribution or architecture nn; 0: exit; d: show details; r: remove tagged; q: quit): q
 
-Finally, clean up after your test by stopping and removing the
-container, and then removing the image.
+最后，清理你的测试： 停止并且移除你的容器，然后移除镜像。 
 
     $ docker stop test_apt_cacher_ng
     $ docker rm test_apt_cacher_ng
