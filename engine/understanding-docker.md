@@ -182,12 +182,3 @@ Docker Engine 组合名空间（namespaces），控制组（control groups）和
 - 亲身体验 [Docker 入门](getstarted/index.md) 教程
 - 查阅[Docker Engine 用户指南](userguide/index.md)中的示例和深入话题
 
-
-## 进一步学习
-- Read about [Installing Docker Engine](installation/index.md#installation).
-- Get hands-on experience with the [Get Started With Docker](getstarted/index.md)
-    tutorial.
-- Check out examples and deep dive topics in the
-    [Docker Engine User Guide](userguide/index.md).
-
-
