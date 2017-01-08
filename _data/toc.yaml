@@ -295,7 +295,7 @@ toc:
       title: Raft consensus in swarm mode
   - sectiontitle: Secure Engine
     section:
-    - path: /engine/security/security/
+    - path: /engine/security/
       title: Docker security
     - path: /engine/security/non-events/
       title: Docker Security Non-events
