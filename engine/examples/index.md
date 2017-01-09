@@ -4,11 +4,11 @@ keywords: dockerize, dockerizing apps, dockerizing applications, container,  con
 title: Dockerize an application
 ---
 
-This section contains the following:
+本章包含以下内容：
 
-* [Dockerizing MongoDB](mongodb.md)
-* [Dockerizing PostgreSQL](postgresql_service.md)
-* [Dockerizing a CouchDB service](couchdb_data_volumes.md)
-* [Dockerizing a Redis service](running_redis_service.md)
-* [Dockerizing an apt-cacher-ng service](apt-cacher-ng.md)
-* [Dockerizing applications: A 'Hello world'](../tutorials/dockerizing.md)
+* [容器内部署MongoDB](mongodb.md)
+* [容器内部署PostgreSQL](postgresql_service.md)
+* [容器内部署一个CouchDB 服务](couchdb_data_volumes.md)
+* [容器内部署一个Redis 服务](running_redis_service.md)
+* [容器内部署 一个 apt-cacher-ng 服务](apt-cacher-ng.md)
+* [容器内部署 应用: 一个 'Hello world'](../tutorials/dockerizing.md)
