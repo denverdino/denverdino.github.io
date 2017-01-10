@@ -4,51 +4,50 @@ keywords: cloud, docker, machine, documentation, installation, digitalocean
 title: 'Example: Use Docker Machine to provision cloud hosts'
 ---
 
-Docker Machine driver plugins are available for many cloud platforms, so you can use Machine to provision cloud hosts. When you use Docker Machine for provisioning, you create cloud hosts with Docker Engine installed on them.
+你需要安装并运行Docker Machine，创建一个云服务账号
 
-You'll need to install and run Docker Machine, and create an account with the cloud provider.
+然后提供账号验证，安全验证及更多配置信息作为 `docker-machine create` 命令参数，不同云服务商驱动的参数标识是不同的。例如Digital Ocean访问令牌对应参数为 `--digitalocean-access-token`
 
-Then you provide account verification, security credentials, and configuration options for the providers as flags to `docker-machine create`. The flags are unique for each cloud-specific driver.  For instance, to pass a Digital Ocean access token, you use the `--digitalocean-access-token` flag.
+下面的实例我们将展示如何创建一台安装Docker环境的 <a href="https://digitalocean.com" target="_blank">Digital Ocean</a> _Droplet_ (云服务器).
 
-As an example, let's take a look at how to create a Dockerized <a href="https://digitalocean.com" target="_blank">Digital Ocean</a> _Droplet_ (cloud server).
 
-### Step 1. Create a Digital Ocean account and log in
+### 步骤 1. 创建 Digital Ocean 账号并登陆
 
-If you have not done so already, go to <a href="https://digitalocean.com" target="_blank">Digital Ocean</a>, create an account, and log in.
+如果你还没有账号, 请到 <a href="https://digitalocean.com" target="_blank">Digital Ocean</a>, 创建账号, 然后登录.
 
-### Step 2. Generate a personal access token
+### 步骤 2. 创建个人访问令牌
 
-To generate your access token:
+按下面的步骤创建你的访问令牌:
 
-1.  Go to the Digital Ocean administrator console and click **API** in the header.
+1.  前往 Digital Ocean 管理控制台，点击顶部的 **API** .
 
     ![Click API in Digital Ocean console](../images/ocean_click_api.png)
 
-2. Click **Generate New Token** to get to the token generator.
+2. 点击 **Generate New Token** 生产令牌.
 
    ![Generate token](../images/ocean_gen_token.png)
 
-3.  Give the token a clever name (e.g. "machine"), make sure the **Write (Optional)** checkbox is checked, and click **Generate Token**.
+3.  给令牌起一个便于记忆的名称 (如. "machine"), 确定要选中 **Write (Optional)** , 点击 **Generate Token**.
 
     ![Name and generate token](../images/ocean_token_create.png)
 
-4.  Grab (copy to clipboard) the generated big long hex string and store it somewhere safe.
+4.  获取 (复制到粘贴板) 生成的长字符串并将它保存到安全的位置.
 
     ![Copy and save personal access token](../images/ocean_save_token.png)
 
-    This is the personal access token you'll use in the next step to create your cloud server.
+    这个访问令牌在后面创建云服务器时会使用.
 
-### Step 3. Install Docker Machine
+### 步骤 3. 安装 Docker Machine
 
-1. If you have not done so already, install Docker Machine on your local host.
+1. 如果你还没有安装Docker Machine, 在你机器上安装.
 
-  * <a href="/engine/installation/mac/" target="_blank"> How to install Docker Machine on macOS</a>
+  * <a href="https://docs.docker.com/engine/installation/mac/" target="_blank"> 如何在macOS上安装Docker Machine</a>
 
-  * <a href="/engine/installation/windows/" target="_blank">How to install Docker Machine on Windows</a>
+  * <a href="https://docs.docker.com/engine/installation/windows/" target="_blank">如何在Windows上安装Docker Machine</a>
 
-  * <a href="/machine/install-machine/" target="_blank">Install Docker Machine directly</a> (e.g., on Linux)
+  * <a href="https://docs.docker.com/machine/install-machine/" target="_blank">安装Docker Machine</a> (Linux版本)
 
-2. At a command terminal, use `docker-machine ls` to get a list of Docker Machines and their status.
+2. 在终端使用 `docker-machine ls` 获取 Docker Machine 列表和他们的状态
 
     ```
     $ docker-machine ls
@@ -56,9 +55,9 @@ To generate your access token:
     default   *        virtualbox   Running   tcp:////xxx.xxx.xx.xxx:xxxx
     ```
 
-6.  Run some Docker commands to make sure that Docker Engine is also up-and-running.
+3.  运行一些Docker命令，验证Docker Engine是否已经运行.
 
-    We'll run `docker run hello-world` again, but you could try `docker ps`,  `docker run docker/whalesay cowsay boo`, or another command to verify that Docker is running.
+    我们仍将使用 `docker run hello-world` , 你可试试这些命令 `docker ps`,  `docker run docker/whalesay cowsay boo`, 或是其他命令来验证Docker是否运行.
 
     ```
     $ docker run hello-world
@@ -68,11 +67,11 @@ To generate your access token:
     ...
     ```
 
-### Step 4. Use Machine to Create the Droplet
+### 步骤 4. 使用 Machine 来创建Droplet
 
-1.  Run `docker-machine create` with the `digitalocean` driver and pass your key to the `--digitalocean-access-token` flag, along with a name for the new cloud server.
+1.  执行 `docker-machine create` ，使用 `digitalocean` 驱动，传入你的令牌参数 `--digitalocean-access-token` , 你也可以设置云服务器名称.
 
-    For this example, we'll call our new Droplet "docker-sandbox".
+    例如, 我们创建一台Droplet，命名为 "docker-sandbox".
 
     ```
     $ docker-machine create --driver digitalocean --digitalocean-access-token xxxxx docker-sandbox
@@ -92,13 +91,14 @@ To generate your access token:
     To see how to connect Docker to this machine, run: docker-machine env docker-sandbox
     ```
 
-      When the Droplet is created, Docker generates a unique SSH key and stores it on your local system in `~/.docker/machines`. Initially, this is used to provision the host. Later, it's used under the hood to access the Droplet directly with the `docker-machine ssh` command. Docker Engine is installed on the cloud server and the daemon is configured to accept remote connections over TCP using TLS for authentication.
+      当Droplet创建完成后, Docker会生成一个唯一的SSH key并将它保存在本机`~/.docker/machines`下. 最初使用它来提供主机，后来可以使用它通过 `docker-machine ssh` 命令来直接连接Droplet。
+      Docker Engine安装在了云服务器上，使用TLS认证通过TCP可远程连接到daemon.
 
-2.  Go to the Digital Ocean console to view the new Droplet.
+2.  前往Digital Ocean控制台查看新建的Droplet.
 
     ![Droplet in Digital Ocean created with Machine](../images/ocean_droplet.png)
 
-3.  At the command terminal, run `docker-machine ls`.
+3.  在终端执行 `docker-machine ls`.
 
     ```
     $ docker-machine ls
@@ -107,10 +107,10 @@ To generate your access token:
     docker-sandbox   -        digitalocean   Running   tcp://45.55.139.48:2376
     ```
 
-    Notice that the new cloud server is running but is not the active host. Our command shell is still connected to the default machine, which is currently the active host as indicated by the asterisk (*).
+    注意新的云服务器已经运行但尚未激活。我们终端目前连接的仍然是默认机器，激活状态的机器ACTIVE栏会标记星号（*）
 
-4. Run `docker-machine env docker-sandbox` to get the environment commands for the new remote host, then run `eval` as directed to re-configure the shell to connect to `docker-sandbox`.
-
+4.  执行 `docker-machine env docker-sandbox` 可以得到远程机器的环境变量，执行 `eval` 这行将当前的终端转为连接到 `docker-sandbox`.
+    
     ```
     $ docker-machine env docker-sandbox
     export DOCKER_TLS_VERIFY="1"
@@ -123,7 +123,7 @@ To generate your access token:
     $ eval "$(docker-machine env docker-sandbox)"
     ```
 
-5.  Re-run `docker-machine ls` to verify that our new server is the active machine, as indicated by the asterisk (*) in the ACTIVE column.
+5.  再次执行 `docker-machine ls` 验证下新的服务器是否激活, ACTIVE列中有星号（*）为激活状态.
 
     ```
     $ docker-machine ls
@@ -132,7 +132,7 @@ To generate your access token:
     docker-sandbox   *        digitalocean   Running   tcp://45.55.222.72:2376
     ```
 
-6.  Run some `docker-machine` commands to inspect the remote host. For example, `docker-machine ip <machine>` gets the host IP address and `docker-machine inspect <machine>` lists all the details.
+6.  执行 `docker-machine` 相关命令查看远程主机配置。例如，使用 `docker-machine ip <machine>` 获取主机IP，`docker-machine inspect <machine>` 列出主机详情
 
     ```
     $ docker-machine ip docker-sandbox
@@ -154,11 +154,9 @@ To generate your access token:
         ...
     ```
 
-7.  Verify Docker Engine is installed correctly by running `docker` commands.
-
-    Start with something basic like `docker run hello-world`, or for a more interesting test, run a Dockerized webserver on your new remote machine.
-
-    In this example, the `-p` option is used to expose port 80 from the `nginx` container and make it accessible on port `8000` of the `docker-sandbox` host.
+7.  使用 `docker` 命令验证Docker Engine是否正确安装
+    可以使用基本的测试如 `docker run hello-world`，或者更有意义的尝试，如在你的远程机器上运行一个容器化的web服务器
+    这个例子中, `-p` 参数用来将 `nginx` 容器80端口暴露出来，使主机`docker-sandbox` 可以通过 `8000` 端口访问到它.
 
     ```
     $ docker run -d -p 8000:80 --name webserver kitematic/hello-world-nginx
@@ -172,18 +170,19 @@ To generate your access token:
     942dfb4a0eaae75bf26c9785ade4ff47ceb2ec2a152be82b9d7960e8b5777e65
     ```
 
-    In a web browser, go to `http://<host_ip>:8000` to bring up the webserver home page. You got the `<host_ip>` from the output of the `docker-machine ip <machine>` command you ran in a previous step. Use the port you exposed in the `docker run` command.
+    在浏览器中输入 `http://<host_ip>:8000` 访问web服务器主页. 之前步骤使用 `docker-machine ip <machine>` 命令可以获取 `<host_ip>`. 端口使用 `docker run` 中暴露的端口.
 
     ![nginx webserver](../images/nginx-webserver.png)
 
-#### Understand the defaults and options on the create command
+#### 了解创建命令的默认和可选参数
 
-For convenience, `docker-machine` will use sensible defaults for choosing settings such as the image that the server is based on, but you override the defaults using the respective flags (e.g. `--digitalocean-image`). This is useful if, for example, you want to create a cloud server with a lot of memory and CPUs (by default `docker-machine` creates a small server). For a full list of the flags/settings available and their defaults, see the output of `docker-machine create -h` at the command line. See also <a href="/machine/drivers/os-base/" target="_blank">Driver options and operating system defaults</a> and information about the <a href="/machine/reference/create/" target="_blank">create</a> command in the Docker Machine documentation.
+为了方便操作, `docker-machine` 使用一些默认设置，如服务器基础镜像, 你可以分别设置相应参数来改变默认的设置 (如. `--digitalocean-image`). 例如, 如果你希望创建一台多核大内存的高配置云服务器(默认地 `docker-machine` 创建一台低配置机器)这些参数将很有帮助. 查看完整的参数/设置 可选值和默认值列表, 可以使用 `docker-machine create -h` 命令.
+你也可以在Docker Machine 文档中查看 <a href="https://docs.docker.com/machine/drivers/os-base/" target="_blank">驱动参数和操作系统默认值</a> 及 <a href="https://docs.docker.com/machine/reference/create/" target="_blank">create</a> 命令
 
 
-### Step 5. Use Machine to remove the Droplet
+### 步骤 5. 使用Machine移除Droplet
 
-To remove a host and all of its containers and images, first stop the machine, then use `docker-machine rm`:
+移除主机及上面的所有容器和镜像，首先停止machine，然后执行 `docker-machine rm`:
 
     $ docker-machine stop docker-sandbox
     $ docker-machine rm docker-sandbox
@@ -194,18 +193,18 @@ To remove a host and all of its containers and images, first stop the machine, t
     NAME      ACTIVE   DRIVER       STATE     URL                         SWARM
     default   *        virtualbox   Running   tcp:////xxx.xxx.xx.xxx:xxxx
 
-If you monitor the Digital Ocean console while you run these commands, you will see it update first to reflect that the Droplet was stopped, and then removed.
+当你执行上述命令时，在Digital Ocean控制台会看到相应的Droplet先停止然后被移除
 
-If you create a host with Docker Machine, but remove it through the cloud provider console, Machine will lose track of the server status. So please use the `docker-machine rm` command for hosts you create with `docker-machine --create`.
+如果你使用Docker Machine创建主机，但在云服务商管理控制台中移除主机，Machine会失去对服务器状态的跟踪。所以如果使用 `docker-machine --create`创建，请使用 `docker-machine rm` 删除。
 
-## Where to go next
+## 继续阅读
 
-* [Docker Machine driver reference](/machine/drivers/)
+* [Docker Machine驱动参考](/machine/drivers/)
 
-* [Docker Machine Overview](/machine/overview/)
+* [Docker Machine概述](/machine/overview/)
 
-* [Use Docker Machine to provision hosts on cloud providers](/machine/get-started-cloud/)
+* [使用 Docker Machine创建主机](/machine/get-started-cloud/)
 
-* [Install Docker Engine](../../installation/index.md)
+* [安装 Docker Engine](../../installation/index.md)
 
-* [Docker User Guide](../../userguide/intro.md)
+* [Docker 用户指南](../../userguide/intro.md)

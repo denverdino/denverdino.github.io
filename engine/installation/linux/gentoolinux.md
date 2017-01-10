@@ -6,38 +6,27 @@ redirect_from:
 title: Install Docker on Gentoo
 ---
 
-Installing Docker on Gentoo Linux can be accomplished using one of two ways: the **official** way and the `docker-overlay` way.
+在 Gentoo Linux 上安装 Docker 有两种方法：**官方安装** 方法和 `docker-overlay` 方法。
+Gentoo 团队官方项目页[Gentoo Docker](https://wiki.gentoo.org/wiki/Project:Docker) team.
 
-Official project page of [Gentoo Docker](https://wiki.gentoo.org/wiki/Project:Docker) team.
+## 官方方式
+如果你正在寻找一种稳定的方案，首推官方方式，可以直接在tree上安装官方 `app-emulation/docker` 包
 
-## Official way
-The first and recommended way if you are looking for a stable
-experience is to use the official `app-emulation/docker` package directly
-from the tree.
-
-If any issues arise from this ebuild including, missing kernel
-configuration flags or dependencies, open a bug
-on the Gentoo [Bugzilla](https://bugs.gentoo.org) assigned to `docker AT gentoo DOT org`
-or join and ask in the official
 [IRC](http://webchat.freenode.net?channels=%23gentoo-containers&uio=d4) channel on the Freenode network.
+如果 ebuild 时出现任何问题，包括缺少内核配置标识或依赖，请到 Gentoo 的 [Bugzilla](https://bugs.gentoo.org)上提交问题，并指派给 `docker AT gentoo DOT org` 
+，或者加入 Freenode 的 Gentoo 官方[IRC](http://webchat.freenode.net?channels=%23gentoo-containers&uio=d4)频道来提问。
 
-## docker-overlay way
+## docker-overlay 方式
 
-If you're looking for a `-bin` ebuild, a live ebuild, or a bleeding edge
-ebuild, use the provided overlay, [docker-overlay](https://github.com/tianon/docker-overlay)
-which can be added using `app-portage/layman`. The most accurate and
-up-to-date documentation for properly installing and using the overlay
-can be found in the [overlay](https://github.com/tianon/docker-overlay/blob/master/README.md#using-this-overlay).
+如果你正在寻找一个 `-bin` ebuild, live ebuild, 或者 bleeding edge ebuild，可以使用[docker-overlay](https://github.com/tianon/docker-overlay)，它使用 `app-portage/layman` 添加第三方portage。
+最新的安装和使用overlay说明请查看[overlay](https://github.com/tianon/docker-overlay/blob/master/README.md#using-this-overlay)。
 
-If any issues arise from this ebuild or the resulting binary, including
-and especially missing kernel configuration flags or dependencies,
-open an [issue](https://github.com/tianon/docker-overlay/issues) on
-the `docker-overlay` repository or ping `tianon` directly in the `#docker`
-IRC channel on the Freenode network.
+如果 ebuild 或者生成的二进制文件时出现任何问题，特别是缺少内核配置标识或依赖关系，
+请在 `docker-overlay` 仓库提交一个[issue](https://github.com/tianon/docker-overlay/issues)或者直接在 Freenode 的 `#docker` IRC频道上联系 `tianon` 。
 
-## Installation
+## 安装
 
-### Available USE flags
+### 可用的使用标识
 
 | USE Flag      | Default | Description |
 | ------------- |:-------:|:------------|
@@ -49,69 +38,61 @@ IRC channel on the Freenode network.
 | vim-syntax    |         |Pulls in related vim syntax scripts.|
 | zsh-completion|         |Enable zsh completion support.|
 
-USE flags are described in detail on [tianon's
+USE flags 详细介绍请见 [tianon's
 blog](https://tianon.github.io/post/2014/05/17/docker-on-gentoo.html).
 
-The package should properly pull in all the necessary dependencies and
-prompt for all necessary kernel options.
+这个包会获取必要的依赖并提示需要的内核选项。
 
     $ sudo emerge -av app-emulation/docker
 
->Note: Sometimes there is a disparity between the latest versions
->in the official **Gentoo tree** and the **docker-overlay**.
->Please be patient, and the latest version should propagate shortly.
+>注: 有时候官方的 **Gentoo tree** 和 **docker-overlay** 的最新版本不一致。
+>请耐心等待，最新版本会很快更新。
 
-## Starting Docker
+## 启动 Docker
 
-Ensure that you are running a kernel that includes all the necessary
-modules and configuration (and optionally for device-mapper
-and AUFS or Btrfs, depending on the storage driver you've decided to use).
+请确保您运行的内核包含了所有必要的模块和配置（根据你要使用的存储驱动，选择device-mapper，AUFS 或 Btrfs）。
 
-To use Docker, the `docker` daemon must be running as **root**.
-To use Docker as a **non-root** user, add yourself to the **docker**
-group by running the following command:
+使用 Docker，`docker` 进程必须以 **root**用户运行。
+对于 **非root** 用户使用 Docker，可以使用下边的命令，将自己添加到 **docker** 用户组：
 
     $ sudo groupadd docker
     $ sudo usermod -a -G docker user
 
 ### OpenRC
 
-To start the `docker` daemon:
+启动 `docker` 进程:
 
     $ sudo /etc/init.d/docker start
 
-To start on system boot:
+开机启动:
 
     $ sudo rc-update add docker default
 
 ### systemd
 
-To start the `docker` daemon:
+启动 `docker` 进程:
 
     $ sudo systemctl start docker
 
-To start on system boot:
+开机启动:
 
     $ sudo systemctl enable docker
 
-If you need to add an HTTP Proxy, set a different directory or partition for the
-Docker runtime files, or make other customizations, read our systemd article to
-learn how to [customize your systemd Docker daemon options](../../admin/systemd.md).
+如果你想要添加一个 HTTP 代理，需要为 Docker 运行文件设置不同的目录或分区。
+如果需要定制一些其它的功能，请阅读我们的systemd文章，了解如何[定制Docker进程](../../admin/systemd.md)
 
-## Uninstallation
+## 卸载
 
-To uninstall the Docker package:
+卸载 Docker 包:
 
     $ sudo emerge -cav app-emulation/docker
 
-To uninstall the Docker package and dependencies that are no longer needed:
+卸载 Docker 包及不再使用的相关依赖包:
 
     $ sudo emerge -C app-emulation/docker
 
-The above commands will not remove images, containers, volumes, or user created
-configuration files on your host. If you wish to delete all images, containers,
-and volumes run the following command:
+上述命令不会删除主机上的镜像，容器，数据卷及用户配置文件。如果想删除镜像，容器，数据卷可以使用下面命令：
 
     $ rm -rf /var/lib/docker
 
-You must delete the user created configuration files manually.
+用户配置文件需要手动查找删除。

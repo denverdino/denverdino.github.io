@@ -6,107 +6,106 @@ redirect_from:
 title: Install Docker on openSUSE and SUSE Linux Enterprise
 ---
 
-This page provides instructions for installing and configuring the latest
-Docker Engine software on openSUSE and SUSE systems.
+这个文档提供了在openSUSE 和 SUSE 操作系统上安装和配置最新版Docker的说明.
 
->**Note:** You can also find bleeding edge Docker versions inside of the repositories maintained by the [Virtualization:containers project](https://build.opensuse.org/project/show/Virtualization:containers) on the [Open Build Service](https://build.opensuse.org/). This project delivers also other packages that are related with the Docker ecosystem (for example, Docker Compose).
+>**说明:** 你可以从[开放构建服务](https://build.opensuse.org/)的[虚拟化:容器项目](https://build.opensuse.org/project/show/Virtualization:containers)
+项目中找到目前维护的最前沿的Docker版本.
+这个项目也提供和Docker生态系统相关的其他包(例如, Docker Compose).
 
-## Prerequisites
+## 先决条件
 
-You must be running a 64 bit architecture.
+你必须运行在64位架构的系统上.
 
 ## openSUSE
 
-Docker is part of the official openSUSE repositories starting from 13.2. No
-additional repository is required on your system.
+从 13.2版本以后Docker就作为官方openSUSE库的一部分了.
+在 openSUSE 13.2版本以后就不需要添加额外的库了.
 
-## SUSE Linux Enterprise
+## SUSE Linux 企业版
 
-Docker is officially supported on SUSE Linux Enterprise 12 and later. You can find the latest supported Docker packages inside the `Container` module. To enable this module, do the following:
+从SUSE Linux 企业版 12以及以后的开始，官方已经开始支持Docker. 你可以在`Container`模块找到最新支持的Docker软件包.
+通过以下步骤来启动该模块:
 
-1. Start YaST, and select *Software > Software Repositories*.
-2. Click *Add* to open the add-on dialog.
-3. Select *Extensions and Module from Registration Server* and click *Next*.
-4. From the list of available extensions and modules, select *Container Module* and click *Next*.
-   The containers module and its repositories are added to your system.
-5. If you use Subscription Management Tool, update the list of repositories at the SMT server.
+1. 开始 YaST, 然后选择 *Software > Software Repositories*.
+2. 点击 *Add* 按钮将打开一个对话框.
+3. 选择 *Extensions and Module from Registration Server* 然后点击 *Next*.
+4. 从可用的扩展和模块列表, 选择 *Container Module* 并且点击 *Next*.
+   容器模块和它的资源库会被添加到你的系统中.
+5. 你可以使用订阅管理工具从SMT服务器更新资源库.
 
-Otherwise execute the following command:
+否则运行以下的命令:
 
     $ sudo SUSEConnect -p sle-module-containers/12/x86_64 -r ''
 
-> **Note:** currently the `-r ''` flag is required to avoid a known limitation of `SUSEConnect`.
+    >**说明:** 目前 `-r ''` 参数用来避免`SUSEConnect`已知的一些限制. 
 
-The [Virtualization:containers project](https://build.opensuse.org/project/show/Virtualization:containers)
-on the [Open Build Service](https://build.opensuse.org/) contains also bleeding
-edge Docker packages for SUSE Linux Enterprise. However these packages are
-**not supported** by SUSE.
 
-### Install Docker
+在[开放构建服务](https://build.opensuse.org/) 的[虚拟化:容器项目](https://build.opensuse.org/project/show/Virtualization:containers)
+包含了SUSE Linux 企业版支持的一些最前沿的Docker软件包. 然后SUSE**不再支持**这些包.
 
-1. Install the Docker package:
+### 安装 Docker
+
+1. 安装Docker 软件包:
 
         $ sudo zypper in docker
 
-2. Start the Docker daemon.
+2. 启动Docker.
 
         $ sudo systemctl start docker
 
-3. Test the Docker installation.
+3. 测试Docker安装.
 
         $ sudo docker run hello-world
 
-## Configure Docker boot options
+## 配置Docker开机启动
 
-You can use these steps on openSUSE or SUSE Linux Enterprise. To start the `docker daemon` at boot, set the following:
+你可以使用以下的步骤在openSUSE 或者 SUSE Linux 企业版上设置`docker daemon`开机启动,设置如下:
 
     $ sudo systemctl enable docker
 
-The `docker` package creates a new group named `docker`. Users, other than
-`root` user, must be part of this group to interact with the
-Docker daemon. You can add users with this command syntax:
+`docker`包创建了一个`docker`的用户组.非`root`用户作为该组成员和Docker进程交互.
+你可以使用一下的命令格式添加用户:
 
-    sudo /usr/sbin/usermod -a -G docker <username>
+    $ sudo /usr/sbin/usermod -a -G docker <username>
 
-Once you add a user, make sure they relog to pick up these new permissions.
+一旦添加用户，确保他们重新登录获得新的权限.
 
-## Enable external network access
+## 允许访问外部网络
 
-If you want your containers to be able to access the external network, you must
-enable the `net.ipv4.ip_forward` rule. To do this, use YaST.
+如果你想要你的容器可以访问外部网络, 你必须启用`net.ipv4.ip_forward`规则.
+使用YaST来完成.
 
-For openSUSE Tumbleweed and later, browse to the **System -> Network Settings -> Routing** menu. For SUSE Linux Enterprise 12 and previous openSUSE versions, browse to **Network Devices -> Network Settings -> Routing** menu (f) and check the *Enable IPv4 Forwarding* box.
+openSUSE Tumbleweed和以后的版本，打开**System -> Network Settings -> Routing**菜单.
+SUSE Linux 企业版 12 和之前的 openSUSE 版本,打开**Network Devices -> Network Settings -> Routing**菜单
+选中 *Enable IPv4 Forwarding* 复选框.
 
-When networking is handled by the Network Manager, instead of YaST you must edit
-the `/etc/sysconfig/SuSEfirewall2` file needs by hand to ensure the `FW_ROUTE`
-flag is set to `yes` like so:
+当网络是由Network Manager而不是YaST处理，你必须编辑`/etc/sysconfig/SuSEfirewall2`文件,
+设置`FW_ROUTE`标识为`yes`，如下：
 
     FW_ROUTE="yes"
 
-## Custom daemon options
+## 自定义进程
 
-If you need to add an HTTP Proxy, set a different directory or partition for the
-Docker runtime files, or make other customizations, read the systemd article to
-learn how to [customize your systemd Docker daemon options](../../admin/systemd.md).
+如果你想要添加一个 HTTP 代理，为 Docker 运行文件设置不同的目录或分区，又或者定制一些其它的功能，请阅读我们的系统文章，
+了解[如何定制Docker进程](../../admin/systemd.md).
 
-## Uninstallation
+## 卸载
 
-To uninstall the Docker package:
+卸载Docker软件包:
 
     $ sudo zypper rm docker
 
-The above command does not remove images, containers, volumes, or user created
-configuration files on your host. If you wish to delete all images, containers,
-and volumes run the following command:
+以上并不会移除镜像，容器，数据卷以及用户创建的配置文件等.如果你想删除所有的镜像，容器，数据卷，可以
+运行一下的命令:
 
     $ rm -rf /var/lib/docker
 
-You must delete the user created configuration files manually.
+你必须手动删除用户创建的配置文件.
 
-## Where to go from here
+## 更多参考
 
-You can find more details about Docker on openSUSE or SUSE Linux Enterprise in the
-[Docker quick start guide](https://www.suse.com/documentation/sles-12/dockerquick/data/dockerquick.html)
-on the SUSE website. The document targets SUSE Linux Enterprise, but its contents apply also to openSUSE.
+你可以在SUSE网站找到更多在openSUSE 或 SUSE Linux 企业版上使用Docker的细节.
+[Docker快速指南](https://www.suse.com/documentation/sles-12/dockerquick/data/dockerquick.html)
+该文档的目标是SUSE Linux 企业版, 但是也适用于openSUSE.
 
-Continue to the [User Guide](../../userguide/index.md).
+更多的查看 [用户指南](../../userguide/index.md).
