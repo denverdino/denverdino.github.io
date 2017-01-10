@@ -1,7 +1,7 @@
 ---
 description: Dockerizing a Couchbase service
 keywords: docker, example, package installation, networking, couchbase
-title: 容器化一个 Couchbase 服务
+title: 容器内部署一个 Couchbase 服务
 ---
 
 本章将展现如何用Docker Compose启动一个[Couchbase](http://couchbase.com) 服务， 通过它的[REST

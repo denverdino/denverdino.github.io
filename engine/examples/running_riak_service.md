@@ -7,40 +7,35 @@ title: Dockerize a Riak service
 The goal of this example is to show you how to build a Docker image with
 Riak pre-installed.
 
-## Creating a Dockerfile
+## 创建一个 Dockerfile
 
-Create an empty file called `Dockerfile`:
+首先，创建一个空的文件，命名为 `Dockerfile`:
 
     $ touch Dockerfile
 
-Next, define the parent image you want to use to build your image on top
-of. We'll use [Ubuntu](https://hub.docker.com/_/ubuntu/) (tag:
-`trusty`), which is available on [Docker Hub](https://hub.docker.com):
+然后，定义一个构建镜像的基础镜像。我们会使用可以直接从[Docker Hub](https://hub.docker.com)上面获取的[Ubuntu镜像](https://hub.docker.com/_/ubuntu/) (tag:`trusty`)。
 
     # Riak
     #
     # VERSION       0.1.1
-
-    # Use the Ubuntu base image provided by dotCloud
+    # 使用由 dotCloud 提供的 Ubuntu 基础镜像
     FROM ubuntu:trusty
     MAINTAINER Hector Castro hector@basho.com
 
-After that, we install the curl which is used to download the repository setup
-script and we download the setup script and run it.
+之后，我们会安装 curl 工具，该工具用来下载镜像仓库的初始化脚本，在下载脚本之后运行该脚本。
 
-    # Install Riak repository before we do apt-get update, so that update happens
-    # in a single step
+    # 在执行 apt-get update 命令之前安装 Riak 仓库，所以apt-get 的更新可以在一个步骤中就能完成
     RUN apt-get install -q -y curl && \
         curl -fsSL https://packagecloud.io/install/repositories/basho/riak/script.deb | sudo bash
 
-Then we install and setup a few dependencies:
+然后我们安装并且初始化一些依赖服务：
 
- - `supervisor` is used manage the Riak processes
- - `riak=2.0.5-1` is the Riak package coded to version 2.0.5
+ - `supervisor` 用来管理 Riak 的进程
+ - `riak=2.0.5-1` 指明 Riak 的包版本为 2.0.5
 
 <!-- -->
 
-    # Install and setup project dependencies
+    # 然后我们安装并且初始化一些依赖服务
     RUN apt-get update && \
         apt-get install -y supervisor riak=2.0.5-1
 
@@ -50,29 +45,28 @@ Then we install and setup a few dependencies:
 
     COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-After that, we modify Riak's configuration:
+在此之后，我们会修改 Riak 的配置项:
 
-    # Configure Riak to accept connections from any host
+    # 配置 Riak 接受任意IP地址的连接
     RUN sed -i "s|listener.http.internal = 127.0.0.1:8098|listener.http.internal = 0.0.0.0:8098|" /etc/riak/riak.conf
     RUN sed -i "s|listener.protobuf.internal = 127.0.0.1:8087|listener.protobuf.internal = 0.0.0.0:8087|" /etc/riak/riak.conf
 
-Then, we expose the Riak Protocol Buffers and HTTP interfaces:
+然后我们对外暴露 Riak 的 Protocol Buffers 协议 和 HTTP接口：
 
-    # Expose Riak Protocol Buffers and HTTP interfaces
+    # 外暴露 Riak Protocol Buffers 和 HTTP 接口
     EXPOSE 8087 8098
 
-Finally, run `supervisord` so that Riak is started:
+最后，使用 `supervisord` 启动 Riak：
 
     CMD ["/usr/bin/supervisord"]
 
-## Create a supervisord configuration file
+## 创建一个 supervisord 的配置文件
 
-Create an empty file called `supervisord.conf`. Make
-sure it's at the same directory level as your `Dockerfile`:
+创建一个空的 `supervisord.conf` 文件. 确保该文件和您的 `Dockerfile` 处于同一个文件夹层级中。
 
     touch supervisord.conf
 
-Populate it with the following program definitions:
+在该文件中，填写以下程序配置定义:
 
     [supervisord]
     nodaemon=true
@@ -87,16 +81,14 @@ Populate it with the following program definitions:
     stdout_logfile=/var/log/supervisor/%(program_name)s.log
     stderr_logfile=/var/log/supervisor/%(program_name)s.log
 
-## Build the Docker image for Riak
+## 创建 Riak 的 Docker 镜像
 
-Now you should be able to build a Docker image for Riak:
+现在您能够创建一个 Riak的 Docker 镜像了：
 
     $ docker build -t "<yourname>/riak" .
 
-## Next steps
+## 接下来的步骤
 
-Riak is a distributed database. Many production deployments consist of
-[at least five nodes](
-http://basho.com/why-your-riak-cluster-should-have-at-least-five-nodes/).
-See the [docker-riak](https://github.com/hectcastro/docker-riak) project
-details on how to deploy a Riak cluster using Docker and Pipework.
+Riak 是一个分布式数据库。许多线上部署方案占用 [至少5个节点](
+http://basho.com/why-your-riak-cluster-should-have-at-least-five-nodes/)。
+请查看 [docker-riak](https://github.com/hectcastro/docker-riak) 项目的详情来了解如何通过 Docker 和 Pipework 来部署一个 Riak 集群。
