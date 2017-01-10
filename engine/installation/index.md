@@ -1,14 +1,14 @@
 ---
-description: 安装方式列表
-keywords: Docker 安装
+description: Lists the installation methods
+keywords: Docker install
 redirect_from:
 - /installation/
 - /engine/installation/linux/frugalware/
 - /engine/installation/frugalware/
-title: 安装 Docker Engine
+title: Install Docker Engine
 ---
 
-Docker Engine 支持 Linux, Cloud, Windows 与 macOS, 安装说明适用于以下各项:
+Docker Engine支持在Linux，Cloud，Windows，macOS中安装，安装说明可以参考下列文章：
 
 ## Linux
 * [Arch Linux](linux/archlinux.md)
@@ -23,37 +23,22 @@ Docker Engine 支持 Linux, Cloud, Windows 与 macOS, 安装说明适用于以�
 * [openSUSE and SUSE Linux Enterprise](linux/SUSE.md)
 * [Ubuntu](linux/ubuntulinux.md)
 
-如果你的 linux 发行版不在其中, 请不要立刻放弃, 试试看: [从二进制文件安装 docker](binaries.md).
-
-
-## macOS 与 Windows
-
-* [Docker for Mac](/docker-for-mac/)
-* [Docker for Windows](/docker-for-windows/)
-
+如果你的linux版本不在上述列表中，也不要失望。想尝试在上述列表之外的linux版本中使用Docker，参见:[使用二进制文件安装](binaries.md)
 
 ## 云端
+* [安装指南](cloud/overview.md)
+* [示例：云提供商环境下安装指南](cloud/cloud-ex-aws.md)
+* [示例：使用Docker Machine在云主机中安装](cloud/cloud-ex-machine-ocean.md)
 
-你可以使用 Docker Cloud 来自动配置和管理你的云实例:
+## macOS 与 Windows
+* [macOS](mac.md)
+* [Windows](windows.md)
 
-* [Amazon Web 服务安装指南](link-aws.md)
-* [DigitalOcean 安装指南](link-do.md)
-* [Microsoft Azure 安装指南](link-azure.md)
-* [Packet 安装指南](link-packet.md)
-* [SoftLayer 安装指南](link-softlayer.md)
-* [Use the Docker Cloud Agent to Bring your Own Host](byoh.md)
+## Docker归档
+更早版本的Docker安装说明，请见下面的docker归档：
+[Docker v1.7](/v1.7/), [Docker v1.6](/v1.6/), [Docker v1.5](/v1.5/), [Docker v1.4](/v1.4/).
 
-如果您希望手工管理您的云实例, 可以使用官方 Docker 版本:
-
-* [Docker for AWS](/docker-for-aws/)
-* [Docker for Azure](/docker-for-azure/)
-
-
-## 以前的版本  
-
-以前版本的 Docker 的安装说明可以在 [Docker 归档](/docsarchive/) 中找到.
-
-
-## 开始使用
-
-在设置好 Docker 之后, 请在 [Docker 入门](/engine/getstarted/) 开始学习基础知识.
+## 安装完成后接下来可以去了解
+* [Docker Engine介绍](../index.md)
+* [支持](https://www.docker.com/support/)
+* [培训](https://training.docker.com//)
