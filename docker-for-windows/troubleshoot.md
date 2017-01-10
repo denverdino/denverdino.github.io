@@ -1,98 +1,64 @@
 ---
-description: Troubleshooting, logs, and known issues
-keywords: windows, troubleshooting, logs, issues
+description: 疑难解答, 日志和已知问题
+keywords: windows, 疑难解答, 日志, 问题
 redirect_from:
 - /windows/troubleshoot/
-title: Logs and troubleshooting
+title: 日志和疑难解答
 ---
 
-Here is information about how to diagnose and troubleshoot problems, send logs
-and communicate with the Docker for Windows team, use our forums and Knowledge
-Hub, browse and log issues on GitHub, and find workarounds for known problems.
+本文提供了如下信息: 如何诊断和解决问题, 发送日志和与 Docker for Windows 团队联系, 使用我们的论坛与知识中心, 在 GitHub 上浏览与记录问题, 寻找已知问题的解决方法.
 
-## Docker Knowledge Hub
+## Docker 知识中心
 
-**Looking for help with Docker for Windows?** Check out the [Docker Knowledge
-**Hub](http://success.docker.com/) for knowledge base articles, FAQs, and
-**technical support for various subscription levels.
+**寻找 Docker for Windows 的帮助?** 查看 [Docker 知识中心](http://success.docker.com/) 以获取各种订阅级别的知识库文章, FAQ 和技术支持.
 
-## Submitting diagnostics, feedback, and GitHub issues
+## 提交诊断信息, 反馈与 GitHub 问题
 
-If you encounter problems for which you do not find solutions in this
-documentation, on [Docker for Windows issues on
-GitHub](https://github.com/docker/for-win/issues), or the [Docker for Windows
-forum](https://forums.docker.com/c/docker-for-windows), we can help you
-troubleshoot the log data. See [Diagnose and
-Feedback](index.md#diagnose-and-feedback) to learn about diagnostics and how to
-create new issues on GitHub.
+如果遇到了在本文档中找不到解决方案的问题, 请访问 [GitHub 上的 Docker for Windows 问题](https://github.com/docker/for-win/issues) 或 [Docker for Windows 论坛](https://forums.docker.com/c/docker-for-windows), 我们可以帮助您排除日志数据故障. 请参阅 [诊断和反馈](index.md#diagnose-and-feedback) 以了解诊断以及如何在 GitHub 上创建新问题.
 
-## Checking the Logs
+## 检查日志
 
-In addition to using the diagnose and feedback option to submit logs, you can browse the logs yourself.
+除了使用诊断和反馈选项来提交日志之外, 您还可以自行浏览日志.
 
-### Use the systray menu to view logs
+### 使用系统托盘菜单查看日志
 
-To view Docker for Windows latest log, click on the `Diagnose & Feedback` menu
-entry in the systray and then on the `Log file` link. You can see the full
-history of logs in your `AppData\Local` folder.
+要查看 Docker for Windows 的最新日志, 请单击系统托盘中的 `Diagnose & Feedback` 菜单项, 然后单击 `Log file` 链接. 您可以在 `AppData\Local` 文件夹中查看日志的完整历史记录.
 
-### Use the systray menu to report and issue
+### 使用系统托盘报告与发送问题
 
-If you encounter an issue and the suggested troubleshoot procedures outlined
-below don't fix it you can generate a diagnostics report. Click on the `Diagnose &
-Feedback` menu entry in the systray and then on the `Upload diagnostic...` link.
-This will upload diagnostics to our server and provide you with a unique ID you
-can use in email or the forum to reference the upload.
+如果遇到问题, 但下面列出的建议故障排除过程不能解决问题, 您可以生成诊断报告. 单击系统托盘中的 `Diagnose & Feedback` 菜单项, 然后单击 `Upload diagnostic...` 链接, 这将上传诊断信息到我们的服务器, 并为您提供一个唯一的ID, 您可以使用此 ID 来在电子邮件或论坛引用您的上传.
 
-## Troubleshooting
+## 故障排除
 
-### inotify on shared drives does not work
+### inotify 在共享驱动器上不工作
 
-Currently, `inotify` does not work on Docker for Windows. This will become
-evident, for example, when an application needs to read/write to a
-container across a mounted drive. This is a known issue that the team is working
-on. Below is a temporary workaround, and a link to the issue.
+目前, `inotify` 不能在 Docker for Windows 上工作. 例如, 当应用程序需要跨已挂载的驱动器读/写容器时, 这将变得明显. 这是团队正在努力解决的已知问题. 以下是临时解决方案与该问题的链接.
 
-* **Workaround for nodemon and Node.js** - If you are using [nodemon](https://github.com/remy/nodemon) with  `Node.js`, try the fallback
-polling mode described here: [nodemon isn't restarting node
+* **nodemon 与 Node.js 的解决方案** - 如果您在 `Node.js` 上使用 [nodemon](https://github.com/remy/nodemon) with  `Node.js`, 请尝试此处描述的回退轮询模式: [nodemon isn't restarting node
 applications](https://github.com/remy/nodemon#application-isnt-restarting)
 
-* **Docker for Windows issue on GitHub** - See the issue [Inotify on shared drives does not work](https://github.com/docker/for-win/issues/56#issuecomment-242135705)
+* **GitHub 上的 Docker for Windows 问题** - 查看问题 [Inotify on shared drives does not work](https://github.com/docker/for-win/issues/56#issuecomment-242135705)
 
-### Volume mounting requires shared drives for Linux containers and for any project directories outside of `C:\Users`
+### Linux 容器以及任何在 `C:\Users` 目录之外的项目挂载卷时需要共享驱动器
 
-If you are using mounted volumes and get runtime errors indicating an
-application file is not found, a volume mount is denied, or a service cannot
-start (e.g., with [Docker Compose](/compose/gettingstarted.md)), you might
-need to enable [shared drives](index.md#shared-drives).
+如果挂载卷时发生应用程序文件无法找到, 卷拒绝挂载或服务无法启动 (例如使用 [Docker Compose](/compose/gettingstarted.md) 时) 的运行时错误, 您可能需要启用](index.md#shared-drives).
 
-Volume mounting requires shared drives for Windows containers, but also for
-Linux containers if the project lives outside of the `C:\Users` directory. Go to
-<img src="images/whale-x.png"> --> **Settings** --> **Shared Drives** and share
-the drive that contains the Dockerfile and volume.
+Linux 容器在挂载卷时需要共享驱动器. 请转到 <img src="images/whale-x.png"> --> **Settings** --> **Shared Drives** 来共享包含了 Dockerfile 与卷的驱动器.
 
-### Verify domain user has permissions for shared drives (volumes)
+### 验证域用户是否具有共享驱动器 (卷) 的权限
 
->**Tip:** Shared drives are only required for volume mounting [Linux
-containers](index.md#switch-between-windows-and-linux-containers-beta-feature),
-not Windows containers.
+>**提示:** 共享驱动器仅在 [Linux 容器](index.md#switch-between-windows-and-linux-containers-beta-feature)挂载卷时需要, 而 Windows 容器不需要.
 
-Permissions to access shared drives are tied to the username and password you
-use to set up shared drives. (See [Shared Drives](index.md#shared-drives).) If
-you run `docker` commands and tasks under a different username than the one used
-to set up shared drives, your containers will not have permissions to access the
-mounted volumes. The volumes will show as empty.
+访问共享驱动器的权限和用于设置共享驱动器的用户名与密码有关. (请参阅[共享驱动器](index.md#shared-drives).)
+如果以与用于设置共享驱动器不同的用户名运行 `docker` 命令和任务, 您的容器将无权访问已挂载的卷, 卷将显示为空.
 
-The solution to this is to switch to the domain user account and reset
-credentials on shared drives.
+此问题的解决方法是切换到域用户帐户并重置共享驱动器上的凭据.
 
-Here is an example of how to de-bug this problem, given a scenario where you
-shared the `C` drive as a local user instead of as the domain user. Assume the
-local user is `samstevens` and the domain user is `merlin`.
+下面的示例说明了如何解决这个问题, 假定一种场景: 您作为本地用户 (而非域用户) 共享了 `C` 驱动器, 本地用户是 `samstevens`, 域用户是 `merlin`.
 
-1. Make sure you are logged in as the Windows domain user (for our example, `merlin`).
+1. 确保您以 Windows 域用户身份登录 (对于本例, 使用 `merlin`).
 
-2. Run `net share c` to view user permissions for `<host>\<username>, FULL`.
+2. 运行 `net share c` 查看 `<host>\<username>, FULL` 的用户权限.
 
 		PS C:\WINDOWS\system32> net share c
 		Share name        C
@@ -103,13 +69,13 @@ local user is `samstevens` and the domain user is `merlin`.
 		Caching           Caching disabled
 		Permission        windowsbox\samstevens, FULL
 
-3. Run the following command to remove the share.
+3. 运行以下命令来移除共享.
 
 		net share c /delete
 
-4. Re-share the drive via the [Shared Drives dialog](index.md#shared-drives), and provide the Windows domain user account credentials.
+4. 通过[共享驱动器对话框](index.md#shared-drives)重新共享驱动器, 并提供 Windows 域用户账户凭据.
 
-5. Re-run `net share c`.
+5. 重新运行 `net share c`.
 
 		PS C:\WINDOWS\system32> net share c
 		Share name        C
@@ -120,18 +86,15 @@ local user is `samstevens` and the domain user is `merlin`.
 		Caching           Caching disabled
 		Permission        windowsbox\merlin, FULL
 
-See also, the related issue on GitHub, [Mounted volumes are empty in the container](https://github.com/docker/for-win/issues/25).
+另请参见 GitHub 上的相关问题 [Mounted volumes are empty in the container](https://github.com/docker/for-win/issues/25).
 
-### Local security policies can block shared drives and cause login errors
+### 本地安全策略可能阻止共享驱动器并导致登录错误
 
-You need permissions to mount shared drives in order to use the Docker for
-Windows [shared drives](index.md#shared-drives) feature.
+您需要权限才能挂载共享驱动器以使用 Docker for Windows 的[共享驱动器](index.md#shared-drives)功能.
 
-If local policy prevents this, you will get errors when you attempt to enable
-shared drives on Docker. This is not something Docker can resolve, you do need
-these permissions to use the feature.
+如果被本地策略阻止, 在 Docker 上尝试启用共享驱动器时您将收到错误, 此问题 Docker 无法解决, 您需要提供权限才能使用此功能.
 
-Here are snip-its from example error messages:
+这里是示例错误消息的片段:
 
 ```
 Logon failure: the user has not been granted the requested logon type at
@@ -142,51 +105,45 @@ error(5): I/O error Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
 mount: mounting //10.0.75.1/C on /c failed: Invalid argument
 ```
 
-See also, <a href="https://github.com/docker/for-win/issues/98">Docker for Windows issue #98</a>.
+另请参见 <a href="https://github.com/docker/for-win/issues/98">Docker for Windows 问题 #98</a>.
 
-### Understand symlinks limitations
+### 了解符号链接的限制
 
-Symlinks will work within and across containers. However, symlinks created outside of containers (for example, on the host) will not work. To learn more, see [Are symlinks supported?](faqs.md#are-symlinks-supported) in the FAQs.
+符号链接将在容器内和容器间工作, 但在容器外部 (例如在主机上) 创建的符号链接将不起作用. 要了解更多信息, 请参阅 FAQ 的[是否支持符号链接?](faqs.md#are-symlinks-supported)
 
-### Avoid unexpected syntax errors, use Unix style line endings for files in containers
+### 避免未期望的语法错误, 对容器中的文件请使用 Unix 风格的行尾序列
 
-Any file destined to run inside a container must use Unix style `\n` line
-endings. This includes files referenced at the command line for builds and in
-RUN commands in Docker files.
+任何要在容器中运行的文件必须使用 Unix 样式 `\n` 的行结尾, 这包括用于编译的命令行中引用的文件, 以及在 Docker 文件的 RUN 命令引用的文件.
 
-Docker containers and `docker build` run in a Unix environment, so files in
-containers must use Unix style line endings: `\n`, _not_ Windows style: `\r\n`.
-Keep this in mind when authoring files such as shell scripts using Windows
-tools, where the default is likely to be Windows style line endings.  These
-commands ultimately get passed to Unix commands inside a Unix based container
-(for example, a shell script passed to `/bin/sh`). If Windows style line endings
-are used, `docker run` will fail with syntax errors.
+Docker 容器和 `docker build` 在 Unix 环境中运行, 因此容器中的文件必须使用 Unix 样式行结尾: `\n`, 而_不是_ Windows 样式: `\r\n`.
+请注意, 在使用 Windows 工具创建诸如 shell 脚本等文件时, 行尾默认值可能是 Windows 样式.
+这些命令最终会传递到基于 Unix 的容器中的 Unix 命令 (例如, shell 脚本传递到 `/bin/sh`), 如果使用 Windows 样式行尾, `docker run` 将失败并出现语法错误.
 
-For an example of this issue and the resolution, see this issue on GitHub: <a href="https://github.com/docker/docker/issues/24388" target="_blank">Docker RUN fails to execute shell script (https://github.com/docker/docker/issues/24388)</a>.
+有关此问题和解决方案的示例, 请参阅 GitHub 上的问题: [Docker RUN 无法执行 shell 脚本](https://github.com/docker/docker/issues/24388).
 
-### Recreate or update your containers after Beta 18 upgrade
+### 在 Beta 18 升级后重新创建或更新容器
 
-Docker 1.12.0 RC3 release introduces a backward incompatible change from RC2 to RC3. (For more information, see https://github.com/docker/docker/issues/24343#issuecomment-230623542.)
+Docker 1.12.0 RC3 版本引入了从 RC2 到 RC3 的向后不兼容更改. (有关详情, 请参阅 https://github.com/docker/docker/issues/24343#issuecomment-230623542.)
 
-You may get the following error when you try to start a container created with pre-Beta 18 Docker for Windows applications.
+当您尝试启动使用早于 Beta 18 的 Docker for Windows 创建的容器时, 可能会收到以下错误.
 
     Error response from daemon: Unknown runtime specified default
 
-You can fix this by either [recreating](troubleshoot.md#recreate-your-containers) or [updating](troubleshoot.md#update-your-containers) your containers.
+此问题可通过[重新创建](troubleshoot.md#recreate-your-containers)或[更新](troubleshoot.md#update-your-containers)容器来解决.
 
-If you get the error message shown above, we recommend recreating them.
+如果您收到上面显示的错误消息, 我们建议您重新创建容器.
 
-#### Recreate your containers
+#### 重新创建
 
-To recreate your containers, use Docker Compose.
+要重新创建容器, 请使用 Docker Compose.
 
     docker-compose down && docker-compose up
 
-#### Update your containers
+#### 更新容器
 
-To fix existing containers, follow these steps.
+要修复已有容器, 请按以下步骤操作:
 
-1.  Run this command.
+1.  运行下面的命令.
 
     ```bash
     $ docker run --rm -v /var/lib/docker:/docker cpuguy83/docker112rc3-runtimefix:rc3
@@ -209,13 +166,13 @@ To fix existing containers, follow these steps.
     proccessed ee5bf706b6600a46e5d26327b13c3c1c5f7b261313438d47318702ff6ed8b30b
     ```
 
-2. Quit Docker.
+2. 退出 Docker.
 
-3. Start Docker.
+3. 启动 Docker.
 
-	> **Note:**  Be sure to quit and then restart Docker for Windows before attempting to start containers.
+	> **注意:** 在尝试启动容器之前, 请务必退出并重新启动 Docker for Windows.
 
-4.  Try to start the container again:
+4. 尝试再次启动容器:
 
     ```bash
     $ docker start old-container
@@ -224,57 +181,44 @@ To fix existing containers, follow these steps.
 
 ### Hyper-V
 
-Docker for Windows requires a Hyper-V as well as the Hyper-V Module for Windows
-Powershell to be installed and enabled. The Docker for Windows installer will
-enable it for you.
+Docker for Windows 需要安装和启用 Hyper-V 和用于 Windows Powershell 的 Hyper-V 模块. Docker for Windows 安装程序将帮助您启用.
 
-See [these
-instructions](https://msdn.microsoft.com/en-us/virtualization/hyperv_on_windows/quick_start/walkthrough_install)
-to install Hyper-V manually. A reboot is *required*. If you install Hyper-V
-without the reboot, Docker for Windows will not work correctly. On some systems,
-Virtualization needs to be enabled in the BIOS. The steps to do so are Vendor
-specific, but typically the BIOS option is called `Virtualization Technology
-(VTx)` or similar.
+参见这些[说明](https://msdn.microsoft.com/en-us/virtualization/hyperv_on_windows/quick_start/walkthrough_install)来手动安装 Hyper-V.
+安装后*需要*重新启动. 如果安装 Hyper-V 后没有重启, Docker for Windows 将不能正常工作.
+在某些系统上, 需要在 BIOS 中启用虚拟化, 操作随制造商的不同而不同, 但通常 BIOS 中的选项被称为 `Virtualization Technology (VTx)` 或类似名称.
 
-### Virtualization must be enabled
+### 必须启用虚拟化
 
-In addition to [Hyper-V](#hyper-v), virtualization must be enabled.
+除了 [Hyper-V](#hyper-v) 之外, 还必须启用虚拟化.
 
-If, at some point, if you manually uninstall Hyper-V or disable virtualization, Docker for Windows will not start.
+如果在手动卸载了 Hyper-V 或禁用了虚拟化, Docker for Windows 将无法启动.
 
-Verify that virtualization is enabled on Task Manager.
+在任务管理器中验证虚拟化是否开启:
 
 ![Task Manager](images/win-virtualization-enabled.png)
 
-See also, the user reported issue [Unable to run Docker for Windows on Windows
-10 Enterprise](https://github.com/docker/for-win/issues/74)
+另请参阅用户报告的问题 [无法在 Windows 10 企业版中运行 Docker for Windows](https://github.com/docker/for-win/issues/74).
 
-### Windows containers and Windows Server 2016
+### Windows 容器和 Windows Server 2016
 
-If you have questions about how to set up and run Windows containers on Windows
-Server 2016 or Windows 10, see [About Windows containers and Windows Server
-2016](index.md#about-windows-containers-and-windows-server-2016).
+如果您对如何在 Windows Server 2016 或 Windows 10 上安装和运行 Windows 容器有任何疑问, 请参阅[关于 Windows 容器和 Windows Server 2016](index.md#about-windows-containers-and-windows-server-2016).
 
-A full tutorial is available in [docker/labs](https://github.com/docker/labs) at
-[Getting Started with Windows
-Containers](https://github.com/docker/labs/blob/master/windows/windows-containers/README.md).
+完整的教程可以在 [docker/labs](https://github.com/docker/labs) 的 [Windows 容器入门](https://github.com/docker/labs/blob/master/windows/windows-containers/README.md) 中找到.
 
-You can install a native Windows binary which allows you to develop and run
-Windows containers without Docker for Windows. However, if you install Docker
-this way, you cannot develop or run Linux containers.  If you try to run a Linux
-container on the native Docker daemon, an error occurs:
+您可以安装本机 Windows 二进制文件, 它允许您在没有 Docker for Windows 时开发和运行 Windows 容器, 但如果以这种方式安装 Docker, 将无法开发或运行 Linux 容器.
+在本机 Docker 守护进程上运行 Linux 容器将发生错误:
 
-  ```no-highlight
-  C:\Program Files\Docker\docker.exe:
+   ```no-highlight
+   C:\Program Files\Docker\docker.exe:
    image operating system "linux" cannot be used on this platform.
    See 'C:\Program Files\Docker\docker.exe run --help'.
    ```
 
-### Networking issues
+### 网络问题
 
-Some users have reported problems connecting to Docker Hub on the Docker for Windows stable version. (See GitHub issue [22567](https://github.com/docker/docker/issues/22567).)
+有些用户报告了在 Docker for Windows 稳定版本上连接 Docker Hub 的问题. (参见 GitHub 问题 [22567](https://github.com/docker/docker/issues/22567).)
 
-Here is an example command and error message:
+这是一个示例命令与错误消息:
 
 	PS C:\WINDOWS\system32> docker run hello-world
 	Unable to find image 'hello-world:latest' locally
@@ -282,147 +226,121 @@ Here is an example command and error message:
 	C:\Program Files\Docker\Docker\Resources\bin\docker.exe: Error while pulling image: Get https://index.docker.io/v1/repositories/library/hello-world/images: dial tcp: lookup index.docker.io on 10.0.75.1:53: no such host.
 	See 'C:\Program Files\Docker\Docker\Resources\bin\docker.exe run --help'.
 
-As an immediate workaround to this problem, reset the DNS server to use the Google DNS fixed address: `8.8.8.8`. You can configure this via the **Settings** -> **Network** dialog, as described in the topic [Network](index.md#network). Docker will automatically restart when you apply this setting, which could take some time.
+解决本问题的直接方法是, 重置 DNS 服务器以使用 Google DNS 固定地址: `8.8.8.8`.
+您可以在 **Settings** -> **Network** 对话框中进行配置, 如[网络](index.md#network)主题中所述.
+当您应用此设置时, Docker 会自动重新启动, 这可能需要一些时间.
 
-We are currently investigating this issue.
+我们目前正在跟进此问题.
 
-#### Networking issues on pre Beta 10 versions
-Docker for Windows Beta 10 and later fixed a number of issues around the
-networking setup.  If you still experience networking issue, this may be related
-to previous Docker for Windows installations.  In this case, please quit Docker
-for Windows and perform the following steps:
+#### Beta 10 之前版本的网络问题
 
-##### 1. Remove multiple `DockerNAT` VMswitches
-You might have multiple Internal VMSwitches called `DockerNAT`. You can view all
-VMSwitches either via the `Hyper-V Manager` sub-menu `Virtual Switch Manager` or
-from an elevated Powershell (run as Administrator) prompt by typing
-`Get-VMSwitch`. Simply delete all VMSwitches with `DockerNAT` in the name,
-either via the `Virtual Switch Manager` or by using `Remove-VMSwitch` powershell
-cmdlet.
+Docker for Windows Beta 10及更高版本修复了有关网络设置的一些问题. 如果您仍然遇到网络问题, 可能与以前版本的
+Docker for Windows 有关, 在这种情况下, 请退出 Docker for Windows 并执行以下步骤:
 
-##### 2. Remove lingering IP addresses
+##### 1.删​​除所有 DockerNAT 虚拟交换机
 
-You might have lingering IP addresses on the system. They are supposed to get
-removed when you remove the associated VMSwitches, but sometimes this fails.
-Using `Remove-NetIPAddress 10.0.75.1` in an elevated Powershell prompt should
-remove them.
+您可能有多个叫做 `DockerNAT` 的内部虚拟交换机, 可以通过 `Hyper-V 管理器` 子菜单的虚拟交换机管理器或通过在提
+升的 Powershell (作为管理员身份运行) 中键入 `Get-VMSwitch` 来检视所有的虚拟交换机. 要删除 `DockerNAT` 名
+字的虚拟交换机, 可以通过 `虚拟交换机管理器` 或 powershell 命令 `Remove-VMSwitch` 来实现.
 
-##### 3. Remove stale NAT configurations
+##### 2. 删除残留的 IP 地址
 
-You might have stale NAT configurations on the system. You should remove them with `Remove-NetNat DockerNAT` on an elevated Powershell prompt.
+您的系统上可能存在残留的 IP 地址, 它们应该在删除相关联的虚拟交换机时被删除, 但有时会删除失败, 可以在提升的
+Powershell 提示符中使用 `Remove-NetIPAddress 10.0.75.1` 来移除它们.
 
-##### 4. Remove stale network adapters
+##### 3. 删除过时的 NAT 配置
 
-You might have stale Network Adapters on the system. You should remove them with the following commands on an elevated Powershell prompt:
+您的系统上可能存在过时的 NAT 配置, 可通过在提升的 Powershell 提示符中使用 `Remove-NetNat DockerNAT` 来移除它们.
+
+##### 4. 删除过时的网络适配器
+
+您的系统上可能存在过时的网络适配器, 可通过在提升的 Powershell 提示符中执行如下命令来移除它们:
 
     $vmNetAdapter = Get-VMNetworkAdapter -ManagementOS -SwitchName DockerNAT
     Get-NetAdapter "vEthernet (DockerNAT)" | ? { $_.DeviceID -ne $vmNetAdapter.DeviceID } | Disable-NetAdapter -Confirm:$False -PassThru | Rename-NetAdapter -NewName "Broken Docker Adapter"
 
-Then you can remove them manually via the `devmgmt.msc` (aka Device Manager).
-You should see them as disabled Hyper-V Virtual Ethernet Adapter under the
-Network Adapter section. A right-click and selecting **uninstall** should remove
-the adapter.
+接着您可以通过 `devmgmt.msc` (即设备管理器) 来手动删除它们, 您应该可以在 "网络适配器" 节中看到禁用的 Hyper-V 虚拟以太网适配器, 右键单击并选择 **卸载** 可以删除适配器.
 
-### NAT/IP configuration
+### NAT/IP 配置
 
-By default, Docker for Windows uses an internal network prefix of
-`10.0.75.0/24`. Should this clash with your normal network setup, you can change
-the prefix from the **Settings** menu. See the [Network](index.md#network) topic
-under [Settings](index.md#docker-settings).
+默认情况下, Docker for Windows 使用内部网络前缀 `10.0.75.0/24`, 如果这与您的正常网络设置冲突, 您可以从 **Settings** 菜单更改前缀, 请参阅[设置](index.md#docker-settings)下的[网络](index.md#network)主题.
 
-#### NAT/IP configuration issues on pre Beta 15 versions
+#### Beta 15 之前版本的 NAT/IP 配置问题
 
-As of Beta 15, Docker for Windows is no longer using a switch with a NAT
-configuration. The notes below are left here only for older Beta versions.
+从 Beta 15 版本开始, Docker for Windows 不再使用具有 NAT 配置的交换机, 下面的注释仅限于较旧的测试版本.
 
-As of Beta14, networking for Docker for Windows is configurable through the UI.
-See the [Network](index.md#network) topic under
-[Settings](index.md#docker-settings).
+从 Beta 14 版本开始, Docker for Windows 的网络可以通过 UI 进行配置, 请参阅[设置](index.md#docker-settings)下的[网络](index.md#network)主题.
 
-By default, Docker for Windows uses an internal Hyper-V switch with a NAT
-configuration with a `10.0.75.0/24` prefix. You can change the prefix used (as
-well as the DNS server) via the **Settings** menu as described in the
-[Network](index.md#network) topic.
+默认情况下, Docker for Windows 使用 NAT 前缀配置为 `10.0.75.0/24` 的内部 Hyper-V 交换机, 您可以通过 **Settings** 菜单更改使用的前缀以及 DNS 服务器, 如网络主题中所述.
 
-If you have additional Hyper-V VMs and they are attached to their own NAT
-prefixes, the prefixes need to be managed carefully, due to limitation of the
-Windows NAT implementation. Specifically, Windows currently only allows a single
-internal NAT prefix. If you need additional prefixes for your other VMs, you can
-create a larger NAT prefix.
+如果您有额外的 Hyper-V 虚拟机, 且它们配置了自己的 NAT 前缀, 由于受到 Windows NAT 实现的限制, 前缀应仔细管理. 具体来说, Windows 目前只允许一个内部 NAT 前缀, 如果您的其它虚拟机需要的额外的前缀, 则可以创建一个更大的 NAT 前缀.
 
-To create a larger NAT prefix, do the following.
+要创建较大的 NAT 前缀, 请执行以下操作:
 
-1. Stop Docker for Windows and remove all NAT prefixes with `Remove-NetNAT`.
+1. 停止 Docker for Windows 并使用 `Remove-NetNAT` 删除所有 NAT 前缀.
 
-2. Create a new shorter NAT prefix which covers the Docker for Windows NAT prefix but allows room for additional NAT prefixes. For example:
+2. 创建一个新的较短的 NAT 前缀, 其涵盖了 Docker for Windows 的 NAT 前缀和额外的 NAT 前缀, 例如:
 
         New-NetNat -Name DockerNAT -InternalIPInterfaceAddressPrefix 10.0.0.0/16
 
-  The next time Docker for Windows starts, it will use the new, wider prefix.
+  下次 Docker for Windows 启动时, 它将使用新的更大范围的前缀.
 
-Alternatively, you can use a different NAT name and NAT prefix and adjust the NAT prefix Docker for Windows uses accordingly via the `Settings` panel.
+或者您也可以使用不同的 NAT 名称与 NAT 前缀, 并相应的通过 `Settings` 面板调整 Docker for Windows 使用的 NAT 前缀.
 
->**Note**: You also need to adjust your existing VMs to use IP addresses from within the new NAT prefix.
+>**注意**: 您还需要调整现有的虚拟机以使用新的 NAT 前缀中的 IP 地址.
 
+### 主机文件系统共享
 
-### Host filesystem Sharing
+Docker for Windows 使用的 Linux 虚拟机 使用 SMB/CIFS 来挂载主机文件系统, 为了使用此功能, 您必须通过 `Settings` 菜单显式启用它. 系统将提示您输入用户名和密码.
 
-The Linux VM used for Docker for Windows uses SMB/CIFS mounting of the host filesystem. In order to use this feature you must explicitly enable it via the `Settings` menu. You will get prompted for your Username and Password.
+不幸的是, 此设置不支持包含 Unicode 字符的密码, 因此您的密码必须为 8 位的 ASCII字符.
 
-Unfortunately, this setup does not support passwords which contain Unicode characters, so your password must be 8-bit ASCII only.
+该设置也不支持空密码, 因此如果要使用主机文件系统共享功能, 您必须设置密码. Beta 11 和更新版本的 Docker for Windows 将显示警告, 但早期版本不会.
 
-The setup also does not support empty password, so you should set a password if you want to use the host filesystem sharing feature.  Beta 11 and newer of Docker for Windows will display a warning, but versions earlier will not.
+注意, Beta 11 之前版本的 Docker for Windows 也不支持用户名和密码中包含空格, 但这已经在 Beta 11 版本中修复.
 
-Note, releases of Docker for Windows prior to Beta 11 also did not support spaces in the password and username, but this has been fixed with Beta 11.
+请确保在 `控制面板\网络和 Internet\网络和共享中心\更改高级共享设置` 中启用了 "文件和打印机共享".
 
-Please make sure that "File and printer sharing" is enabled in `Control Panel\Network and Internet\Network and Sharing Center\Advanced sharing settings`.
+![共享设置](images/win-file-and-printer-sharing.png)
 
-![Sharing settings](images/win-file-and-printer-sharing.png)
+## 解决方法
 
-## Workarounds
+### `inotify` 目前不能在 Docker for Windows 中工作
 
-### `inotify` currently does not work on Docker for Windows
+如果您在 `Node.js` 上使用 `nodemon`, 临时解决方法是尝试此处描述的回退轮询模式: [nodemon isn't restarting node applications](https://github.com/remy/nodemon#application-isnt-restarting). See also this issue on GitHub [Inotify on shared drives does not work](https://github.com/docker/for-win/issues/56#issuecomment-242135705).
 
-If you are using `Node.js` with `nodemon`, a temporary workaround is to try the fallback polling mode described here: [nodemon isn't restarting node applications](https://github.com/remy/nodemon#application-isnt-restarting). See also this issue on GitHub [Inotify on shared drives does not work](https://github.com/docker/for-win/issues/56#issuecomment-242135705).
+### 重启
 
-### Reboot
+重新启动 PC 以停止 / 丢弃从先前安装版本运行的守护进程的任何痕迹.
 
-Restart your PC to stop / discard any vestige of the daemon running from the previously installed version.
+### 取消设置 `DOCKER_HOST`
 
-### Unset `DOCKER_HOST`
+`DOCKER_HOST` 不需要被设置, 因为它可能指向了另一个 Docker (例如 VirtualBox), 所以应该取消设置.
+如果您使用 bash, `unset ${!DOCKER_*}` 将取消设置现有的 `DOCKER` 环境变量, 对于其它 shell, 单独取消设置每个环境变量.
 
-You do not need `DOCKER_HOST` set, so unset as it may be pointing at
-another Docker (e.g. VirtualBox). If you use bash, `unset ${!DOCKER_*}`
-will unset existing `DOCKER` environment variables you have set. For other shells, unset each environment variable individually.
+### 确保 Docker 正在运行 webserver 示例
 
-### Make sure Docker is running for webserver examples
+对于 `hello-world-nginx` 和其它示例, Docker for Windows 必须运行才能访问 `http://localhost/`. 请确保
+Docker 的鲸鱼图标在任务栏托盘中显示, 并且您是在连接到 Docker for Windows 引擎的 shell 中运行 Docker 命令
+(而非来自 Toolbox 的引擎), 否则可能使用 docker 启动了 webserver 容器却得到 "网页不可用" 的错误. 有关区分这
+两个环境的更多信息, 请参阅[入门](index.md)中的 "运行 Docker for Windows 与 Docker Toolbox".
 
-For the `hello-world-nginx` example and others, Docker for Windows must be running in order to get to the webserver on `http://localhost/`. Make sure that the Docker whale is showing in the menu bar, and that you run the Docker commands in a shell that is connected to the Docker for Windows Engine (not Engine from Toolbox). Otherwise, you might start the webserver container but get a "web page not available" error when you go to `docker`.  For more on distinguishing between the two environments, see "Running Docker for Windows and Docker Toolbox" in [Getting Started](index.md).
+### 如何解决`端口已分配`的错误
 
-### How to solve `port already allocated` errors
+如果您得到类似 `Bind for 0.0.0.0:8080 failed: port is already allocated` 或
+`listen tcp:0.0.0.0:8080: bind: address is already in use` 的错误...
 
-If you see errors like `Bind for 0.0.0.0:8080 failed: port is already allocated` or
-  `listen tcp:0.0.0.0:8080: bind: address is already in use` ...
+这些错误通常是由 Windows 上使用这些端口的其它软件造成的, 要定位这个软件, 请使用 `resmon.exe` GUI, 然后单击
+"网络", "侦听端口", 或在 powershell 中使用 `netstat -aon | find /i "listening "` 来发现当前使用端口的进
+程的 PID (PID 是最右边列中的数字). 您可以关闭其它进程, 或在 docker 应用程序中使用不同的端口.
 
-These errors are often caused by some other software on Windows using those
-ports. To discover the identity of this software, either use the `resmon.exe`
-GUI and click  "Network" and then "Listening Ports" or in a powershell use
-`netstat -aon | find /i "listening "` to discover the PID of the process
-currently using the port (the PID is the number in the rightmost column). Decide
-whether to shut the other process down, or to use a different port in your
-docker app.
+### 当安装防火墙或防病毒软件时, Docker 无法启动
 
-### Docker fails to start when firewall or anti-virus software is installed
+**某些防火墙和防病毒软件可能与 Microsoft Windows 10 不兼容** (例如, Windows 10 周年更新). 这种冲突通常在 Windows 更新或全新安装防火墙后发生, 并且表现为来自 Docker 守护进程和 **Docker for Windows 启动失败**的错误响应. Comodo 防火墙就是该问题的一个例子, 但用户报告称该软件已更新为可与这些 Windows 10 的版本一起工作.
 
-**Some firewalls and anti-virus software might be incompatible with  Microsoft Windows 10 buids** (e.g., Windows 10 Anniversary Update). The conflict typically occurs after a Windows update or new install of the firewall, and manifests as an error response from the Docker daemon and a **Docker for Windows start failure**. The Comodo Firewall was one example of this problem, but users report that software has since been updated to work with these Windows 10 builds.
-
-See the Comodo forums topics [Comodo Firewall conflict with
-Hyper-V](https://forums.comodo.com/bug-reports-cis/comodo-firewall-began-conflict-with-hyperv-t116351.0.html)
-and [Windows 10 Anniversary build doesn't allow Comodo drivers to be
-installed](https://forums.comodo.com/install-setup-configuration-help-cis/windows-10-aniversary-build-doesnt-allow-comodo-drivers-to-be-installed-t116322.0.html).
-A Docker for Windows user-created issue describes the problem specifically as it
-relates to Docker: [Docker fails to start on Windows
+请参阅 Comodo 论坛主题 [Comodo Firewall conflict with
+Hyper-V](https://forums.comodo.com/bug-reports-cis/comodo-firewall-began-conflict-with-hyperv-t116351.0.html) 与 [Windows 10 Anniversary build doesn't allow Comodo drivers to be
+installed](https://forums.comodo.com/install-setup-configuration-help-cis/windows-10-aniversary-build-doesnt-allow-comodo-drivers-to-be-installed-t116322.0.html). 有 Docker for Windows 用户创建的问题特别描述了与 Docker 相关的问题: [Docker fails to start on Windows
 10](https://github.com/docker/for-win/issues/27).
 
-For a temporary workaround, uninstall the firewall or anti-virus software, or explore other
-workarounds suggested on the forum.
+作为临时的应对方法, 请卸载防火墙或防病毒软件, 或浏览论坛上建议的其它解决方法.
