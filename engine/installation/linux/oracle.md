@@ -8,7 +8,7 @@ title: Install Docker on Oracle Linux
 
 Docker 支持 Oracle Linux 6 and 7. 你不需要为在Oracle Linux上安装Docker去订阅Oracle Linux支持
 
-## 前提
+## 安装前准备
 
 因为目前Docker的限制, 它只能在x86_64架构下运行。
 Docker 需要使用 Unbreakable Enterprise Kernel Release 4 (4.1.12) 或更高版本内核的Oracle Linux. 

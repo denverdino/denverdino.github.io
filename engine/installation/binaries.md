@@ -40,7 +40,7 @@ Docker要求最低Linux版本为3.10。
 
 值得注意的是 Docker 可以以客户端模式存在，它几乎可以运行在任何的Linux内核（甚至 macOS）上。
 
-## 开启 AppArmor 和 SELinux
+## 尽量开启 AppArmor 和 SELinux
 
 如果你的 Linux 发行版上支持 AppArmor 或 Selinux 请启用。这有助于提高安全性并阻止某些漏洞。请在发行版提供的文档中查看如何开启推荐的安全设置的详细操作。
 
@@ -54,49 +54,34 @@ Docker要求最低Linux版本为3.10。
 
 ## 获取Docker Engine二进制文件
 
-你可以下载最新版本或者特定版本的二进制版本。参见`docker/docker` [Releases page](https://github.com/docker/docker/releases).
+你可以下载最新版本或者特定版本的二进制版本。`docker/docker` [releases page](https://github.com/docker/docker/releases)中列出了稳定的发布版本
 
-Docker每个版本的发布记录底部都会有一组下载链接。链接中包含了该版本的源代码地址、已支持平台的二进制安装文件地址和不在支持的Linux版本中的静态二进制文件地址。
-可以再下载章节中找到链接列表，找到合适的二进制文件来下载。
+你可以通过在URL中分别添加.md5 或 .sha256后缀获取包的MD5和SHA256值。
 
-### Windows 和 macOS 二进制文件的限制
+### 获取Linux安装包
 
-对于Windows系统，`i386` 下载仅是一个32位客户端安装包。`x86_64` 下载文件中包含客户端和服务端安装文件，可以在64位Windows
-Server 2016 和 Windows 10 中使用.
+使用下面的URL下载Linux下最新安装包：
 
-macOS二进制文件仅包含客户端，你不能使用它来启用`dockerd`进程。如果要运行守护进程，请安装 [Docker for Mac](/docker-for-mac/index.md)
+    https://get.docker.com/builds/Linux/i386/docker-latest.tgz
 
-### 静态二进制文件的URL规则
+    https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz
 
-已经发布的二进制文件的URL是固定的并遵照一定的规则。目前还不支持目录结构查看。如果你不想在发布记录中查找下载链接，可以根据下面说明的规则拼出下载URL：
+下载Linux下某个特定版本安装包可以使用下面的URL格式：
 
-| Description            | URL pattern                                                       |
-|------------------------|-------------------------------------------------------------------|
-| Latest Linux 64-bit    | `https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz`    |
-| Latest Linux 32-bit    | `https://get.docker.com/builds/Linux/i386/docker-latest.tgz`      |
-| Specific version Linux 64-bit| `https://get.docker.com/builds/Linux/x86_64/docker-<version>.tgz` |
-| Specific version Linux 32-bit| `https://get.docker.com/builds/Linux/i386/docker-<version>.tgz`   |
-| Latest Windows 64-bit | `https://get.docker.com/builds/Windows/x86_64/docker-latest.zip`     |
-| Latest Windows 32-bit | `https://get.docker.com/builds/Windows/i386/docker-latest.zip`      |
-| Specific version Windows 64-bit | `https://get.docker.com/builds/Windows/x86_64/docker-<version>.zip` |
-| Specific version Windows 32-bit | `https://get.docker.com/builds/Windows/i386/docker-<version>.zip` |
-| Latest MacOS 64-bit   | `https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz` |
-| Specific version MacOS 64-bit | `https://get.docker.com/builds/Darwin/x86_64/docker-<version>.tgz` |
+    https://get.docker.com/builds/Linux/i386/docker-<version>.tgz
 
-例如，Docker 1.11.0 64-bit的Linux二进制安装文件地址为
-`https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz`.
+    https://get.docker.com/builds/Linux/x86_64/docker-<version>.tgz
+
+例如：
+
+    https://get.docker.com/builds/Linux/i386/docker-1.11.0.tgz
+
+    https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz
+
+> **注意** 上述说明适用于Docker Engine 1.11 及以上版本. Engine 1.10 或以下版本只有一个安装包，说明稍有不同。
+> 安装 1.10 或以下版本请参考 <a href="https://docs.docker.com/v1.10/engine/installation/binaries/" target="_blank">1.10 documentation</a>.
 
 
-> **注意** These instructions are for Docker Engine 1.11 and up. Engine 1.10 and
-> 上述规则只适用于Docker Engine 1.11及以上版本。对于Engine 1.10及以下版本的二进制文件在一个包内，规则是不同的。
-> 安装1.10及以下版本请参考这些说明[1.10 documentation](https://docs.docker.com/v1.10/engine/installation/binaries/){:target="_blank"}.
-
-#### 验证下载文件
-
-为了验证下载文件的完整性，你可以在URL后面添加`.md5` 或 `.sha256`来获取该文件的MD5值 或 SHA256值。
-例如，验证上面链接中的`docker-1.11.0.tgz`文件，可以使用URL
-`https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz.md5` 或
-`https://get.docker.com/builds/Linux/x86_64/docker-1.11.0.tgz.sha256`.
 
 ## 安装Linux二进制文件
 
@@ -138,13 +123,48 @@ contrib directory</a>.
 
 想要了解更多运行Engine守护进程模式的信息，参见Engine命令行参考中的[daemon command](../reference/commandline/dockerd.md)
 
-## macOS中二进制文件安装
+## 获取macOS安装包
 
-双击下载的 `.tgz` 文件或通过命令行 `tar -xvzf docker-1.11.0.tgz` 来解压文件。你可以再任何位置运行客户端。
+macOS安装包只是一个客户端，不能运行`docker`在守护进程模式。使用下面URL下载最新版本：
 
-## Windows中安装二进制文件
+    https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz
 
-双击下载的 `.zip` 文件来解压。你可以再任何位置运行客户端。
+下载某个特定版本，可以使用下面的URL格式：
+
+    https://get.docker.com/builds/Darwin/x86_64/docker-<version>.tgz
+
+例如：
+
+    https://get.docker.com/builds/Darwin/x86_64/docker-1.11.0.tgz
+
+双击下载的 `.tgz` 文件或通过命令行 `tar -xvzf docker-1.11.0.tgz` 来解压文件。你可以在任何位置运行客户端。
+
+## 获取Windows安装包
+
+目前你只能下载`1.9.1`版本的安装包.此外，32位安装包(`i386`)仅包含一个客户端，不能运行`docker`在守护进程模式。
+64位安装包(`x86_64`)包含完整组件.
+
+使用下面URL下载最新版本：
+
+    https://get.docker.com/builds/Windows/i386/docker-latest.zip
+
+    https://get.docker.com/builds/Windows/x86_64/docker-latest.zip
+
+下载某个特定版本，可以使用下面的URL格式：
+
+    https://get.docker.com/builds/Windows/i386/docker-<version>.zip
+
+    https://get.docker.com/builds/Windows/x86_64/docker-<version>.zip
+
+例如:
+
+    https://get.docker.com/builds/Windows/i386/docker-1.11.0.zip
+
+    https://get.docker.com/builds/Windows/x86_64/docker-1.11.0.zip
+
+
+> **注意** 上述说明使用于 Engine 1.11 以以上版本. 旧版本安装说明稍有不同。
+> 如果要安装 1.10 或更低版本, 请参考 <a href="https://docs.docker.com/v1.10/engine/installation/binaries/" target="_blank">1.10 documentation</a>.
 
 ## 非root权限执行客户端命令
 
@@ -163,11 +183,9 @@ Linux中`dockerd` 守护进程由root用户运行并绑定一个Unix socket（�
 
 Linux中升级你手动安装的 Docker Engine ,需要先停掉docker进程：
 
-```bash
-$ killall dockerd
-```
+  $ killall docker
 
-Docker进程停止后，移除旧的安装文件并按着[步骤](binaries.md#get-the-linux-binaries)重新安装
+然后参考[regular installation steps](#get-the-linux-binaries)步骤操作.
 
 ## 接下来
 
