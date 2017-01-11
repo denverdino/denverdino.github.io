@@ -6,72 +6,64 @@ redirect_from:
 title: Install Docker on Arch Linux
 ---
 
-Installing on Arch Linux can be handled via the package in community:
+你可以使用Arch Linux社区发布的软件包进行安装:
 
  - [docker](https://www.archlinux.org/packages/community/x86_64/docker/)
 
-or the following AUR package:
+或者使用 AUR 包:
 
  - [docker-git](https://aur.archlinux.org/packages/docker-git/)
 
-The docker package will install the latest tagged version of docker. The
-docker-git package will build from the current master branch.
+docker软件包将会安装最新版本的Docker. docker-git 则是由master 分支构建的包.
 
-## Dependencies
+## 依赖
 
-Docker depends on several packages which are specified as dependencies
-in the packages. The core dependencies are:
+Docker 依赖于几个指定的安装包. 核心的依赖包如下:
 
  - bridge-utils
  - device-mapper
  - iproute2
  - sqlite
 
-## Installation
+## 安装
 
-For the normal package a simple
+对于一般包简单安装:
 
     $ sudo pacman -S docker
 
-is all that is needed.
+这样就安装了所需要的一切.
 
-For the AUR package execute:
+对于AUR包执行:
 
     $ yaourt -S docker-git
 
-The instructions here assume **yaourt** is installed. See [Arch User
+安装说明假设已安装好 **yaourt** . 如果你之前没有安装构建过这个包，请参考 [Arch User
 Repository](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages)
-for information on building and installing packages from the AUR if you
-have not done so before.
 
-## Starting Docker
 
-There is a systemd service unit created for docker. To start the docker
-service:
+## 启动 Docker
+
+Docker 会创建一个系统服务，用下面命令来启动 Docker:
 
     $ sudo systemctl start docker
 
-To start on system boot:
+设置开机启动:
 
     $ sudo systemctl enable docker
 
-## Custom daemon options
+## 自定义进程选项
 
-If you need to add an HTTP Proxy, set a different directory or partition for the
-Docker runtime files, or make other customizations, read our systemd article to
-learn how to [customize your systemd Docker daemon options](../../admin/systemd.md).
+如果你想要添加一个 HTTP 代理，为 Docker 运行文件设置不同的目录或分区，又或者定制一些其它的功能，请阅读我们的系统文章，
+了解[如何定制Docker进程](../../admin/systemd.md).
 
-## Running Docker with a manually-defined network
+## 通过手动定义网络运行Docker
 
-If you manually configure your network using `systemd-network` version 220 or
-higher, containers you start with Docker may be unable to access your network.
-Beginning with version 220, the forwarding setting for a given network
-(`net.ipv4.conf.<interface>.forwarding`) defaults to *off*. This setting
-prevents IP forwarding. It also conflicts with Docker which enables the
-`net.ipv4.conf.all.forwarding` setting within a container.
+如果你手动配置网络通过`systemd-network` 220 或者更高的版本，你使用Docker启动的容器将不能访问你的网络。
+从220版本开始，对于特定网络的转发规则(`net.ipv4.conf.<interface>.forwarding`) 默认值为*off*.
+该设置阻止IP转发。该规则与Docker在容器中开启`net.ipv4.conf.all.forwarding`规则是冲突的。
 
-To work around this, edit the `<interface>.network` file in
-`/etc/systemd/network/` on your Docker host add the following block:
+为了使得以上可以工作, 需要在你的Docker宿主机下，编辑`/etc/systemd/network/`目录下的 `<interface>.network`文件。
+添加如下内容:
 
 ```
 [Network]
@@ -80,22 +72,21 @@ IPForward=kernel
 ...
 ```
 
-This configuration allows IP forwarding from the container as expected.
+这个配置允许从容器中进行IP转发.
 
-## Uninstallation
+## 卸载
 
-To uninstall the Docker package:
+卸载Docker软件包:
 
     $ sudo pacman -R docker
 
-To uninstall the Docker package and dependencies that are no longer needed:
+卸载Docker 以及依赖的软件包:
 
     $ sudo pacman -Rns docker
 
-The above commands will not remove images, containers, volumes, or user created
-configuration files on your host. If you wish to delete all images, containers,
-and volumes run the following command:
+以上的命令不会移除镜像，容器，数据卷以及用户创建的配置文件。
+如果想删除全部的镜像，容器，数据卷，运行以下命令：
 
     $ rm -rf /var/lib/docker
 
-You must delete the user created configuration files manually.
+你必须手动删除用户创建的配置文件。

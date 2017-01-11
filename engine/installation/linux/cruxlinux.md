@@ -6,82 +6,78 @@ redirect_from:
 title: Install Docker on CRUX Linux
 ---
 
-Installing on CRUX Linux can be done using the
-official [contrib](http://crux.nu/portdb/?a=repo&q=contrib) ports:
+在CRUX Linux 安装Docker可以通过官方的
+ [contrib](http://crux.nu/portdb/?a=repo&q=contrib) ports:
 
 - docker
 
-The `docker` port will build and install the latest tagged version of Docker.
+`docker` port 将构建安装最新版本的Docker.
 
 
-## Installation
+## 安装
 
-Assuming you have contrib enabled, update your ports tree and install docker:
+如果你的版本允许，更新你的 ports 目录树并且安装docker:
 
     $ sudo prt-get depinst docker
 
 
-## Kernel requirements
+## 内核要求
 
-To have a working **CRUX+Docker** Host you must ensure your Kernel has
-the necessary modules enabled for the Docker Daemon to function correctly.
+如果使 **CRUX+Docker** H主机正常工作，你必须确保你的内核安装必要的模块来保证 Docker 进程的正常运行.
 
-Please read the `README`:
+请阅读 `README`:
 
     $ sudo prt-get readme docker
 
-The `docker` port installs the `contrib/check-config.sh` script
-provided by the Docker contributors for checking your kernel
-configuration as a suitable Docker host.
+`docker` port 安装由Docker发行版提供的 `contrib/check-config.sh` 脚本,
+以供检查你的内核配置是否合适安装Docker主机.
 
-To check your Kernel configuration run:
+运行下面的命令来检查你的内核:
 
     $ /usr/share/docker/check-config.sh
 
-## Starting Docker
+## 启动Docker
 
-There is a rc script created for Docker. To start the Docker service:
+我们提供一个 rc 脚本来创建 Docker.请使用下列命令来启动 Docker 服务:
 
     $ sudo /etc/rc.d/docker start
 
-To start on system boot:
+设置开机启动:
 
- - Edit `/etc/rc.conf`
- - Put `docker` into the `SERVICES=(...)` array after `net`.
+ - 编辑 `/etc/rc.conf`
+ - 将 `docker` 放到 `SERVICES=(...)` 数组里的 `net` 之后.
 
-## Images
+## 镜像
 
-There is a CRUX image as part of the Docker "Official Library" of images.
-To use this image simply pull it or use it as part of your `FROM` line in
-your `Dockerfile(s)`.
+`官方库`中提供了CRUX镜像。你可以使用`pull`命令在使用这个镜像,当然你也可以在
+`Dockerfile(s)`文件的`FROM`部分设置使用.
 
     $ docker pull crux
     $ docker run -i -t crux
 
-There are also user contributed [CRUX based image(s)](https://hub.docker.com/_/crux/) on the Docker Hub.
+在Docker Hub中也有其他用户贡献的 [CRUX基础镜像](https://hub.docker.com/_/crux/).
 
 
-## Uninstallation
+## 卸载
 
-To uninstall the Docker package:
+卸载Docker软件包:
 
     $ sudo prt-get remove docker
 
-The above command will not remove images, containers, volumes, or user created
-configuration files on your host. If you wish to delete all images, containers,
-and volumes run the following command:
+以上的命令并不会移除镜像，容器，数据卷或者用户创建的配置文件。如果你想删除全部的镜像，容器以及数据卷
+运行如下的命令：
 
     $ rm -rf /var/lib/docker
 
-You must delete the user created configuration files manually.
+你必须手动删除用户配置文件.
 
 ## Issues
 
-If you have any issues please file a bug with the
+如果你有任何的问题，欢迎提到
 [CRUX Bug Tracker](http://crux.nu/bugs/).
 
-## Support
+## 支持
 
-For support contact the [CRUX Mailing List](http://crux.nu/Main/MailingLists)
-or join CRUX's [IRC Channels](http://crux.nu/Main/IrcChannels). on the
+需要帮忙请联系 [CRUX Mailing List](http://crux.nu/Main/MailingLists)
+或者加入 CRUX's [IRC Channels](http://crux.nu/Main/IrcChannels). 通过
 [FreeNode](http://freenode.net/) IRC Network.
