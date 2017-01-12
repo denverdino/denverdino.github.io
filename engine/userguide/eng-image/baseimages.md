@@ -6,21 +6,18 @@ redirect_from:
 title: Create a base image
 ---
 
-So you want to create your own [*Base Image*](../../reference/glossary.md#base-image)? Great!
+你开始希望创建自己的[*基础镜像*](../../reference/glossary.md#base-image)了吗? 太棒了！
 
-The specific process will depend heavily on the Linux distribution you
-want to package. We have some examples below, and you are encouraged to
-submit pull requests to contribute new ones.
+具体的制作过程将依赖于你希望打包的特定的Linux发行版。下面，我们有几个镜像制作的示例，
+欢迎通过提交pull请求来贡献更多的示例。
 
-## Create a full image using tar
+## 使用归档文件来创建一个完整的镜像
 
-In general, you'll want to start with a working machine that is running
-the distribution you'd like to package as a base image, though that is
-not required for some tools like Debian's
-[Debootstrap](https://wiki.debian.org/Debootstrap), which you can also
-use to build Ubuntu images.
+通常来说，当你需要打包某一Linux的发行版，将其作为基础镜像时，你需要一个运行该发行版的机器，
+尽管对于某些工具来说这不是必须的，例如Debian的[Debootstrap](https://wiki.debian.org/Debootstrap),
+你可以用它来构建Ubuntu的镜像。
 
-It can be as simple as this to create an Ubuntu base image:
+通过如下步骤，制作一个Ubuntu的基础镜像可以很简单：
 
     $ sudo debootstrap raring raring > /dev/null
     $ sudo tar -C raring -c . | docker import - raring
@@ -34,36 +31,33 @@ It can be as simple as this to create an Ubuntu base image:
     DISTRIB_CODENAME=raring
     DISTRIB_DESCRIPTION="Ubuntu 13.04"
 
-There are more example scripts for creating base images in the Docker
-GitHub Repo:
+在Docker GitHub 仓库中，还有更多的示例脚本用于创建基础镜像：
 
  - [BusyBox](https://github.com/docker/docker/blob/master/contrib/mkimage-busybox.sh)
- - CentOS / Scientific Linux CERN (SLC) [on Debian/Ubuntu](
-   https://github.com/docker/docker/blob/master/contrib/mkimage-rinse.sh) or
-   [on CentOS/RHEL/SLC/etc.](
+ - CentOS / Scientific Linux CERN (SLC) [在 Debian/Ubuntu上](
+   https://github.com/docker/docker/blob/master/contrib/mkimage-rinse.sh) 或者
+   [在 CentOS/RHEL/SLC/等上](
    https://github.com/docker/docker/blob/master/contrib/mkimage-yum.sh)
  - [Debian / Ubuntu](
    https://github.com/docker/docker/blob/master/contrib/mkimage-debootstrap.sh)
 
-## Creating a simple base image using scratch
+## 使用scratch创建一个简单的基础镜像
 
-You can use Docker's reserved, minimal image, `scratch`, as a starting point for building containers. Using the `scratch` "image" signals to the build process that you want the next command in the `Dockerfile` to be the first filesystem layer in your image.
-
-While `scratch` appears in Docker's repository on the hub, you can't pull it, run it, or tag any image with the name `scratch`. Instead, you can refer to it in your `Dockerfile`. For example, to create a minimal container using `scratch`:
+你可以使用一个Docker保留的最小化的镜像，`scratch`，作为构建容器的起点。使用`scratch`镜像告诉了构建过程你希望在`Dockerfile`中的下一条命令作为镜像的第一个文件系统层。
+尽管`scratch`镜像出现在Docker hub的仓库中，你不能pull它，执行它，或者给其他的镜像打上`scratch`的标签。你能做的就是在`Dockerfile`中引用该镜像，例如使用`scratch`创建一个最小的容器：
 
     FROM scratch
     ADD hello /
     CMD ["/hello"]
 
-This example creates the hello-world image used in the tutorials.
-If you want to test it out, you can clone [the image repo](https://github.com/docker-library/hello-world)
+这一示例创建了在教材中使用的hello-world镜像。
+如果你想测试这一镜像的制作，你可以克隆[镜像仓库](https://github.com/docker-library/hello-world)
 
 
-## More resources
+## 更多资源
 
-There are lots more resources available to help you write your 'Dockerfile`.
+还有更多的资源来帮助你编写`Dockerfile`.
 
-* There's a [complete guide to all the instructions](../../reference/builder.md) available for use in a `Dockerfile` in the reference section.
-* To help you write a clear, readable, maintainable `Dockerfile`, we've also
-written a [`Dockerfile` Best Practices guide](dockerfile_best-practices.md).
-* If your goal is to create a new Official Repository, be sure to read up on Docker's [Official Repositories](/docker-hub/official_repos/).
+* 在引用部分，对于Dockerfile出现的所有指令，有一个完整的[说明](../../reference/builder.md)
+* 为了帮助您编写清晰，可读，维护性好的`Dockerfile`，我们提供了[`Dockerfile`最佳实践指南](dockerfile_best-practices.md)
+* 如果你的目标是创建一个新的官方仓库，请务必阅读[官方仓库](/docker-hub/official_repos/)。

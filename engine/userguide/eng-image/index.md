@@ -4,6 +4,6 @@ keywords: docker, introduction, documentation, about, technology, docker.io, use
 title: Work with images
 ---
 
-* [Create a base image](baseimages.md)
-* [Best practices for writing Dockerfiles](dockerfile_best-practices.md)
-* [Image management](image_management.md)
+* [制作一个基础镜像](baseimages.md)
+* [Dockerfiles编写最佳实践](dockerfile_best-practices.md)
+* [镜像管理](image_management.md)
