@@ -1,29 +1,26 @@
 ---
-description: Learn how select the proper storage driver for your container.
+description: 如何为你的容器选择合适的存储驱动  
 keywords: container, storage, driver, AUFS, btfs, devicemapper,zvfs
-title: Docker storage drivers
+title: Docker 存储驱动
 ---
 
-Docker relies on driver technology to manage the storage and interactions associated with images and the containers that run them. This section contains the following pages:
+Docker 通过一些存储驱动的技术去管理镜像和容器的存储，这一章包含以下章节：
 
-* [Understand images, containers, and storage drivers](imagesandcontainers.md)
-* [Select a storage driver](selectadriver.md)
-* [AUFS storage driver in practice](aufs-driver.md)
-* [Btrfs storage driver in practice](btrfs-driver.md)
-* [Device Mapper storage driver in practice](device-mapper-driver.md)
-* [OverlayFS in practice](overlayfs-driver.md)
-* [ZFS storage in practice](zfs-driver.md)
 
-If you are new to Docker containers make sure you read ["Understand images, containers, and storage drivers"](imagesandcontainers.md) first. It explains key concepts and technologies that can help you when working with storage drivers.
+* [理解 镜像、容器和存储驱动](imagesandcontainers.md)
+* [如何选择存储驱动](selectadriver.md)
+* [AUFS存储驱动实践](aufs-driver.md)
+* [Btrfs 存储驱动实践](btrfs-driver.md)
+* [Device Mapper 存储驱动实践](device-mapper-driver.md)
+* [OverlayFS 实践](overlayfs-driver.md)
+* [ZFS 存储实践](zfs-driver.md)
 
-### Acknowledgment
+如果你对Docker container刚接触不久，那么你应该先读一下[理解 镜像、容器和存储驱动](imagesandcontainers.md)，它诠释了镜像、容器和存储驱动的核心概念和技术，并通过这些概念帮助你更好的使用存储的驱动。
 
-The Docker storage driver material was created in large part by our guest author
-Nigel Poulton with a bit of help from Docker's own Jérôme Petazzoni. In his
-spare time Nigel creates [IT training
-videos](http://www.pluralsight.com/author/nigel-poulton), co-hosts the weekly
-[In Tech We Trust podcast](http://intechwetrustpodcast.com/), and lives it large
-on [Twitter](https://twitter.com/nigelpoulton).
+### 鸣谢
+
+Docker的存储驱动大部分由伟大的贡献者Nigel Poulton在Docker的Jérôme Petazzoni的一点点的帮助下创造的，在Nigel Poulton的工作之余，他还制做了 [IT知识系列视频](http://www.pluralsight.com/author/nigel-poulton)，和别人一起制作了这个播客
+[In Tech We Trust podcast](http://intechwetrustpodcast.com/)，并且在他的[Twitter](https://twitter.com/nigelpoulton)也有相应的内容。
 
 
 &nbsp;

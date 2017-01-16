@@ -1,53 +1,48 @@
 ---
-description: Use macvlan for container networking
+description: 使用Macvlan配置容器网络  
 keywords: Examples, Usage, network, docker, documentation, user guide, macvlan, cluster
-title: Get started with Macvlan network driver
+title: Macvlan 网络驱动入门
 ---
 
-The Macvlan driver is in order to make Docker users use cases and vet the implementation to ensure a hardened, production ready driver. Libnetwork now gives users total control over both IPv4 and IPv6 addressing. The VLAN drivers build on top of that in giving operators complete control of layer 2 VLAN tagging for users interested in underlay network integration. For overlay deployments that abstract away physical constraints see the [multi-host overlay ](/engine/userguide/networking/get-started-overlay/) driver.
+Macvlan网络驱动是为了在Docker的用户的使用场景中提供一个稳定的，生产就绪的网络驱动。目前Libnetwork 允许用户控制IPv4和IPv6地址管理。对于需要将容器网络和底层网络集成的用户来说，VLAN的驱动也允许他们完全控制二层VLAN taggine。而对于使用不依赖于物理网络约束的overlay网络方式部署网络结构的用户，可以参考[multi-host overlay ](/engine/userguide/networking/get-started-overlay/) 的驱动部署容器的网络。
 
-Macvlan is a new twist on the tried and true network virtualization technique. The Linux implementations are extremely lightweight because rather than using the traditional Linux bridge for isolation, they are simply associated to a Linux Ethernet interface or sub-interface to enforce separation between networks and connectivity to the physical network.
+Macvlan是一种新的网络虚拟化技术。Linux使用非常轻量的方式实现Macvlan，因为Mavlan不使用传统的Linux bridge做隔离和区分，而是直接与Linux的以太网接口或者子接口关联，以实现在物理网络中网络和连接的隔离。
 
-Macvlan offers a number of unique features and plenty of room for further innovations with the various modes. Two high level advantages of these approaches are, the positive performance implications of bypassing the Linux bridge and the simplicity of having less moving parts. Removing the bridge that traditionally resides in between the Docker host NIC and container interface leaves a very simple setup consisting of container interfaces, attached directly to the Docker host interface. This result is easy access for external facing services as there is no port mappings in these scenarios.
+Macvlan提供了很多独特的功能以及为后面更多模式加入的接口。Macvlan中的那些模式的优势在于比较高的网络性能，以及不依赖于Linux Bridge技术，简化虚拟网络的结构。移除了传统的Docker宿主机的网络设备和容器中虚拟网络设备中间的Linux bridge，而使用容器的虚拟网络接口直接挂载到宿主机的网络接口删个。这样在Docker上就可以更加方便的暴漏服务出去，因为这种方式不需要端口映射就可以让外部访问到容器中的服务。
 
-## Pre-Requisites
+## 实现准备
+- 下面这个示例中的宿主机是使用Docker 1.12.0以上的版本的单机上测试的。
 
-- The examples on this page are all single host and setup using Docker 1.12.0+
+- 所有的示例都可以在运行了Docker的宿主机上测试，示例中使用了sub-interface比如`eth0.10`可以替换成`eth0`或者别的可用的宿主机上的parent-interface。子接口名字中有`.`字符的可以即使的自动的被创建。如果不指定`-o parent`的参数值，就会自动创建一个`dummy`的接口保证本地宿主机容器的连通性。
 
-- All of the examples can be performed on a single host running Docker. Any examples using a sub-interface like `eth0.10` can be replaced with `eth0` or any other valid parent interface on the Docker host. Sub-interfaces with a `.` are created on the fly. `-o parent` interfaces can also be left out of the `docker network create` all together and the driver will create a `dummy` interface that will enable local host connectivity to perform the examples.
+- 内核要求：
 
-- Kernel requirements:
+ - 使用`uname -r`命令输出和检查kernel版本
+ - 支持Macvlan的kernel版本：v3.9–3.19 和 4.0+
 
- - To check your current kernel version, use `uname -r` to display your kernel version
- - Macvlan Linux kernel v3.9–3.19 and 4.0+
+## Macvlan Bridge模式使用示例
 
-## MacVlan Bridge Mode Example Usage
+Macvlan Bridge模式每个容器有一个独立的MAC地址，用于记录宿主机上的MAC地址的端口的映射。
 
-Macvlan Bridge mode has a unique MAC address per container used to track MAC to port mappings by the Docker host.
+- Macvlan驱动的网络会被挂载到一个宿主机上的网络接口，例如宿主机的物理网络接口`eth0`，用于802.1q VLAN tagging的子接口，例如`eth0.10`(`.10`表示VLAN `10`)，或者绑定宿主机的适配器，将两个以太网接口捆绑成一个逻辑接口。
 
-- Macvlan driver networks are attached to a parent Docker host interface. Examples are a physical interface such as `eth0`, a sub-interface for 802.1q VLAN tagging like `eth0.10` (`.10` representing VLAN `10`) or even bonded host adaptors which bundle two Ethernet interfaces into a single logical interface.
+- 指定的网关是宿主机的外部的基础网络设施提供的网关
 
-- The specified gateway is external to the host provided by the network infrastructure.
+- 每个Macvlan Bridge模式的Docker网络都是相互隔离的，并且一个网络接口不允许多个网络同时挂载。并且理论上一个宿主机的网络适配器最多只能挂载4,094个子接口。
 
-- Each Macvlan Bridge mode Docker network is isolated from one another and there can be only one network attached to a parent interface at a time. There is a theoretical limit of 4,094 sub-interfaces per host adaptor that a Docker network could be attached to.
+- 在`macvlan bridge`中，同一个子网内的任何一个容器都可以在不需要网关的情况下与别的容器互相通信。
+- `docker network`命令对于vlan的驱动同样适用
+- 在Macvlan模式下，在不同网络/子网中的容器不能在没有外部路由的情况下互相访问，或者同一个网络拥有多个子网，子网间也是不能在没有外部路由的情况下互相访问。
 
-- Any container inside the same subnet can talk to any other container in the same network without a  gateway in `macvlan bridge`.
-
-- The same `docker network` commands apply to the vlan drivers.
-
-- In Macvlan mode, containers on separate networks cannot reach one another without an external process routing between the two networks/subnets. This also applies to multiple subnets within the same `docker network
-
-In the following example, `eth0` on the docker host has an IP on the `172.16.86.0/24` network and a default gateway of `172.16.86.1`. The gateway is an external router with an address of `172.16.86.1`. An IP address is not required on the Docker host interface `eth0` in `bridge` mode, it merely needs to be on the proper upstream network to get forwarded by a network switch or network router.
+在下面的示例中，docker宿主机的`eth0`接口有一个在`172.16.86.0/24`网络中的IP和默认的网关地址`172.16.86.1`。这个网关是一个地址是`172.16.86.1`的外部路由器。对于`bridge`模式中，宿主机的`eth0`是不需要配置IP地址的，它仅仅是为了转发到上层网络中的交换机和路由器。
 
 ![Simple Macvlan Bridge Mode Example](images/macvlan_bridge_simple.png)
 
-**Note** For Macvlan bridge mode the subnet values need to match the NIC's interface of the Docker host. For example, Use the same subnet and gateway of the Docker host ethernet interface that is specified by the `-o parent=` option.
+**注意** 在Macvlan bridge模式中子网的配置需要跟宿主机的接口的配置一致。例如，使用和宿主机以太网接口一直的子网和网关配置，这个网络接口可以通过`-o parent=`选项指定。
 
-- The parent interface used in this example is `eth0` and it is on the subnet `172.16.86.0/24`. The containers in the `docker network` will also need to be on this same subnet as the parent `-o parent=`. The gateway is an external router on the network, not any ip masquerading or any other local proxy.
-
-- The driver is specified with `-d driver_name` option. In this case `-d macvlan`
-
-- The parent interface `-o parent=eth0` is configured as followed:
+- 这个例子中我们使用的父接口是`eth0`并且它在子网`172.16.86.0/24`的网段上。在`docker network`中看到的容器需要和`-o parent=`使用同样的子网配置。网关是一个网络中的外部的路由器，到这个路有器之间没有ip地址伪装和别的代理。
+- 使用网络驱动需要在创建网络时指明`-d 驱动名`选项，在这个驱动既`-d macvlan`选项
+- 父接口配置通过`-o parent=eth0`，如下：
 
 ```
 ip addr show eth0
@@ -55,7 +50,7 @@ ip addr show eth0
     inet 172.16.86.250/24 brd 172.16.86.255 scope global eth0
 ```
 
-Create the macvlan network and run a couple of containers attached to it:
+创建macvlan网络，并启动两个容器挂载到这个网络中：
 
 ```
 # Macvlan  (-o macvlan_mode= Defaults to Bridge mode if not specified)
@@ -73,7 +68,7 @@ ping -c 4 172.16.86.10
 
 ```
 
- Take a look at the containers ip and routing table:
+看一下这俩容器的IP和路由表：
 
 ```
 
@@ -91,9 +86,10 @@ ip route
 # In this case the containers cannot ping the -o parent=172.16.86.250
 ```
 
-You can explicitly specify the `bridge` mode option `-o macvlan_mode=bridge`. It is the default so will be in `bridge` mode either way.
+你可以通过`-o mavlan_mode=bridge`参数指定`bridge`模式，如果不指定
+You can explicitly specify the `bridge` mode option `-o macvlan_mode=bridge`. 而且在不指定是默认也是`bridge`模式.
 
-While the `eth0` interface does not need to have an IP address in Macvlan Bridge it is not uncommon to have an IP address on the interface. Addresses can be excluded from getting an address from the default built in IPAM by using the `--aux-address=x.x.x.x` flag. This will blacklist the specified address from being handed out to containers. The same network example above blocking the `-o parent=eth0` address from being handed out to a container.
+虽然在Macvlan模式中父接口`eth0`并不需要IP地址，但一般接口不会没有IP地址吧，在创建网络的时候如果使用默认的IPAM的话，可以使用`--aux-address=x.x.x.x`的表示，这样在分配给容器IP地址时就会排除掉指定的IP地址，下面这个例子就是排除了`eth0`的网络地址的命令：
 
 ```
 docker network create -d macvlan \
@@ -102,8 +98,7 @@ docker network create -d macvlan \
     --aux-address="exclude_host=172.16.86.250" \
     -o parent=eth0 pub_net
 ```
-
-Another option for subpool IP address selection in a network provided by the default Docker IPAM driver is to use `--ip-range=`. This specifies the driver to allocate container addresses from this pool rather then the broader range from the `--subnet=` argument from a network create as seen in the following example that will allocate addresses beginning at `192.168.32.128` and increment upwards from there.
+另外一个默认的Docker IPAM驱动提供的IP地址选取的参数是`ip-range=`。这个表示了驱动分配IP地址的范围是`ip-range`的地址段，而不是使用`--subnet=`的参数的段。例如下面这个例子，IP地址的分配将从`192.168.32.128`开始分配。
 
 ```
 docker network create -d macvlan  \
@@ -116,74 +111,73 @@ docker network create -d macvlan  \
 docker run --net=macnet32 -it --rm alpine /bin/sh
 ```
 
-The network can then be deleted with:
+网络可以通过如下方式删除:
 
 ```
 docker network rm <network_name or id>
 ```
 
-- **Note:** In Macvlan you are not able to ping or communicate with the default namespace IP address. For example, if you create a container and try to ping the Docker host's `eth0` it will **not** work. That traffic is explicitly filtered by the kernel modules themselves to offer additional provider isolation and security.
+- **注意** 在Macvlan你不能ping或者联通宿主机的namespace中的IP地址，比如你创建了容器，并试图ping Docker宿主机上的`eth0`的地址，这个是**不**通的。这个通信由于安全性和隔离性被kernel的内核模块拦截了。
 
-For more on Docker networking commands see [Working with Docker network commands](/engine/userguide/networking/work-with-networks/)
+Docker的网络命令可以参考 [使用Docker network命令](/engine/userguide/networking/work-with-networks/)
 
-## Macvlan 802.1q Trunk Bridge Mode Example Usage
+## Macvlan 802.1q Trunk Bridge 模式使用示例
+VLAN技术很长时间都被用作数据中心虚拟化网络的解决方案，并且在今天还有很多的使用。VLAN通过一个12位的标签，区分不同的域的方式实现对单个或者多个子网的逻辑的分组。对于网络工程师来说通过VLAN划分网络和配置例如`web`，`db`或者其他需要隔离的服务的安全是在正常不过的事了。
 
-VLANs (Virtual Local Area Networks) have long been a primary means of virtualizing data center networks and are still in virtually all existing networks today. VLANs work by tagging a Layer-2 isolation domain with a 12-bit identifier ranging from 1-4094 that is inserted into a packet header that enables a logical grouping of a single or multiple subnets of both IPv4 and IPv6. It is very common for network operators to separate traffic using VLANs based on a subnet(s) function or security profile such as `web`, `db` or any other isolation needs.
-
-It is very common to have a compute host requirement of running multiple virtual networks concurrently on a host. Linux networking has long supported VLAN tagging, also known by its standard 802.1q, for maintaining datapath isolation between networks. The Ethernet link connected to a Docker host can be configured to support the 802.1q VLAN IDs, by creating Linux sub-interfaces, each one dedicated to a unique VLAN ID.
+目前一个宿主机上需要连接多个虚拟网络是很正常的，Linux网络很早就支持VLAN的标签，它的标准是802.1q，用于管理网络中的数据隔离。可以通过配置连接到Docker宿主机的以太网连接支持802.1q的VLAN ID，以便于创建Linux的子接口，而每个子接口可以用唯一的VLAN ID。
 
 ![Multi Tenant 802.1q Vlans](images/multi_tenant_8021q_vlans.png)
 
-Trunking 802.1q to a Linux host is notoriously painful for many in operations. It requires configuration file changes in order to be persistent through a reboot. If a bridge is involved, a physical NIC needs to be moved into the bridge and the bridge then gets the IP address. This has lead to many a stranded servers since the risk of cutting off access during that convoluted process is high.
+众所周知，给Linux宿主机配置802.1q的操作时很复杂和痛苦的，它需要配置一系列的文件，以便于在系统重启后依然能保证配置。如果再引入了网桥的话，物理网卡的接口需要挂载到这个网桥上，然后每个网桥获得IP地址。因为还需要再不同网桥上隔离访问，这样就导致了非常复杂的网络配置。
 
-Like all of the Docker network drivers, the overarching goal is to alleviate the operational pains of managing network resources. To that end, when a network receives a sub-interface as the parent that does not exist, the drivers create the VLAN tagged interfaces while creating the network.
+和其他Docker网络驱动类似，驱动的首要目标即缓解管理网络资源时操作的痛苦。为了那个目的，当一个网络在创建网络的时候收到一个并不存在的子接口作为网络的父接口，那么驱动就会在创建网络的时候创建一个VLAN标记的接口。
 
-In the case of a host reboot, instead of needing to modify often complex network configuration files the driver will recreate all network links when the Docker daemon restarts. The driver tracks if it created the VLAN tagged sub-interface originally with the network create and will **only** recreate the sub-interface after a restart or delete `docker network rm` the link if it created it in the first place with `docker network create`.
+当宿主机重启时，这个驱动会在Docker daemon重启的时候重新创建网络的网络接口，而不是修改那些复杂的网络配置文件。如果VLAN的子接口是Docker daemon在`docker network create`的时候创建的，那么在Docker重启后只会重新创建这个子接口，并在在`docker network rm`的时候删除这个子接口。
 
-If the user doesn't want Docker to modify the `-o parent` sub-interface, the user simply needs to pass an existing link that already exists as the parent interface. Parent interfaces such as `eth0` are not deleted, only sub-interfaces that are not master links.
+如果用户不希望Docker修改`-o parent`参数中的子接口，那么用户只简单的需要在这个参数中传入一个已经存在的接口作为网络的父接口。像`eth0`这样的父接口是不会被删除的，只有那些不是master的接口才能被删除。
 
-For the driver to add/delete the vlan sub-interfaces the format needs to be `interface_name.vlan_tag`.
+这个驱动添加和删除的vlan子接口的格式是`interface_name.vlan_tag`。
 
-For example: `eth0.50` denotes a parent interface of `eth0` with a slave of `eth0.50` tagged with vlan id `50`. The equivalent `ip link` command would be `ip link add link eth0 name eth0.50 type vlan id 50`.
+例如：`eth0.50`意思是父接口是`eth0`，挂载在它上面的一个子接口是`eth0.50`，并且vlan id是`50`。这个配置等价到`ip link`的配置命令是： `ip link add link eth0 name eth0.50 type vlan id 50`。
 
 **Vlan ID 50**
 
-In the first network tagged and isolated by the Docker host, `eth0.50` is the parent interface tagged with vlan id `50` specified with `-o parent=eth0.50`. Other naming formats can be used, but the links need to be added and deleted manually using `ip link` or Linux configuration files. As long as the `-o parent` exists anything can be used if compliant with Linux netlink.
+在Docker的宿主机上创建第一个VLAN标记和隔离的网络，通过在创建网络的时候指定了`-o parent=eth0.50`指定父接口为vlan id为`50`的接口`eth0.50`。这个父接口也可以手动指定别的名字，但如果那样就必须手动通过`ip link`或者配置文件创建和删除父接口。如果通过`-o  parent`指定的接口存在的话，只要这个接口兼容与Linux 网络接口的标准就可以被使用。
 
 ```
-# now add networks and hosts as you would normally by attaching to the master (sub)interface that is tagged
+# 现在创建网络挂载到VLAN标记的接口上
 docker network  create  -d macvlan \
     --subnet=192.168.50.0/24 \
     --gateway=192.168.50.1 \
     -o parent=eth0.50 macvlan50
 
-# In two separate terminals, start a Docker container and the containers can now ping one another.
+# 在两个不同的终端上，启动两个Docker容器，然后两个容器就分别可以ping通另外一个。
 docker run --net=macvlan50 -it --name macvlan_test5 --rm alpine /bin/sh
 docker run --net=macvlan50 -it --name macvlan_test6 --rm alpine /bin/sh
 ```
 
 **Vlan ID 60**
 
-In the second network, tagged and isolated by the Docker host, `eth0.60` is the parent interface tagged with vlan id `60` specified with `-o parent=eth0.60`. The `macvlan_mode=` defaults to `macvlan_mode=bridge`. It can also be explicitly set with the same result as shown in the next example.
+创建另外一个隔离的，VLAN标记的隔离的网络，通过在创建网络的时候指定了`-o parent=eth0.60`指定父接口为vlan id为`60`的接口`eth0.60`，而`macvlan_mode=`参数的默认值为`macvlan_mode=bridge`，可以看到在下面这个示例中有相同的结果。
 
 ```
-# now add networks and hosts as you would normally by attaching to the master (sub)interface that is tagged.
+# 现在创建网络挂载到VLAN标记的接口上
 docker network  create  -d macvlan \
     --subnet=192.168.60.0/24 \
     --gateway=192.168.60.1 \
     -o parent=eth0.60 -o \
     -o macvlan_mode=bridge macvlan60
 
-# In two separate terminals, start a Docker container and the containers can now ping one another.
+# 在两个不同的终端上，启动两个Docker容器，然后两个容器就分别可以ping通另外一个。
 docker run --net=macvlan60 -it --name macvlan_test7 --rm alpine /bin/sh
 docker run --net=macvlan60 -it --name macvlan_test8 --rm alpine /bin/sh
 ```
-**Example:** Multi-Subnet Macvlan 802.1q Trunking
+**例子:** 多个子网的 Macvlan 802.1q Trunking
 
-The same as the example before except there is an additional subnet bound to the network that the user can choose to provision containers on. In MacVlan/Bridge mode, containers can only ping one another if they are on the same subnet/broadcast domain unless there is an external router that routes the traffic (answers ARP etc) between the two subnets.
+下面的例子除了添加了更多的用户选择的容器子网的绑定外和前面的例子是一样的。在MacVlan/Bridge模式，容器只能ping通同一个子网/广播域，除非有外部的路由去路由不同的子网的网络流量。
 
 ```
-### Create multiple L2 subnets
+### 创建多个L2网络
 docker network create -d ipvlan \
     --subnet=192.168.210.0/24 \
     --subnet=192.168.212.0/24 \
@@ -191,21 +185,21 @@ docker network create -d ipvlan \
     --gateway=192.168.212.254  \
      -o ipvlan_mode=l2 ipvlan210
 
-# Test 192.168.210.0/24 connectivity between containers
+# 测试 192.168.210.0/24 容器间连接性
 docker run --net=ipvlan210 --ip=192.168.210.10 -itd alpine /bin/sh
 docker run --net=ipvlan210 --ip=192.168.210.9 -it --rm alpine ping -c 2 192.168.210.10
 
-# Test 192.168.212.0/24 connectivity between containers
+# 测试 192.168.212.0/24 容器间连接性
 docker run --net=ipvlan210 --ip=192.168.212.10 -itd alpine /bin/sh
 docker run --net=ipvlan210 --ip=192.168.212.9 -it --rm alpine ping -c 2 192.168.212.10
 ```
 
-## Dual Stack IPv4 IPv6 Macvlan Bridge Mode
+## 多层 IPv4 IPv6 Macvlan Bridge 模式
 
-**Example:** Macvlan Bridge mode, 802.1q trunk, VLAN ID: 218, Multi-Subnet, Dual Stack
+**示例:** Macvlan Bridge模式, 802.1q trunk, VLAN ID: 218, 多个子网 构成的多层
 
 ```
-# Create multiple bridge subnets with a gateway of x.x.x.1:
+# 创建多个子网网段的macvlan网络
 docker network  create  -d macvlan \
     --subnet=192.168.216.0/24 --subnet=192.168.218.0/24 \
     --gateway=192.168.216.1  --gateway=192.168.218.1 \
@@ -213,22 +207,22 @@ docker network  create  -d macvlan \
      -o parent=eth0.218 \
      -o macvlan_mode=bridge macvlan216
 
-# Start a container on the first subnet 192.168.216.0/24
+# 在第一个192.168.216.0/24网段创建一个容器
 docker run --net=macvlan216 --name=macnet216_test --ip=192.168.216.10 -itd alpine /bin/sh
 
-# Start a container on the second subnet 192.168.218.0/24
+# 在第二个192.168.218.0/24网段创建容器
 docker run --net=macvlan216 --name=macnet216_test --ip=192.168.218.10 -itd alpine /bin/sh
 
-# Ping the first container started on the 192.168.216.0/24 subnet
+# 通过192.168.216.0/24的网段的容器Ping 在192.168.216.0/24网段中的第一个容器
 docker run --net=macvlan216 --ip=192.168.216.11 -it --rm alpine /bin/sh
 ping 192.168.216.10
 
-# Ping the first container started on the 192.168.218.0/24 subnet
+# 通过192.168.218.0/24的网段的容器Ping 在192.168.218.0/24网段中的第一个容器
 docker run --net=macvlan216 --ip=192.168.218.11 -it --rm alpine /bin/sh
 ping 192.168.218.10
 ```
 
-View the details of one of the containers:
+查看其中一个容器的详情:
 
 ```
 docker run --net=macvlan216 --ip=192.168.216.11 -it --rm alpine /bin/sh
@@ -243,12 +237,12 @@ root@526f3060d759:/# ip a show eth0
     inet6 2001:db8:abc8::2/64 scope link nodad
        valid_lft forever preferred_lft forever
 
-# Specified v4 gateway of 192.168.216.1
+# 指定的IP V4的网关地址是192.168.216.1
 root@526f3060d759:/# ip route
   default via 192.168.216.1 dev eth0
   192.168.216.0/24 dev eth0  proto kernel  scope link  src 192.168.216.11
 
-# Specified v6 gateway of 2001:db8:abc8::10
+# 指定的IP V6的网关地址是 2001:db8:abc8::10
 root@526f3060d759:/# ip -6 route
   2001:db8:abc4::/64 dev eth0  proto kernel  metric 256
   2001:db8:abc8::/64 dev eth0  proto kernel  metric 256
