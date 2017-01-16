@@ -7,65 +7,42 @@ redirect_from:
 title: Store images on Docker Hub
 ---
 
-So far you've learned how to use the command line to run Docker on your local
-host. You've learned how to [pull down images](usingdocker.md) to build
-containers from existing images and you've learned how to [create your own
-images](dockerimages.md).
+到目前为止，您已经学会了如何使用命令行在本地主机上运行Docker。您学习了如何[拉取镜像](usingdocker.md)从现有的镜像构建容器，您已经学会了如何[创建自己的镜像](dockerimages.md)。
 
-Next, you're going to learn how to use the [Docker Hub](https://hub.docker.com)
-to simplify and enhance your Docker workflows.
+接下来，您将学习如何使用[Docker Hub](https://hub.docker.com)来简化和增强您的Docker工作流。
 
-The [Docker Hub](https://hub.docker.com) is a public registry maintained by
-Docker, Inc. It contains images you can download and use to build
-containers. It also provides authentication, work group structure, workflow
-tools like webhooks and build triggers, and privacy tools like private
-repositories for storing images you don't want to share publicly.
+[Docker Hub](https://hub.docker.com)是由Docker公司维护的公共镜像仓库。它包含可以下载并用于构建容器的镜像。它还提供身份验证，工作组，工作流工具(如Webhooks和构建触发器)和隐私工具(如用于存储非共享镜像的私有仓库)。
 
-## Docker commands and Docker Hub
+## Docker命令和Docker Hub
 
-Docker itself provides access to Docker Hub services via the `docker search`,
-`pull`, `login`, and `push` commands. This page will show you how these commands work.
+Docker本身通过`docker search`，`pull`，`login`和`push`命令提供对Docker Hub服务的访问。此页面将显示这些命令的工作原理。
 
-### Account creation and login
-Before you try an Engine CLI command, if you haven't already, create a Docker
-ID. You can do this through [Docker Hub](https://hub.docker.com/). Once you have
-a Docker ID, log into your account from the Engine CLI:
+###创建和登录帐户
+在尝试Engine CLI命令之前，请创建Docker ID(如果您尚未创建Docker ID)。您可以通过[Docker Hub](https://hub.docker.com/)创建Docker ID。一旦您有一个Docker ID，从Engine CLI登录您的帐户：
 
 ```bash
 $ docker login
 ```
 
-The `login` command stores your Docker ID authentication credentials in the
-`$HOME/.docker/config.json` (Bash notation). For Windows `cmd` users the
-notation for this file is `%HOME%\.docker\config.json` ; for PowerShell users
-the notation is `$env:Home\.docker\config.json`.
+`login`命令将您的Docker ID身份验证凭据存储在`$HOME/.docker/config.json`中(对于Bash shell而言)。对于Windows`cmd`用户，此文件的位置是`％HOME％\.docker\config.json`;对于PowerShell用户，位置是`$env:Home\.docker\config.json`。
 
-Once you have logged in from the command line, you can `commit` and `push`
-Engine subcommands to interact with your repos on Docker Hub.
+一旦从命令行登录，您可以使用`commit`和`push` 等Engine子命令与Docker Hub上的仓库进行交互。
 
-## Searching for images
+## 搜索镜像
 
-You can search the [Docker Hub](https://hub.docker.com) registry via its search
-interface or by using the command line interface. Searching can find images by image
-name, user name, or description:
+您可以通过其搜索界面或使用命令行界面搜索[Docker Hub](https://hub.docker.com)镜像仓库。可以通过镜像名称，用户名或描述查找镜像：
 
-    $ docker search centos
-
+	$ docker search centos
     NAME           DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED
     centos         The official build of CentOS                    1223      [OK]
     tianon/centos  CentOS 5 and 6, created using rinse instea...   33
     ...
+    
+在那里您可以看到两个示例结果：`centos`和`tianon/centos`。第二个结果表明它来自一个名为`tianon`的用户的公共仓库，而第一个结果`centos`没有显式地列出一个仓库，这意味着它来自受信任的顶级命名空间[Official Repositories](/docker-hub/official_repos/). `/`字符将用户的存储库与映像名称分隔开。
 
-There you can see two example results: `centos` and `tianon/centos`. The second
-result shows that it comes from the public repository of a user, named
-`tianon/`, while the first result, `centos`, doesn't explicitly list a
-repository which means that it comes from the trusted top-level namespace for
-[Official Repositories](/docker-hub/official_repos/). The `/` character separates
-a user's repository from the image name.
+找到所需的镜像后，您可以使用`docker pull <imagename>`下载：
 
-Once you've found the image you want, you can download it with `docker pull <imagename>`:
-
-    $ docker pull centos
+	$ docker pull centos
 
     Using default tag: latest
     latest: Pulling from library/centos
@@ -75,111 +52,80 @@ Once you've found the image you want, you can download it with `docker pull <ima
     Digest: sha256:90305c9112250c7e3746425477f1c4ef112b03b4abe78c612e092037bfecc3b7
     Status: Downloaded newer image for centos:latest
 
-You now have an image from which you can run containers.
+现在您有一个可以运行容器的镜像了。
 
-### Specific Versions or Latest
-Using `docker pull centos` is equivalent to using `docker pull centos:latest`.
-To pull an image that is not the default latest image you can be more precise
-with the image that you want.
+### 指定版本或最新版本
 
-For example, to pull version 5 of `centos` use `docker pull centos:centos5`.
-In this example, `centos5` is the tag labeling an image in the `centos`
-repository for a version of `centos`.
+使用`docker pull centos`相当于使用`docker pull centos:latest`。您可以通过更精确的指定镜像的版本来选择您需要的镜像。
 
-To find a list of tags pointing to currently available versions of a repository
-see the [Docker Hub](https://hub.docker.com) registry.
+例如，要拉取镜像`centos`的centos5版本，请使用`docker pull centos:centos5`。在这个例子中，`centos5`是一个标签，它标记`centos`仓库中一个指定镜像的版本。
 
-## Contributing to Docker Hub
+要查找仓库的当前可用版本的标签列表，请参阅[Docker Hub](https://hub.docker.com)镜像仓库。
 
-Anyone can pull public images from the [Docker Hub](https://hub.docker.com)
-registry, but if you would like to share your own images, then you must
-[register first](/docker-hub/accounts).
+## 贡献给Docker Hub
 
-## Pushing a repository to Docker Hub
+任何人都可以从[Docker Hub](https://hub.docker.com)官方镜像仓库中提取公开的镜像，但是如果您想共享自己的镜像给其他人，那么您必须先[注册](/docker-hub/accounts)。
 
-In order to push a repository to its registry, you need to have named an image
-or committed your container to a named image as we saw
-[here](dockerimages.md).
+## 将镜像推送到Docker Hub
 
-Now you can push this repository to the registry designated by its name or tag.
+为了将镜像推送到其镜像仓库，您需要命名一个镜像或将容器提交到一个命名的镜像，参考[这儿](dockerimages.md)。
 
-    $ docker push yourname/newimage
+现在，您可以将此镜像推送到由其名称或标签指定的镜像仓库。
 
-The image will then be uploaded and available for use by your team-mates and/or the
-community.
+	$ docker push yourname/newimage
 
-## Features of Docker Hub
+然后镜像将上传到镜像仓库，并供您的团队和/或社区使用。
 
-Let's take a closer look at some of the features of Docker Hub. You can find more
-information [here](/docker-hub/).
+## Docker Hub的特性
 
-* Private repositories
-* Organizations and teams
-* Automated Builds
+让我们仔细看看Docker Hub的一些功能。您可以在这里找到更多信息[这儿](/docker-hub/)。
+
+* 私人存储库
+* 组织和团队
+* 自动构建
 * Webhooks
 
-### Private repositories
+### 私有镜像仓库
 
-Sometimes you have images you don't want to make public and share with
-everyone. So Docker Hub allows you to have private repositories. You can
-sign up for a plan [here](https://hub.docker.com/account/billing-plans/).
+有时您有一些私有镜像，您不想公开分享给大家。因此，Docker Hub允许您拥有私有仓库。访问[这里](https://hub.docker.com/account/billing-plans/)。
 
-### Organizations and teams
+### 组织和团队
 
-One of the useful aspects of private repositories is that you can share
-them only with members of your organization or team. Docker Hub lets you
-create organizations where you can collaborate with your colleagues and
-manage private repositories. You can learn how to create and manage an organization
-[here](https://hub.docker.com/organizations/).
+私有仓库的一个有用的方面是，您只能与您的组织或团队的成员共享它们。 Docker Hub允许您创建组织，您可以与同事协作并管理私有仓库。您可以在这里了解如何[创建和管理组织](https://hub.docker.com/organizations/)。
 
-### Automated Builds
+### 自动构建
 
-Automated Builds automate the building and updating of images from
-[GitHub](https://www.github.com) or [Bitbucket](http://bitbucket.com), directly on Docker
-Hub. It works by adding a commit hook to your selected GitHub or Bitbucket repository,
-triggering a build and update when you push a commit.
+自动构建会直接在Docker Hub上自动化的从[GitHub](https://www.github.com)或[Bitbucket](http://bitbucket.com)构建和更新镜像。它的工作原理是通过向选定的GitHub或Bitbucket仓库添加一个钩子，在推送代码时触发Docker Hub上镜像的构建和更新。
 
-#### To setup an Automated Build
+#### 设置自动构建
 
-1.  Create a [Docker Hub account](https://hub.docker.com/) and login.
-2.  Link your GitHub or Bitbucket account on the ["Linked Accounts &amp; Services"](https://hub.docker.com/account/authorized-services/) page.
-3.  Select "Create Automated Build" from the "Create" dropdown menu
-4.  Pick a GitHub or Bitbucket project that has a `Dockerfile` that you want to build.
-5.  Pick the branch you want to build (the default is the `master` branch).
-6.  Give the Automated Build a name.
-7.  Assign an optional Docker tag to the Build.
-8.  Specify where the `Dockerfile` is located. The default is `/`.
+1. 创建一个[Docker Hub帐户](https://hub.docker.com/)并登录。
+2. 在["已关联的帐户和服务"](https://hub.docker.com/account/authorized-services/)页面上链接您的GitHub或Bitbucket帐户。
+3. 从"创建"下拉菜单中选择"创建自动构建"
+4. 选择一个包含`Dockerfile`的GitHub或Bitbucket项目。
+5. 选择要构建的分支（默认是`master`分支）。
+6. 给自动构建一个名称。
+7. 为构建分配一个可选的Docker标签。
+8. 指定`Dockerfile`所在的位置。默认是`/`。
 
-Once the Automated Build is configured it will automatically trigger a
-build and, in a few minutes, you should see your new Automated Build on the [Docker Hub](https://hub.docker.com)
-Registry. It will stay in sync with your GitHub and Bitbucket repository until you
-deactivate the Automated Build.
+一旦配置了自动构建，它将自动触发构建，并在几分钟后，您应该在[Docker Hub](https://hub.docker.com)镜像仓库上看到新的自动构建。它将保持与您的GitHub和Bitbucket仓库同步，直到您停用自动构建。
 
-To check the output and status of your Automated Build repositories, click on a repository name within the ["Your Repositories" page](https://registry.hub.docker.com/repos/). Automated Builds are indicated by a check-mark icon next to the repository name. Within the repository details page, you may click on the "Build Details" tab to view the status and output of all builds triggered by the Docker Hub.
+要检查自动构建存储库的输出和状态，请单击["Your Repositories"](https://registry.hub.docker.com/repos/)页面中的仓库名称。自动构建由仓库名称旁边的复选框图标标识。在镜像仓库详细信息页面中，您可以单击"Build Details"选项卡查看由Docker Hub触发的所有构建的状态和输出。
 
-Once you've created an Automated Build you can deactivate or delete it. You
-cannot, however, push to an Automated Build with the `docker push` command.
-You can only manage it by committing code to your GitHub or Bitbucket
-repository.
+创建自动构建后，可以停用或删除它。但是不能使用`docker push`命令推送到自动构建的仓库。您只能通过将代码提交到GitHub或Bitbucket存储库来管理它。
 
-You can create multiple Automated Builds per repository and configure them
-to point to specific `Dockerfile`'s or Git branches.
+您可以为每个仓库创建多个自动构建，并将其配置为指向特定的`Dockerfile`或Git分支。
 
-#### Build triggers
+#### 构建触发器
 
-Automated Builds can also be triggered via a URL on Docker Hub. This
-allows you to rebuild an Automated build image on demand.
+自动构建也可以通过Docker Hub上的URL触发。这允许您根据需要重新构建一个自动构建的镜像。
 
 ### Webhooks
 
-Webhooks are attached to your repositories and allow you to trigger an
-event when an image or updated image is pushed to the repository. With
-a webhook you can specify a target URL and a JSON payload that will be
-delivered when the image is pushed.
+Webhook被附加到您的镜像仓库上，当一个镜像或者已更新的镜像推送到镜像仓库时该Webhook将被触发。使用webhook，您可以指定在推送镜像时需要传递的目标URL和有效的JSON内容。
 
-See the Docker Hub documentation for [more information on
-webhooks](/docker-hub/repos/#webhooks)
+请参阅Docker Hub文档[有关webhooks的更多信息](/docker-hub/repos/#webhooks)
 
-## Next steps
+## 下一步
 
-Go and use Docker!
+去使用Docker！

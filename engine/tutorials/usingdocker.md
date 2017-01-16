@@ -2,9 +2,7 @@
 redirect_from:
 - /engine/userguide/containers/usingdocker/
 description: Learn how to manage and operate Docker containers.
-keywords:
-- docker, the docker guide, documentation, docker.io, monitoring containers,
-  docker top, docker inspect, docker port, ports, docker logs, log, logs
+keywords: docker, the docker guide, documentation, docker.io, monitoring containers, docker top, docker inspect, docker port, ports, docker logs, log, logs
 menu:
   main:
     parent: engine_learn_menu
@@ -12,32 +10,25 @@ menu:
 title: Run a simple application
 ---
 
-In the ["*Hello world in a container*"](dockerizing.md) you launched your first
-containers using the `docker run` command. You ran an *interactive container*
-that ran in the foreground. You also ran a *detached container* that ran in the
-background. In the process you learned about several Docker commands:
+在["*Hello world in a container*"](dockerizing.md)中，您使用`docker run`命令启动了第一个容器。您运行了一个在前台运行的*交互式容器*。您还运行了一个*dettached的后台容器*。在此过程中，您了解了几个Docker命令：
 
-* `docker ps` - Lists containers.
-* `docker logs` - Shows the standard output of a container.
-* `docker stop` - Stops running containers.
+* `docker ps` - 列出容器。
+* `docker logs` - 显示容器的标准输出。
+* `docker stop` - 停止运行容器。
 
-## Learn about the Docker client
+## 了解Docker客户端
 
-The `docker` program is called the Docker client. Each action you can take with
-the client is a command and each command can take a series of flags and arguments.
+`docker`程序称为Docker客户端。客户端可以使用的每个操作都是一个命令，每个命令可以使用一系列标志和参数。
 
-    # Usage:  [sudo] docker [subcommand] [flags] [arguments] ..
-    # Example:
-    $ docker run -i -t ubuntu /bin/bash
+	# 用法：[sudo] docker [subcommand] [flags] [arguments] ..
+	# 示例：
+	$ docker run -i -t ubuntu /bin/bash
 
-You can see this in action by using the `docker version` command to return
-version information on the currently installed Docker client and daemon.
+您可以通过使用`docker version`命令来返回当前安装的Docker客户端和守护进程的版本信息。
 
-    $ docker version
+	$ docker version
 
-This command will not only provide you the version of Docker client and
-daemon you are using, but also the version of Go (the programming
-language powering Docker).
+此命令将不仅提供您正在使用的Docker客户端和守护进程的版本，而且还提供Go的版本(为Docker提供支持的编程语言)。
 
     Client:
      Version:      1.12.2
@@ -55,17 +46,15 @@ language powering Docker).
      Built:        Wed Oct 26 23:26:11 2016
      OS/Arch:      linux/amd64
 
-## Get Docker command help
+## 获取Docker命令帮助
 
-You can display the help for specific Docker commands. The help details the
-options and their usage. To see a list of all the possible commands, use the
-following:
+您可以显示特定Docker命令的帮助信息。帮助信息详细介绍了命令的选项及其用法。要查看所有可能的命令的列表，请使用以下命令：
+	
+	$ docker --help
 
-    $ docker --help
+要查看特定命令的用法，请使用`--help`标志指定命令：
 
-To see usage for a specific command, specify the command with the `--help` flag:
-
-    $ docker attach --help
+	$ docker attach --help
 
     Usage: docker attach [OPTIONS] CONTAINER
 
@@ -76,122 +65,91 @@ To see usage for a specific command, specify the command with the `--help` flag:
       --help                 Print usage
       --no-stdin             Do not attach STDIN
       --sig-proxy            Proxy all received signals to the process (default true)
+ 
+> **注意：**
+> 有关每个命令的更多详细信息和示例，请参阅本指南中的[命令参考](../reference/commandline/cli.md)。
 
-> **Note:**
-> For further details and examples of each command, see the
-> [command reference](../reference/commandline/cli.md) in this guide.
+## 在Docker中运行Web应用程序
 
-## Run a web application in Docker
+现在您已经了解了一些有关Docker客户端的信息，您可以开始了解更重要的东西：运行更多的容器。到目前为止，您运行的任何容器都没有什么特别有用的，所以您可以通过在Docker中运行一个示例Web应用程序来改变这种状况。
 
-Now that you've learned a bit more about the Docker client, you can move onto
-the important stuff: running more containers. So far none of the
-containers you've run did anything particularly useful, so you can
-change that by running an example web application in Docker.
-
-For the web application you're going to run a Python Flask application.
-Start with a `docker run` command.
+对于Web应用程序，您将运行一个Python Flask应用程序。从`docker run`命令开始。
 
     $ docker run -d -P training/webapp python app.py
 
-This command consists of the following parts:
+此命令由以下部分组成：
 
-* The `-d` flag runs the container in the background (as a so-called daemon).
-* The `-P` flag maps any required network ports inside the container to your
-  host. This lets you view the web application.
-* The `training/webapp` image is a pre-built image that contains a simple Python
-  Flask web application.
-* The remaining arguments make up the command that is run inside
-  the container. The `python app.py` command launches the web application.
+* `-d`标志在后台运行容器(作为所谓的守护进程)。
+* `-P`标志将容器中任何所需的网络端口映射到您的主机。这使您可以浏览Web应用程序。
+* `training/webapp`镜像是一个预构建的图像，包含一个简单的Python Flask网络应用程序。
+* 剩余的参数组成在其中运行的命令容器。 `python app.py`命令启动Web应用程序。
 
-> **Note:**
-> You can see more detail on the `docker run` command
-> in the [command reference](../reference/commandline/run.md)
-> and the [docker run reference](../reference/run.md).
+> **注意：**
+> 您可以在[command reference](../reference/commandline/run.md)和[docker run reference](../reference/run.md)中的`docker run`命令中查看更多详细信息。
 
-## View the web application container
+## 查看Web应用程序容器
 
-Now you can see your running container using the `docker ps` command.
+现在您可以使用`docker ps`命令看到您运行的容器。
 
     $ docker ps -l
 
     CONTAINER ID  IMAGE                   COMMAND       CREATED        STATUS        PORTS                    NAMES
     bc533791f3f5  training/webapp:latest  python app.py 5 seconds ago  Up 2 seconds  0.0.0.0:49155->5000/tcp  nostalgic_morse
 
-The `-l` flag shows only the details of the *last* container started.
+`-l`标志只显示*最近运行的*容器的详细信息。
 
-> **Note:**
-> By default, the `docker ps` command only shows information about running
-> containers. If you want to see stopped containers too, use the `-a` flag.
+> **注意：**
+>默认情况下，docker ps命令只显示有关运行容器的信息。如果您也想看到停止的容器，使用`-a`标志。
 
-You can see the same details you saw [when you first dockerized a
-container](dockerizing.md), with one important addition in the `PORTS`
-column.
+您可以看到您在[当您第一次docker化一个容器](dockerizing.md)中看到的相同的细节信息，并且添加了一个额外的重要的列`PORTS`。
 
     PORTS
     0.0.0.0:49155->5000/tcp
 
-When you passed the `-P` flag to the `docker run` command,
-Docker mapped any ports exposed in the container to your host.
+当您将`-P`标志传递给docker run命令时，Docker将容器中暴露的任何端口映射到您的主机。
 
-> **Note:**
-> You'll learn more about how to expose ports in Docker images when
-> [you learn how to build images](dockerimages.md).
+> **注意：**
+>您将学习更多关于如何在Docker镜像中暴露更多端口[参见](dockerimages.md)。
 
-In this case Docker has exposed port 5000 (the default Python Flask
-port) on port 49155.
+在这种情况下，Docker在端口49155上暴露了端口5000(默认的Python Flask端口)。
 
-Network port bindings are very configurable in Docker. In the last example the
-`-P` flag is a shortcut for `-p 5000` that maps port 5000 inside the container
-to a high port (from *ephemeral port range* which typically ranges from 32768
-to 61000) on the local Docker host. You can also bind Docker containers to
-specific ports using the `-p` flag, for example:
+网络端口绑定在Docker中非常容易配置。在最后一个示例中，`-P`标志是`-p 5000`的快捷方式，它将容器内的端口5000映射到本地Docker主机上的高端端口(从*临时端口范围*，通常范围从32768到61000) 。您还可以使用`-p`标志将Docker容器绑定到特定端口，例如：
 
     $ docker run -d -p 80:5000 training/webapp python app.py
 
-This would map port 5000 inside your container to port 80 on your local
-host. You might be asking about now: why wouldn't we just want to always
-use 1:1 port mappings in Docker containers rather than mapping to high
-ports? Well, 1:1 mappings have the constraint of only being able to map
-one of each port on your local host.
+这将映射您的容器内的端口5000到本地主机上的端口80。您现在可能会问：为什么我们不想总是在Docker容器中使用1：1端口映射而选择使用映射到高端端口？好吧，1：1映射有一个约束，它只能映射本地主机上某个端口一次。
 
-Suppose you want to test two Python applications: both bound to port 5000 inside
-their own containers. Without Docker's port mapping you could only access one at
-a time on the Docker host.
+假设您想测试两个Python应用程序：都绑定到容器里面5000端口上。没有Docker的端口映射，您只能在Docker主机上一次访问一个。
 
-So you can now browse to port 49155 in a web browser to see the application.
+因此，您现在可以在Web浏览器中浏览到端口49155查看应用程序。
 
-![Screenshot of the running web application](webapp1.png).
+![正在运行的Web应用程序的屏幕截图](webapp1.png)。
 
-Your Python web application is live!
+您的Python Web应用程序正常运行了！
 
-> **Note:**
-> If you have been using a virtual machine on macOS, Windows or Linux,
-> you'll need to get the IP of the virtual host instead of using localhost.
-> You can do this by running `docker-machine ip` from the command line:
+> **注意：**
+>如果您在macOS，Windows或Linux上使用虚拟机，
+>您需要获取虚拟主机的IP，而不是使用localhost。
+>您可以通过从命令行运行`docker-machine ip`来做到这一点：
 >
->     $ docker-machine ip
->     192.168.99.100
+> $ docker-machine ip
+> 192.168.99.100
 >
-> In this case you'd browse to `http://192.168.99.100:49155` for the above example.
+>在这种情况下，您将浏览到上面的例子中的“http://192.168.99.100:49155”。
 
-## A network port shortcut
+## 快捷的网络端口映射
 
-Using the `docker ps` command to return the mapped port is a bit clumsy,
-so Docker has a useful shortcut you can use: `docker port`.
-To use `docker port`, specify the ID or name of your container and then
-the port for which you need the corresponding public-facing port.
+使用`docker ps`命令返回映射的端口有点笨拙，所以Docker有一个有用的快捷方式可以使用：`docker port`。要使用`docker port`，请指定您的容器的ID或名称，然后指定相应的需要暴露出去的端口。
 
-    $ docker port nostalgic_morse 5000
+	$ docker port nostalgic_morse 5000
 
-    0.0.0.0:49155
+	0.0.0.0:49155
 
-In this case you've looked up what port is mapped externally to port 5000 inside
-the container.
+在这种情况下，您也同时找到了映射到容器内端口5000的外部端口49155。
 
-## View the web application's logs
+##查看Web应用程序的日志
 
-You can also find out a bit more about what's happening with your
-application and use another of the commands you've learned, `docker logs`.
+您还可以更多地了解您的应用程序发生了什么，并使用您学到的另一个命令，`docker logs`。
 
     $ docker logs -f nostalgic_morse
 
@@ -199,32 +157,26 @@ application and use another of the commands you've learned, `docker logs`.
     10.0.2.2 - - [06/Nov/2016 20:16:31] "GET / HTTP/1.1" 200 -
     10.0.2.2 - - [06/Nov/2016 20:16:31] "GET /favicon.ico HTTP/1.1" 404 -
 
-The `-f` flag causes the `docker logs` command to act like the `tail -f` command
-and watch the container's standard output. You can see here the logs from Flask
-showing the application running on port 5000 and the access log entries for it.
+`-f`标志使`docker logs`命令像`tail -f`命令，并监视容器的标准输出。您可以在这里看到来自Flask的日志，它显示了在端口5000上运行的应用程序和它的访问日志信息。
 
-## Look at the web application container's processes
+## 查看Web应用程序容器的进程
 
-In addition to the container's logs you can also examine the processes
-running inside it using the `docker top` command.
+除了容器的日志，您还可以使用`docker top`命令来检查容器中运行的进程。
 
     $ docker top nostalgic_morse
 
     PID                 USER                COMMAND
     854                 root                python app.py
 
-Here you can see that the `python app.py` command is the only process
-running inside the container.
+在这里您可以看到`python app.py`命令是在容器中运行的唯一进程。
 
-## Inspect the web application container
+## Inspect Web应用容器
 
-Lastly, you can take a low-level dive into the Docker container using the
-`docker inspect` command. It returns a JSON document containing useful
-configuration and status information for the specified container.
+最后，可以使用`docker inspect`命令对Docker容器进行低级别的信息挖掘。它返回一个JSON文档，其中包含指定容器的相关配置和状态信息。
 
-    $ docker inspect nostalgic_morse
+	$ docker inspect nostalgic_morse
 
-You can see a sample of that JSON output.
+您可以看到该JSON输出的示例。
 
     [{
         "ID": "bc533791f3f500b280a9626688bc79e342e3ea0d528efe3a86a51ecb28ea20",
@@ -239,8 +191,8 @@ You can see a sample of that JSON output.
            "User": "",
     . . .
 
-You can also narrow down the information you want to return by requesting a
-specific element, for example to return the container's IP address, you would:
+您还可以通过请求特定元素来缩小要返回的信息，例如返回容器的IP地址，使用如下命令：
+
 
     {% raw %}
     $ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nostalgic_morse
@@ -248,69 +200,58 @@ specific element, for example to return the container's IP address, you would:
 
     172.17.0.5
 
-## Stop the web application container
+## 停止Web应用容器
 
-The web application is still running inside the container. You can stop it using
-the `docker stop` command and the name of the container: `nostalgic_morse`.
+Web应用程序仍在容器内运行。您可以使用`docker stop`命令和容器名称来停止它：`nostalgic_morse`。
 
-    $ docker stop nostalgic_morse
+	$ docker stop nostalgic_morse
 
-    nostalgic_morse
+	nostalgic_morse
 
-You can now use the `docker ps` command to check if the container has
-been stopped.
+现在可以使用`docker ps`命令来检查容器是否已经停止。
 
-    $ docker ps -l
+	$ docker ps -l
 
-## Restart the web application container
+## 重新启动Web应用程序容器
 
-Oops! Just after you stopped the container you get a call to say another
-developer needs the container back. From here you have two choices: you
-can create a new container or restart the old one. Look at
-starting your previous container back up.
+Oops！在您刚刚停止了容器后，您接到一个电话说另一个开发人员需要容器重新运行起来。从这里您有两个选择：您可以创建一个新的容器或重新启动旧的容器。现在我们来看看如何启动您之前的容器备份。
 
-    $ docker start nostalgic_morse
+	$ docker start nostalgic_morse
 
-    nostalgic_morse
+	nostalgic_morse
 
-Now quickly run `docker ps -l` again to see the running container is
-back up or browse to the container's URL to see if the application
-responds.
+现在，再次快速运行`docker ps -l`，以查看正在运行的容器是否已恢复或浏览容器的URL以查看应用程序是否响应。
 
-> **Note:**
-> Also available is the `docker restart` command that runs a stop and
-> then start on the container.
+> **注意：**
+>也可以使用`docker restart`命令先停止然后在启动容器。
 
-## Remove the web application container
+## 删除Web应用程序容器
 
-Your colleague has let you know that they've now finished with the container
-and won't need it again. Now, you can remove it using the `docker rm` command.
+您的同事已通知您，他们已使用完容器了，不再需要它了。现在，您可以使用`docker rm`命令删除它。
 
     $ docker rm nostalgic_morse
 
     Error: Impossible to remove a running container, please stop it first or use -f
     2014/05/24 08:12:56 Error: failed to remove one or more containers
 
-What happened? You can't actually remove a running container. This protects
-you from accidentally removing a running container you might need. You can try
-this again by stopping the container first.
 
-    $ docker stop nostalgic_morse
+发生了什么？您实际上不能删除正在运行的容器。这可以防止您意外删除可能需要的正在运行的容器。您可以通过先停止容器再次尝试。
 
-    nostalgic_morse
+	$ docker stop nostalgic_morse
 
-    $ docker rm nostalgic_morse
+	nostalgic_morse
 
-    nostalgic_morse
+	$ docker rm nostalgic_morse
 
-And now the container is stopped and deleted.
+	nostalgic_morse
 
-> **Note:**
-> Always remember that removing a container is final!
+现在容器被停止和删除。
 
-# Next steps
+> **注意：**
+>记住移除容器是最后一步！
 
-Until now you've only used images that you've downloaded from Docker Hub. Next,
-you can get introduced to building and sharing your own images.
+# 下一步
 
-Go to [Working with Docker Images](dockerimages.md).
+到现在为止，您只使用了从Docker Hub下载的镜像。接下来，您可以了解如何构建和共享您自己的镜像。
+
+转到[使用Docker镜像](dockerimages.md)。
