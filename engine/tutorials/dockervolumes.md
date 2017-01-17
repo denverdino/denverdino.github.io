@@ -5,7 +5,7 @@ redirect_from:
 - /engine/userguide/containers/dockervolumes/
 - /engine/userguide/dockervolumes/
 - /userguide/dockervolumes/
-title:以容器管理数据
+title:用容器管理数据
 ---
 
 到目前为止，您已经了解了一些[基本的Docker概念](usingdocker.md)，看看如何使用[Docker镜像](dockerimages.md)以及了解[网络和容器之间的链接](../userguide/networking/default_network/dockerlinks.md)。在本节中，您将学习如何在Docker容器内部和容器之间管理数据。
@@ -29,7 +29,7 @@ title:以容器管理数据
 
 ### 添加数据卷
 
-您可以使用`docker create`和`docker run`命令的`-v`标志将数据卷添加到容器。您可以多次使用`-v'来挂载多个数据卷。现在，在Web应用程序容器中挂载单个卷。
+您可以使用`docker create`和`docker run`命令的`-v`标志将数据卷添加到容器。您可以多次使用`-v`来挂载多个数据卷。现在，在Web应用程序容器中挂载单个卷。
 
 ```bash
 $ docker run -d -P --name web -v /webapp training/webapp python app.py
@@ -70,7 +70,7 @@ $ docker inspect web
 
 ### 将主机目录作为数据卷
 
-除了使用`-v'标志创建卷，您还可以将一个目录从Docker引擎所在的主机挂载到容器中。
+除了使用`-v`标志创建卷，您还可以将一个目录从Docker引擎所在的主机挂载到容器中。
 
 ```bash
 $ docker run -d -P --name web -v /src/webapp:/webapp training/webapp python app.py
@@ -201,7 +201,7 @@ $ docker run -d --name db3 --volumes-from db1 training/postgres
 > **注意:**当移除容器时，Docker不会警告您*没有提供`-v`选项来删除它的卷*。如果在不使用`-v`选项的情况下删除容器，您可能会遇到"悬挂"卷;那些不再由容器引用的卷。
 >您可以使用`docker volume ls -f dangling=true`查找悬挂卷，并使用`docker volume rm <volume name>`删除不再需要的卷。
 
-##备份，恢复或迁移数据卷
+## 备份，恢复或迁移数据卷
 
 我们可以对卷执行的另一个有用的功能是使用它们进行备份，恢复或迁移。您可以通过使用`--volumes-from`标志创建一个新的容器来挂载该卷，如下所示:
 

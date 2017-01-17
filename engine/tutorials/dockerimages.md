@@ -11,8 +11,7 @@ title:构建您自己的镜像
 您还会发现Docker会在Docker主机上存储下载好的镜像。 如果
 镜像不是已经存在于主机上，那么它将从镜像仓库下载:默认情况下是[Docker Hub Registry](https://hub.docker.com)。
 
-在本节中，我们将更多地探讨Docker镜像
-包含:
+在本节中，我们将更多地探讨Docker镜,包含以下部分:
 
 * 在Docker本地主机上管理和使用镜像。
 * 创建基本镜像。
@@ -82,7 +81,7 @@ title:构建您自己的镜像
 
     bash-4.1#
 
-##查找镜像
+## 查找镜像
 
 Docker的一个特点是很多人因为各种各样的目的创建Docker镜像，其中许多已上传到[Docker Hub](https://hub.docker.com)。 您可以在[Docker Hub](https://hub.docker.com)网站上搜索这些镜像。
 
@@ -164,7 +163,7 @@ Docker的一个特点是很多人因为各种各样的目的创建Docker镜像�
 
 您还指定了要从ID为“0b2616b0e5a8”(您之前记录的ID)的容器创建此新镜像，并且已为镜像指定了Target:
 
-    ouruser/sinatra:v2
+    ouruser/sinatra:v2
 
 将这个镜像Target拆解下。您正在写这个镜像由一个新用户`ouruser`组成。您还指定了镜像的名称，在这里您保留原始镜像名称“sinatra”。最后，您要为新镜像指定一个标签:`v2`。
 
@@ -182,7 +181,7 @@ Docker的一个特点是很多人因为各种各样的目的创建Docker镜像�
 
     root@78e82f680994:/#
 
-###从`Dockerfile`构建一个镜像
+### 从`Dockerfile`构建一个镜像
 
 使用`docker commit`命令是一个简单的扩展镜像的方法，但是它不容易在一个团队中共享镜像的开发过程。相反，您可以使用一个新的命令，`docker build`，从头开始构建新的镜像。
 
@@ -209,7 +208,8 @@ Docker的一个特点是很多人因为各种各样的目的创建Docker镜像�
 检查您的`Dockerfile`。每个指令以一个大写的指令作为语句的前缀。
 
     INSTRUCTION 语句
-    
+
+
 > **注意:**使用`#`表示注释
 
 第一个指令`FROM`告诉Docker我们的基础镜像来源是什么，在这种情况下，我们的新镜像基于Ubuntu 14.04镜像。 该指令使用`MAINTAINER`指令来指定是谁维护的这个新的镜像。
@@ -412,7 +412,7 @@ Docker的一个特点是很多人因为各种各样的目的创建Docker镜像�
 >为了帮助您写一个清晰，可读，可维护的“Dockerfile”，我们也
 >写了一个[`Dockerfile`最佳实践指南](../userguide/eng-image/dockerfile_best-practices.md)。
 
-##在镜像上设置标签
+## 在镜像上设置标签
 
 您还可以在提交或构建现有镜像成功之后为它添加标签。我们可以使用`docker tag`命令来做到这一点。现在，给您的`ouruser/sinatra`镜像添加一个新标签。
 
@@ -429,7 +429,7 @@ Docker的一个特点是很多人因为各种各样的目的创建Docker镜像�
 	ouruser/sinatra devel 5db5f8471261 11小时前446.7 MB
 	ouruser/sinatra v2 5db5f8471261 11小时前446.7 MB
 
-##镜像摘要
+## 镜像摘要
 
 每个使用v2或最新版本格式的镜像具有一个内容可寻址的标识符，这个标识符称为`digest`。只要用于生成镜像的输入不变，则摘要值是可预测的不变的。要列出镜像的摘要值，请使用`--digests`标志:
 
@@ -443,7 +443,7 @@ Docker的一个特点是很多人因为各种各样的目的创建Docker镜像�
 	$ docker pull ouruser/sinatra@sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf
 
 您还可以通过在`create`，`run`和`rmi`命令中的通过摘要引用镜像，以及在Dockerfile中的`FROM`引用镜像。
-##将镜像推送到Docker Hub
+## 将镜像推送到Docker Hub
 
 一旦您构建或创建了一个新的镜像，您可以使用`docker push`命令将其推送到[Docker Hub](https://hub.docker.com)。这允许您与其他人共享镜像，公开这个镜像或推送到[私有仓库](https://hub.docker.com/account/billing-plans/)。
 
@@ -453,7 +453,7 @@ Docker的一个特点是很多人因为各种各样的目的创建Docker镜像�
     Pushing repository ouruser/sinatra (3 tags)
     . . .
 
-##从主机中删除镜像
+## 从主机中删除镜像
 
 您也可以使用docker rmi命令以某种方式删除Docker主机上的镜像[类似于containers](usingdocker.md)。
 
@@ -468,7 +468,7 @@ Docker的一个特点是很多人因为各种各样的目的创建Docker镜像�
 
 > **注意:**要从主机中删除镜像，请确保没有基于它的容器还处于活跃状态。
 
-##检查镜像和容器的大小
+## 检查镜像和容器的大小
 
 镜像是[按层存储](../userguide/storagedriver/imagesandcontainers.md)，并且与主机上的其他镜像共享这些层，因此真实磁盘使用量取决于主机上的镜像之间有多少层共享。在一个只读rootfs之上添加一个[可写层](../userguide/storagedriver/imagesandcontainers.md＃/container-and-layers)，容器就运行在这个可写层之上。
 

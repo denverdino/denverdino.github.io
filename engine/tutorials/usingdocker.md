@@ -7,10 +7,10 @@ menu:
   main:
     parent: engine_learn_menu
     weight: -5
-title: Run a simple application
+title: 运行一个示例程序
 ---
 
-在["*Hello world in a container*"](dockerizing.md)中，您使用`docker run`命令启动了第一个容器。您运行了一个在前台运行的*交互式容器*。您还运行了一个*dettached的后台容器*。在此过程中，您了解了几个Docker命令：
+在["*容器中运行Hello World*"](dockerizing.md)中，您使用`docker run`命令启动了第一个容器。您运行了一个在前台运行的*交互式容器*。您还运行了一个*dettached的后台容器*。在此过程中，您了解了几个Docker命令：
 
 * `docker ps` - 列出容器。
 * `docker logs` - 显示容器的标准输出。
@@ -147,7 +147,7 @@ title: Run a simple application
 
 在这种情况下，您也同时找到了映射到容器内端口5000的外部端口49155。
 
-##查看Web应用程序的日志
+## 查看Web应用程序的日志
 
 您还可以更多地了解您的应用程序发生了什么，并使用您学到的另一个命令，`docker logs`。
 

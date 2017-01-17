@@ -4,7 +4,7 @@ keywords: docker指南，docker，docker平台，如何，dockerize，dockerizin
 redirect_from: 
 - /engine/userguide/containers/dockerizing/
 - /engine/userguide/dockerizing/
-title: 在容器中的世界
+title: 容器中运行Hello World
 ---
 
 *那么这个Docker到底是什么呢？*
@@ -14,7 +14,7 @@ Docker允许您在容器内部运行应用程序，创建您自己的容器世�
 
 > **Note**:根据您的Docker系统配置，您可能需要为这个页面上的所有`docker`命令加一个`sudo`前缀。为了避免这个加`sudo`的操作，系统管理员可以创建一个名为`docker`的Unix用户组，并将当前用户添加进去。
 
-##运行Hello World
+## 运行Hello World
 
 让我们运行一个hello world容器。
 
@@ -26,11 +26,11 @@ Docker允许您在容器内部运行应用程序，创建您自己的容器世�
 
 在这个例子中:
 
-*`docker run`运行了一个容器。
+* `docker run`运行了一个容器。
 
-*`ubuntu`是您运行的镜像。当您指定一个镜像时，Docker首先查看Docker主机上的镜像存储。如果镜像不存在于本地，则从公共镜像仓库[Docker Hub](https://hub.docker.com)中拉取（pull）。
+* `ubuntu`是您运行的镜像。当您指定一个镜像时，Docker首先查看Docker主机上的镜像存储。如果镜像不存在于本地，则从公共镜像仓库[Docker Hub](https://hub.docker.com)中拉取（pull）。
 
-*`/bin/echo`是在新容器中运行的命令。
+* `/bin/echo`是在新容器中运行的命令。
 
 现在容器启动了。 Docker创建了一个新的Ubuntu系统环境，并在其中执行`/bin/echo`命令，然后打印出来:
 
@@ -38,7 +38,7 @@ Docker允许您在容器内部运行应用程序，创建您自己的容器世�
 
 那么，容器启动之后发生了什么？好了，Docker容器只有在您指定的命令是活跃的情况下才会一直运行。因此，在上述示例中，一旦命令被执行完成，容器就停止并退出了。
 
-##运行交互式容器
+## 运行交互式容器
 
 让我们在容器中运行一个新命令。
 
@@ -79,7 +79,7 @@ Docker允许您在容器内部运行应用程序，创建您自己的容器世�
 
 > **注意:**与我们以前的容器一样，Bash shell进程完成后，容器停止。
 
-##启动Hello world的守护进程
+## 启动Hello world的守护进程
 
 让我们创建一个作为守护进程运行的容器。
 
@@ -151,7 +151,7 @@ Docker允许您在容器内部运行应用程序，创建您自己的容器世�
 
 	insane_babbage
 
-`docker stop'命令告诉Docker优雅的停止正在运行的容器，并返回它正在停止的容器的名称。
+`docker stop`命令告诉Docker优雅的停止正在运行的容器，并返回它正在停止的容器的名称。
 
 让我们通过`docker ps`检查`docker stop`命令是否起作用了。
 
