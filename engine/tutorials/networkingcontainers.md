@@ -1,39 +1,35 @@
 ---
-description: How to network Docker containers.
-keywords: Examples, Usage, volume, docker, documentation, user guide, data,  volumes
+description: 如何连通Docker容器的网络。
+keywords: 示例，用法，卷，docker，文档，用户指南，数据，卷
 redirect_from:
 - /engine/userguide/containers/networkigncontainers/
 - /engine/userguide/networkigncontainers/
-title: Network containers
+title:容器网络连通
 ---
 
-If you are working your way through the user guide, you just built and ran a
-simple application. You've also built in your own images. This section teaches
-you how to network your containers.
 
-## Launch a container on the default network
+如果您正在看用户指南，您刚刚构建并运行了一个简单的应用程序。您还构建了您自己的镜像。本节教您如何为您的容器连通他们的网络。
 
-Docker includes support for networking containers through the use of **network
-drivers**. By default, Docker provides two network drivers for you, the
-`bridge` and the `overlay` drivers. You can also write a network driver plugin so
-that you can create your own drivers but that is an advanced task.
+## 在默认网络上启动容器
 
-Every installation of the Docker Engine automatically includes three default networks. You can list them:
+Docker通过使用**网络驱动程序**连通容器的网络。默认情况下，Docker为您提供了两个网络驱动程序，`bridge`和`overlay`驱动程序。您还可以编写网络驱动程序插件，以便您可以创建自己的驱动程序，但这是一个高级任务。
 
-    $ docker network ls
+每次安装Docker Engine都会自动包含三个默认网络。您可以列出:
+
+	$ docker network ls
 
     NETWORK ID          NAME                DRIVER
     18a2866682b8        none                null
     c288470c46f6        host                host
     7b369448dccb        bridge              bridge
 
-The network named `bridge` is a special network. Unless you tell it otherwise, Docker always launches your containers in this network. Try this now:
+名为`bridge`的网络是一个特殊的网络。除非您另有说明，Docker总是在这个网络中启动您的容器。立即尝试:
 
-    $ docker run -itd --name=networktest ubuntu
+	$ docker run -itd --name=networktest ubuntu
 
-    74695c9cea6d9810718fddadc01a727a5dd3ce6a69d09752239736c030599741
+	74695c9cea6d9810718fddadc01a727a5dd3ce6a69d09752239736c030599741
 
-Inspecting the network is an easy way to find out the container's IP address.
+检查网络是找出容器的IP地址最简单的方法。
 
 ```bash
 $ docker network inspect bridge
@@ -74,25 +70,25 @@ $ docker network inspect bridge
             "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
             "com.docker.network.bridge.name": "docker0",
             "com.docker.network.driver.mtu": "9001"
-        },
-        "Labels": {}
+        }
     }
 ]
 ```
 
-You can remove a container from a network by disconnecting the container. To do this, you supply both the network name and the container name. You can also use the container id. In this example, though, the name is faster.
+您可以通过断开容器的网络连接来从网络中删除该容器。为此，您需要提供网络名称和容器名称。您还可以使用容器ID。在这个例子中，名称更快。
 
-    $ docker network disconnect bridge networktest
+	$ docker network disconnect bridge networktest
 
-While you can disconnect a container from a network, you cannot remove the  builtin `bridge` network named `bridge`. Networks are natural ways to isolate containers from other containers or other networks. So, as you get more experienced with Docker, you'll want to create your own networks.
+虽然可以从网络中断开该容器的网络连接，但是您无法删除名为`bridge`的内置`bridge`网络。网络是将容器与其他容器或其他网络隔离开来的最自然方式。所以，当您对Docker有更多的经验时，您会想创建您自己的网络。
 
-## Create your own bridge network
+## 创建自己的网桥
 
-Docker Engine natively supports both bridge networks and overlay networks. A bridge network is limited to a single host running Docker Engine. An overlay network can include multiple hosts and is a more advanced topic. For this example, you'll create a bridge network:
+Docker引擎原生的支持bridge网络和overlay网络。bridge网络局限于运行Docker Engine的单个主机。overlay网络可以让多个主机上的容器网络相互连通，并且是更高级的主题。对于此示例，您将创建一个bridge网络:
 
-    $ docker network create -d bridge my-bridge-network
+	$ docker network create -d bridge my-bridge-network
 
-The `-d` flag tells Docker to use the `bridge` driver for the new network. You could have left this flag off as `bridge` is the default value for this flag. Go ahead and list the networks on your machine:
+`-d`标志告诉Docker为新网络使用`bridge`驱动程序。您可以把这个标志关掉，因为`bridge`是这个标志的默认值。继续并在您的机器上列出网络:
+
 
     $ docker network ls
 
@@ -102,9 +98,9 @@ The `-d` flag tells Docker to use the `bridge` driver for the new network. You c
     18a2866682b8        none                null
     c288470c46f6        host                host
 
-If you inspect the network, you'll find that it has nothing in it.
-
-    $ docker network inspect my-bridge-network
+如果您检查网络，您会发现它什么都没有。
+	
+	$ docker network inspect my-bridge-network
 
     [
         {
@@ -117,28 +113,25 @@ If you inspect the network, you'll find that it has nothing in it.
                 "Config": [
                     {
                         "Subnet": "172.18.0.0/16",
-                        "Gateway": "172.18.0.1"
+                        "Gateway": "172.18.0.1/16"
                     }
                 ]
             },
             "Containers": {},
-            "Options": {},
-            "Labels": {}
+            "Options": {}
         }
     ]
 
-## Add containers to a network
 
-To build web applications that act in concert but do so securely, create a
-network. Networks, by definition, provide complete isolation for containers. You
-can add containers to a network when you first run a container.
+## 添加容器到网络
 
-Launch a container running a PostgreSQL database and pass it the `--network=my-bridge-network` flag to connect it to your new network:
+要构建协同工作并且安全的Web应用程序，请创建网络。根据定义，网络为容器提供完全的隔离。您可以在首次运行容器时向网络添加容器。
 
-    $ docker run -d --network=my-bridge-network --name db training/postgres
+启动一个运行PostgreSQL数据库的容器，并通过`-net = my-bridge-network'标志将它连接到您的新网络:
 
-If you inspect your `my-bridge-network` you'll see it has a container attached.
-You can also inspect your container to see where it is connected:
+	$ docker run -d --net = my-bridge-network --name db training / postgres
+
+如果您检查您的`my-bridge-network`，您会看到它有一个容器。您也可以检查您的容器，看看它的连接:
 
     {% raw %}
     $ docker inspect --format='{{json .NetworkSettings.Networks}}'  db
@@ -147,11 +140,11 @@ You can also inspect your container to see where it is connected:
     {"my-bridge-network":{"NetworkID":"7d86d31b1478e7cca9ebed7e73aa0fdeec46c5ca29497431d3007d2d9e15ed99",
     "EndpointID":"508b170d56b2ac9e4ef86694b0a76a22dd3df1983404f7321da5649645bf7043","Gateway":"172.18.0.1","IPAddress":"172.18.0.2","IPPrefixLen":16,"IPv6Gateway":"","GlobalIPv6Address":"","GlobalIPv6PrefixLen":0,"MacAddress":"02:42:ac:11:00:02"}}
 
-Now, go ahead and start your by now familiar web application. This time leave off the `-P` flag and also don't specify a network.
+现在继续，开始您现在熟悉的Web应用程序。这次不指定网络。
 
-    $ docker run -d --name web training/webapp python app.py
+	$ docker run -d --name web training/webapp python app.py
 
-Which network is your `web` application running under? Inspect the application and you'll find it is running in the default `bridge` network.
+您的`web`应用程序运行在哪个网络？`docker inspect`应用程序，您会发现它运行在默认的`bridge`网络。
 
     {% raw %}
     $ docker inspect --format='{{json .NetworkSettings.Networks}}'  web
@@ -160,7 +153,8 @@ Which network is your `web` application running under? Inspect the application a
     {"bridge":{"NetworkID":"7ea29fc1412292a2d7bba362f9253545fecdfa8ce9a6e37dd10ba8bee7129812",
     "EndpointID":"508b170d56b2ac9e4ef86694b0a76a22dd3df1983404f7321da5649645bf7043","Gateway":"172.17.0.1","IPAddress":"172.17.0.2","IPPrefixLen":16,"IPv6Gateway":"","GlobalIPv6Address":"","GlobalIPv6PrefixLen":0,"MacAddress":"02:42:ac:11:00:02"}}
 
-Then, get the IP address of your `web`
+然后，获取您的`web`的IP地址
+
 
     {% raw %}
     $ docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' web
@@ -168,9 +162,9 @@ Then, get the IP address of your `web`
 
     172.17.0.2
 
-Now, open a shell to your running `db` container:
+现在，打开一个shell到您运行的`db`容器:
 
-    $ docker exec -it db bash
+	$ docker exec -it db bash
 
     root@a205f0dd33b2:/# ping 172.17.0.2
     ping 172.17.0.2
@@ -179,13 +173,14 @@ Now, open a shell to your running `db` container:
     --- 172.17.0.2 ping statistics ---
     44 packets transmitted, 0 received, 100% packet loss, time 43185ms
 
-After a bit, use `CTRL-C` to end the `ping` and you'll find the ping failed. That is because the two containers are running on different networks. You can fix that. Then, use the `exit` command to close the container.
+一会儿后，使用`CTRL-C`结束`ping`，您会发现ping失败。这是因为两个容器在不同的网络上运行。您可以解决这个问题。然后，使用`exit`命令关闭容器。
 
-Docker networking allows you to attach a container to as many networks as you like. You can also attach an already running container. Go ahead and attach your running `web` app to the `my-bridge-network`.
+Docker网络允许您将容器附加到任意数量的网络。您还可以附加已在运行的容器到网络中。继续，将您运行的“web”应用程序附加到`my-bridge-network`。
 
-    $ docker network connect my-bridge-network web
+	$ docker network connect my-bridge-web web
 
-Open a shell into the `db` application again and try the ping command. This time just use the container name `web` rather than the IP Address.
+再次打开一个shell进入到`db`应用程序并尝试ping命令。这次只使用容器名称`web`而不是IP地址。
+
 
     $ docker exec -it db bash
 
@@ -198,9 +193,9 @@ Open a shell into the `db` application again and try the ping command. This time
     --- web ping statistics ---
     3 packets transmitted, 3 received, 0% packet loss, time 2000ms
     rtt min/avg/max/mdev = 0.060/0.073/0.095/0.018 ms
+    
+`ping`显示它正在联系一个不在`bridge`网络上的IP地址，这个地址来自于`my-bridge-network`。
 
-The `ping` shows it is contacting a different IP address, the address on the `my-bridge-network` which is different from its address on the `bridge` network.
+## 下一步
 
-## Next steps
-
-Now that you know how to network containers, see [how to manage data in containers](dockervolumes.md).
+现在您知道如何为容器连通网络，参见[如何管理容器中的数据](dockervolumes.md)。
