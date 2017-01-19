@@ -1,75 +1,44 @@
 ---
-description: Learn how to optimize your use of OverlayFS driver.
+description: 学习使用OverlayFS 存储驱动优化Docker。
 keywords: container, storage, driver, OverlayFS
-title: Docker and OverlayFS in practice
+title: Docker和OverlayFS实践
 ---
 
-OverlayFS is a modern *union filesystem* that is similar to AUFS. In comparison
- to AUFS, OverlayFS:
+OverlayFS 是一个类似于AUFS的 *联合文件系统*。与AUFS对比的话，Overlay：
 
-* has a simpler design
-* has been in the mainline Linux kernel since version 3.18
-* is potentially faster
+* 更简单的设计
+* 从3.18的内核开始就合并到Linux主线上
+* 速度更快
 
-As a result, OverlayFS is rapidly gaining popularity in the Docker community
-and is seen by many as a natural successor to AUFS. As promising as OverlayFS
-is, it is still relatively young. Therefore caution should be taken before
-using it in production Docker environments.
+因此，在Docker社区中OverlayFS正在快速的流行起来，并且看起来将是AUFS的继承者。作为未来的前景，它目前还不算成熟。因此在生产环境使用它时要小心谨慎。
 
-Docker's `overlay` storage driver leverages several OverlayFS features to build
- and manage the on-disk structures of images and containers.
+Docker的`overlay`存储驱动利用了很多OverlayFS的特性来管理磁盘上镜像和容器的数据结构。
 
-Since version 1.12, Docker also provides `overlay2` storage driver which is much
-more efficient than `overlay` in terms of inode utilization. The `overlay2`
-driver is only compatible with Linux kernel 4.0 and later.
+从1.12的版本之后，Docker也提供了比`overlay`在inode使用上更高效的`overlay2`的存储驱动。`overlay2`的存储驱动只兼容与Linux kernel 4.0和之后的版本。
 
-For comparison between `overlay` vs `overlay2`, please also refer to [Select a
-storage driver](selectadriver.md#overlay-vs-overlay2).
+关于`overlay`和`overlay2`的对比，可以参考[选择存储驱动](selectadriver.md#overlay-vs-overlay2)。
 
->**Note**: Since it was merged into the mainline kernel, the OverlayFS *kernel
->module* was renamed from "overlayfs" to "overlay". As a result you may see the
-> two terms used interchangeably in some documentation. However, this document
-> uses  "OverlayFS" to refer to the overall filesystem, and `overlay`/`overlay2`
-> to refer to Docker's storage-drivers.
+>**Note**: 在合并到kernel主干开始，OverlayFS的*kernel模块*就从`overlayfs`改名成了
+> `overlay`。因此你可能会看到在某些文档中有这这种不同的术语。不过这篇文档中使用“OverlayFS”指
+> 代Overlay文件系统，`overlay`/`overlay2`指代Docker的存储驱动。
 
-## Image layering and sharing with OverlayFS (`overlay`)
+## 通过OverlayFS (`overlay`) 的镜像分层和共享
 
-OverlayFS takes two directories on a single Linux host, layers one on top of
-the other, and provides a single unified view. These directories are often
-referred to as *layers* and the technology used to layer them is known as a
-*union mount*. The OverlayFS terminology is "lowerdir" for the bottom layer and
- "upperdir" for the top layer. The unified view is exposed through its own
-directory called "merged".
+OverlayFS 在Linux宿主机上使用一层在另外一层上面的两个目录组成一个标准的视图。这些目录京城被称为 *层* 并且这种技术被称为*联合挂载*。OverlayFS使用一个"lowerdir"作为下层，和"upperdir"作为上层。而组合成的标准视图称之为"merged"。
 
-The diagram below shows how a Docker image and a Docker container are layered.
-The image layer is the "lowerdir" and the container layer is the "upperdir".
-The unified view is exposed through a directory called "merged" which is
-effectively the containers mount point. The diagram shows how Docker constructs
- map to OverlayFS constructs.
+下面的图中展示了Docker镜像和容器是如何分层的。镜像的层是作为"lowerdir"，容器的层作为"upperdir"。而通过称为"merged"的一个目录作为统一的视图，用作容器的挂载点。这个图中展示了Docker使用OverlayFS的组成结构。
 
 ![](images/overlay_constructs.jpg)
 
-Notice how the image layer and container layer can contain the same files. When
- this happens, the files in the container layer ("upperdir") are dominant and
-obscure the existence of the same files in the image layer ("lowerdir"). The
-container mount ("merged") presents the unified view.
+在镜像的层和容器的层中可以包含相同的文件。当这样的事件发生时，容器层("upperdir")的文件会优先显示出来，并忽略下层的镜像层("lowerdir")中的文件。容器的挂载("merged")展示了统一的视图。
 
-The `overlay` driver only works with two layers. This means that multi-layered
-images cannot be implemented as multiple OverlayFS layers. Instead, each image
-layer is implemented as its own directory under `/var/lib/docker/overlay`.  Hard
-links are then used as a space-efficient way to reference data shared with lower
-layers. As of Docker 1.10, image layer IDs no longer correspond to directory
-names in `/var/lib/docker/`
+`overlay`驱动仅工作于两层。这就意味着多层的镜像不能通过多层的OverlayFS层来实现。所以，镜像的每一层都会在`/var/lib/docker/overlay`下面有他自己的文件夹。然后使用硬链接的方式指向下层中的共享的数据。Docker 1.10之后，镜像的层ID不再和`/var/lib/docker`的镜像ID绑定。
 
-To create a container, the `overlay` driver combines the directory representing
- the image's top layer plus a new directory for the container. The image's top
-layer is the "lowerdir" in the overlay and read-only. The new directory for the
- container is the "upperdir" and is writable.
+在创建一个容器时，`overlay`的驱动镜像组合最上层对应的目录和一个新的目录作为容器的层。镜像的最上层的目录作为overlay的"lowerdir"并且是只读的。而新创建的目录是容器的"upperdir"，是可写的。
 
-### Example: Image and container on-disk constructs (`overlay`)
+### 示例: 镜像和容器在磁盘上的结构(`overlay`)
 
-The following `docker pull` command shows a Docker host with downloading a
-Docker image comprising five layers.
+下面的在Docker宿主机的`docker pull`的命令展示了下载一个包含5层的一个docker镜像。
 
     $ sudo docker pull ubuntu
 
@@ -84,13 +53,9 @@ Docker image comprising five layers.
     Digest: sha256:46fb5d001b88ad904c5c732b086b596b92cfb4a4840a3abd0e35dbb6870585e4
     Status: Downloaded newer image for ubuntu:latest
 
-Each image layer has its own directory under `/var/lib/docker/overlay/`. This
-is where the contents of each image layer are stored.
+每一层镜像在`/var/lib/docker/overlay`下面有自己的目录。每个镜像的层将内容保存在这个这个目录中。
 
-The output of the command below shows the five directories that store the
-contents of each image layer just pulled. However, as can be seen, the image
-layer IDs do not match the directory names in `/var/lib/docker/overlay`. This
-is normal behavior in Docker 1.10 and later.
+下面的命令展示了刚才pull到的镜像的保存层内容的5个目录。不过，如你所见，镜像的ID并不匹配于`/var/lib/docker/overlay`目录的目录名，这个在Docker 1.10及之后的版本是正常的。
 
     $ ls -l /var/lib/docker/overlay/
 
@@ -101,9 +66,7 @@ is normal behavior in Docker 1.10 and later.
     drwx------ 3 root root 4096 Jun 20 16:11 ad0fe55125ebf599da124da175174a4b8c1878afe6907bf7c78570341f308461
     drwx------ 3 root root 4096 Jun 20 16:11 edab9b5e5bf73f2997524eebeac1de4cf9c8b904fa8ad3ec43b3504196aa3801
 
-The image layer directories contain the files unique to that layer as well as
-hard links to the data that is shared with lower layers. This allows for
-efficient use of disk space.
+镜像的目录包含着每一层自己的文件内容以及对下层镜像层数据的硬链接。这保证了对磁盘空间的高效利用。
 
     $ ls -i /var/lib/docker/overlay/38f3ed2eac129654acef11c32670b534670c3a06e483fce313d72e3e0a15baa8/root/bin/ls
 
@@ -113,10 +76,7 @@ efficient use of disk space.
 
     19793696 /var/lib/docker/overlay/55f1e14c361b90570df46371b20ce6d480c434981cbda5fd68c6ff61aa0a5358/root/bin/ls
 
-Containers also exist on-disk in the Docker host's filesystem under
-`/var/lib/docker/overlay/`. If you inspect the directory relating to a running
-container using the `ls -l` command, you find the following file and
-directories.
+容器在宿主机的文件系统中也存储在`/var/lib/docker/overlay/`目录中。如果你查看关联到运行中容器的目录，你可以找到下面这些文件和目录。
 
     $ ls -l /var/lib/docker/overlay/<directory-of-running-container>
 
@@ -126,27 +86,20 @@ directories.
     drwxr-xr-x 4 root root 4096 Jun 20 16:39 upper
     drwx------ 3 root root 4096 Jun 20 16:39 work
 
-These four filesystem objects are all artifacts of OverlayFS. The "lower-id"
-file contains the ID of the top layer of the image the container is based on.
-This is used by OverlayFS as the "lowerdir".
+这四个文件系统的对象组成OverlayFS的基础组件。"lower-id"文件包含了容器基于的镜像的基础镜像的顶层ID，被OverlayFS作为"lowerdir"使用。
 
     $ cat /var/lib/docker/overlay/ec444863a55a9f1ca2df72223d459c5d940a721b2288ff86a3f27be28b53be6c/lower-id
 
     55f1e14c361b90570df46371b20ce6d480c434981cbda5fd68c6ff61aa0a5358
 
-The "upper" directory is the containers read-write layer. Any changes made to
-the container are written to this directory.
+而"upper"目录被用作容器的读写层。所有对容器的修改都会被写入到这一层中。
 
-The "merged" directory is effectively the containers mount point. This is where
- the unified view of the image ("lowerdir") and container ("upperdir") is
-exposed. Any changes written to the container are immediately reflected in this
- directory.
+"merged"目录是容器的挂载点。这个是镜像("lowerdir")和容器("upperdir")的暴漏出的统一视图。所有的在容器中的修改会被直接写到这个文件夹中。
 
-The "work" directory is required for OverlayFS to function. It is used for
-things such as *copy_up* operations.
+"work"目录是OverlayFS功能所需的。它用于做类似于*copy_up*操作。
 
-You can verify all of these constructs from the output of the `mount` command.
-(Ellipses and line breaks are used in the output below to enhance readability.)
+你可以通过`mount`命令来验证这整个的结构。(省略号和换行是为了让输出更易读)
+
 
     $ mount | grep overlay
 
@@ -155,21 +108,18 @@ You can verify all of these constructs from the output of the `mount` command.
     upperdir=/var/lib/docker/overlay/ec444863a55a.../upper,
     workdir=/var/lib/docker/overlay/ec444863a55a.../work)
 
-The output reflects that the overlay is mounted as read-write ("rw").
+下面的输出表明overlay是通过读写("rw")挂载的。
 
 
-## Image layering and sharing with OverlayFS (`overlay2`)
+## 镜像的分层和共享 (`overlay2`)
 
-While the `overlay` driver only works with a single lower OverlayFS layer and
-hence requires hard links for implementation of multi-layered images, the
-`overlay2` driver natively supports multiple lower OverlayFS layers (up to 128).
+`overlay`驱动只能工作于单个的OverlayFS lower 层，而且需要依赖于硬链接来实现多层镜像，而`overlay2`驱动原生的支持多个OverlayFS底层(最多到128)。
 
-Hence the `overlay2` driver offers better performance for layer-related docker commands (e.g. `docker build` and `docker commit`), and consumes fewer inodes than the `overlay` driver.
+因此`overlay2`驱动为层相关的Docker命令(比如`docker build`和`docker commit`)提供了更好的性能，以及比`overlay`驱动更小的inodes开销。
 
-### Example: Image and container on-disk constructs (`overlay2`)
+### 示例：镜像和容器在磁盘上的结构 (`overlay2`)
 
-After downloading a five-layer image using `docker pull ubuntu`, you can see
-six directories under `/var/lib/docker/overlay2`.
+当使用`docker pull ubuntu`下载了一个5层的镜像后，你可以在`/var/lib/docker/overlay2`的目录下看到6个目录。
 
     $ ls -l /var/lib/docker/overlay2
 
@@ -181,9 +131,7 @@ six directories under `/var/lib/docker/overlay2`.
     drwx------ 5 root root 4096 Jun 20 07:36 eca1e4e1694283e001f200a667bb3cb40853cf2d1b12c29feda7422fed78afed
     drwx------ 2 root root 4096 Jun 20 07:36 l
 
-The "l" directory contains shortened layer identifiers as symbolic links.  These
-shortened identifiers are used for avoid hitting the page size limitation on
-mount arguments.
+”l“目录包含了到镜像间断的标识作为动态链接。这些间断的标识是为了避免导致挂载参数的大小限制。
 
     $ ls -l /var/lib/docker/overlay2/l
 
@@ -194,8 +142,7 @@ mount arguments.
     lrwxrwxrwx 1 root root 72 Jun 20 07:36 NFYKDW6APBCCUCTOUSYDH4DXAT -> ../223c2864175491657d238e2664251df13b63adb8d050924fd1bfcdb278b866f7/diff
     lrwxrwxrwx 1 root root 72 Jun 20 07:36 UL2MW33MSE3Q5VYIKBRN4ZAGQP -> ../e8876a226237217ec61c4baf238a32992291d059fdac95ed6303bdff3f59cff5/diff
 
-The lowerest layer contains the "link" file which contains the name of the shortened
-identifier, and the "diff" directory which contains the contents.
+最下层的镜像层包含了缩短的标识的"link"文件，以及包含镜像内容的"diff"文件夹。
 
     $ ls /var/lib/docker/overlay2/3a36935c9df35472229c57f4a27105a136f5e4dbef0f87905b2e506e494e348b/
 
@@ -209,9 +156,7 @@ identifier, and the "diff" directory which contains the contents.
 
     bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
 
-The second layer contains the "lower" file for denoting the layer composition,
-and the "diff" directory for the layer contents.  It also contains the "merged" and
-the "work" directories.
+而第二层包含了"lower"文件表示下面的层的构成，以及"diff"目录包含层的内容。它也包含了"merged"和"work"目录。
 
     $ ls /var/lib/docker/overlay2/223c2864175491657d238e2664251df13b63adb8d050924fd1bfcdb278b866f7
 
@@ -225,8 +170,7 @@ the "work" directories.
 
     etc  sbin  usr  var
 
-A directory for running container have similar files and directories as well.
-Note that the lower list is separated by ':', and ordered from highest layer to lower.
+而运行中的容器的目录中拥有类似的文件和目录，注意到下层的列表用":"分隔，依次从高层到底层排列。
 
     $ ls -l /var/lib/docker/overlay/<directory-of-running-container>
 
@@ -234,7 +178,7 @@ Note that the lower list is separated by ':', and ordered from highest layer to 
 
     l/DJA75GUWHWG7EWICFYX54FIOVT:l/B3WWEFKBG3PLLV737KZFIASSW7:l/JEYMODZYFCZFYSDABYXD5MF6YO:l/UL2MW33MSE3Q5VYIKBRN4ZAGQP:l/NFYKDW6APBCCUCTOUSYDH4DXAT:l/6Y5IM2XC7TSNIJZZFLJCS6I4I4
 
-The result of `mount` is as follows:
+查看`mount`的结果如下：
 
     $ mount | grep overlay
 
@@ -244,82 +188,45 @@ The result of `mount` is as follows:
     upperdir=9186877cdf386d0a3b016149cf30c208f326dca307529e646afce5b3f83f5304/diff,
     workdir=9186877cdf386d0a3b016149cf30c208f326dca307529e646afce5b3f83f5304/work)
 
-## Container reads and writes with overlay
+## 在overlay驱动下的容器读与写
 
-Consider three scenarios where a container opens a file for read access with
-overlay.
+在overlay驱动下考虑三种容器打开文件读取的场景：
 
-- **The file does not exist in the container layer**. If a container opens a
-file for read access and the file does not already exist in the container
-("upperdir") it is read from the image ("lowerdir"). This should incur very
-little performance overhead.
+- **文件不存在在容器层**. 如果容器打开和读取了一个并不存在于容器层("upperdir")中的一个文件，它将从镜像("lowerdir")中读取，这个会造成很小的性能损耗。
 
-- **The file only exists in the container layer**. If a container opens a file
-for read access and the file exists in the container ("upperdir") and not in
-the image ("lowerdir"), it is read directly from the container.
+- **文件只存在于容器层**. 如果一个容器打开和读取存在于容器("upperdir")而不在镜像("lowerdir")中的文件，就会直接从容器中读取。
 
-- **The file exists in the container layer and the image layer**. If a
-container opens a file for read access and the file exists in the image layer
-and the container layer, the file's version in the container layer is read.
-This is because files in the container layer ("upperdir") obscure files with
-the same name in the image layer ("lowerdir").
+- **文件存储在镜像层和容器层**. 如果一个容器打开和读取一个都存在于镜像和容器中的文件，那么容器层中的文件将被读取到。因为容器层("upperdir")中的文件覆盖了镜像层("lowerdir")中的文件。
 
-Consider some scenarios where files in a container are modified.
+考虑文件在容器中被修改的一些场景：
 
-- **Writing to a file for the first time**. The first time a container writes
-to an existing file, that file does not exist in the container ("upperdir").
-The `overlay`/`overlay2` driver performs a *copy_up* operation to copy the file
-from the image ("lowerdir") to the container ("upperdir"). The container then
-writes the changes to the new copy of the file in the container layer.
+- **第一次修改文件**. 如果第一次修改已存在的文件，这个文件不存在与容器("upperdir")中。`overlay`/`overlay2`的驱动会执行*copy_up*的操作，将这个文件从镜像('lowerdir')中拷贝到容器("upperdir")中，然后这个容器会将修改写入到新拷贝到容器层中的文件中。
 
-    However, OverlayFS works at the file level not the block level. This means
-that all OverlayFS copy-up operations copy entire files, even if the file is
-very large and only a small part of it is being modified. This can have a
-noticeable impact on container write performance. However, two things are
-worth noting:
+    然而，OverlayFS工作在文件上而不是磁盘块上。这意味着OverlayFS的copy-up操作拷贝整个文件。就算文件很大，但是只有很小的部分修改。这个会导致很可见影响写入性能。不过，有两件事情值得提一下：
+    
+    * copy_up操作只会在第一次修改文件时做。后续的对同一文件的修改会直接修改已经拷贝到容器中的文件的实例。
+    * OverlayFS只会工作在两层，这意味着性能消耗会比在很多层的镜像中寻找文件的AUFS有更低的延迟。
 
-    * The copy_up operation only occurs the first time any given file is
-written to. Subsequent writes to the same file will operate against the copy of
- the file already copied up to the container.
+- **删除文件和目录**. 当容器中的文件被删除时，一个*writeout*文件会在容器层("upperdir")中创建，而这个文件在镜像层("lowerdir")中并没有被删除，只是在容器中覆盖了这个文件的可见性。
 
-    * OverlayFS only works with two layers. This means that performance should
-be better than AUFS which can suffer noticeable latencies when searching for
-files in images with many layers.
+    删除容器中的一个目录会在容器("upperdir")中创建一个*opaque directory*的操作，这个和一个whiteout文件的效果是一样的并有效的隐藏了镜像中的目录。
 
-- **Deleting files and directories**. When files are deleted within a container
- a *whiteout* file is created in the containers "upperdir". The version of the
-file in the image layer ("lowerdir") is not deleted. However, the whiteout file
- in the container obscures it.
+- **重命名目录**. 对一个目录调用`rename(2)`的系统调用只允许源目录和摩的目录都在上层，否则就会收到`EXDEV` ("cross-device link not permitted")的错误码。
 
-    Deleting a directory in a container results in *opaque directory* being
-created in the "upperdir". This has the same effect as a whiteout file and
-effectively masks the existence of the directory in the image's "lowerdir".
+所以你的应用需要设计为可以接收`EXDEV`错误码，并通过"copy和unlink"策略实现。
 
-- **Renaming directories**. Calling `rename(2)` for a directory is allowed only
-when both of the source and the destination path are on the top layer.
-Otherwise, it returns `EXDEV` ("cross-device link not permitted").
+## 配置Docker 使用`overlay`/`overlay2`存储驱动
 
-So your application has to be designed so that it can handle `EXDEV` and fall
-back to a "copy and unlink" strategy.
+如果在你的Docker宿主机上配置使用`overlay`存储驱动，要保证你的Linux kernel是在3.18及以后的版本，并保证overlay的kernel 模块被加载了。而如果使用`overlay2`的驱动的话，你的内核需要是4.0及之后的版本。OverlayFS可以运行在目前主流的Linux文件系统上，不过ext4目前还是最推荐在生产环境使用的底层文件系统。
 
-## Configure Docker with the `overlay`/`overlay2` storage driver
+下面的流程将展示你如何配置你的Docker宿主机使用OverlayFS。这个流程事先需要你的Docker daemon是停止状态的。
 
-To configure Docker to use the `overlay` storage driver your Docker host must be
-running version 3.18 of the Linux kernel (preferably newer) with the overlay
-kernel module loaded. For the `overlay2` driver, the version of your kernel must
-be 4.0 or newer. OverlayFS can operate on top of most supported Linux filesystems.
-However, ext4 is currently recommended for use in production environments.
+> **警告:** 如果你之前已经在你的宿主机上使用了Docker并且有需要保存的镜像，请先将他们Push到
+> Docker Hub或者你私有的Docker Trusty Registr。
 
-The following procedure shows you how to configure your Docker host to use
-OverlayFS. The procedure assumes that the Docker daemon is in a stopped state.
+1. 首先停掉Running的Docker daemon。
 
-> **Caution:** If you have already run the Docker daemon on your Docker host
-> and have images you want to keep, `push` them Docker Hub or your private
-> Docker Trusted Registry before attempting this procedure.
-
-1. If it is running, stop the Docker `daemon`.
-
-2. Verify your kernel version and that the overlay kernel module is loaded.
+2. 验证你的Kernel版本以及overlay的kernel模块加载情况.
 
         $ uname -r
 
@@ -329,7 +236,7 @@ OverlayFS. The procedure assumes that the Docker daemon is in a stopped state.
 
         overlay
 
-3. Start the Docker daemon with the `overlay`/`overlay2` storage driver.
+3. 使用 `overlay`/`overlay2` storage driver存储驱动启动Docker daemon.
 
         $ dockerd --storage-driver=overlay &
 
@@ -338,14 +245,10 @@ OverlayFS. The procedure assumes that the Docker daemon is in a stopped state.
         INFO[0000] Option DefaultDriver: bridge
         INFO[0000] Option DefaultNetwork: bridge
         <output truncated>
+    
+    或者，你可以通过修改Docker的配置文件中的`DOCKER_OPTS`添加`--storage-driver=overlay`标记让Docker daemon自动的使用`overlay`/`overlay2`的驱动，只要这个参数配设置了，你可以通过标准的启动脚本启动而不需要手动的添加`--storage-driver`参数。
 
-    Alternatively, you can force the Docker daemon to automatically start with
-    the `overlay`/`overlay2` driver by editing the Docker config file and adding
-    the `--storage-driver=overlay` flag to the `DOCKER_OPTS` line. Once this option
-    is set you can start the daemon using normal startup scripts without having
-    to manually pass in the `--storage-driver` flag.
-
-4. Verify that the daemon is using the `overlay`/`overlay2` storage driver
+4. 验证Docker daemon 使用了`overlay`/`overlay2` 存储驱动
 
         $ docker info
 
@@ -355,77 +258,38 @@ OverlayFS. The procedure assumes that the Docker daemon is in a stopped state.
          Backing Filesystem: extfs
         <output truncated>
 
-    Notice that the *Backing filesystem* in the output above is showing as
-`extfs`. Multiple backing filesystems are supported but `extfs` (ext4) is
-recommended for production use cases.
+    注意到这里输出的*Backing filesystem*是`extfs`。虽然后端的文件系统支持很多种，但是在生产环境还是推荐使用`extfs`(ext4)文件系统。
 
-Your Docker host is now using the `overlay`/`overlay2` storage driver. If you
-run the `mount` command, you'll find Docker has automatically created the
-`overlay` mount with the required "lowerdir", "upperdir", "merged" and "workdir"
-constructs.
+你的Docker宿主机目前已经使用了`overlay`/`overlay2`存储驱动。如果你运行`mount`命令，你可以发现Docker自动的通过需要的"lowdir","upperdir","merged","workdir"创建了`overlay`类型的挂载。
 
-## OverlayFS and Docker Performance
+## OverlayFS在Docker上的性能
 
-As a general rule, the `overlay`/`overlay2` drivers should be fast. Almost
-certainly faster than `aufs` and `devicemapper`. In certain circumstances it may
-also be faster than `btrfs`. That said, there are a few things to be aware of
-relative to the performance of Docker using the `overlay`/`overlay2` storage
-drivers.
+在一般的场景下，`overlay`/`overlay2`的驱动是比`aufs`和`devicemapper`快的。在特定的场景上，会比`btrfs`快。也就是说，在Docker上使用`overlay`/`overlay2`的性能是较好的。
 
-- **Page Caching**. OverlayFS supports page cache sharing. This means multiple
-containers accessing the same file can share a single page cache entry (or
-entries). This makes the `overlay`/`overlay2` drivers efficient with memory and
-a good option for PaaS and other high density use cases.
+- **页缓存**. OverlayFS支持页缓存共享，这意味着多个容器访问同样的文件可以共享同一个页缓存。这使得`overlay`/`overlay2`驱动有更高的内存效率。所以适合于Pass平台或者高密度的使用场景。
 
-- **copy_up**. As with AUFS, OverlayFS has to perform copy-up operations any
-time a container writes to a file for the first time. This can insert latency
-into the write operation &mdash; especially if the file being copied up is
-large. However, once the file has been copied up, all subsequent writes to that
- file occur without the need for further copy-up operations.
+- **copy_up**. 和AUFS一样，OverlayFS每次写入到文件时会执行copy_up操作，在写操作的时候会导致一定的延时 &mdash; 特别是需要copy-up的文件很大时会更加严重。而对这个文件的后续的操作不会再需要copy-up操作。
+    
+    OverlayFS的copy_up操作比AUFS的操作更加快速。这因为AUFS支持多层的挂载，在多个AUFS层中寻找时会耗费更多的时间。
+    
+- **Inode 限制**. 使用`overlay`驱动会导致大量的inode的消耗。特别是在很多镜像和容器启停的时候会导致系统的inode快速的耗尽，`overlay2`就不会再存在这个问题。
 
-    The OverlayFS copy_up operation should be faster than the same operation
-with AUFS. This is because AUFS supports more layers than OverlayFS and it is
-possible to incur far larger latencies if searching through many AUFS layers.
+不幸的是，你只能在创建文件系统创建的时候才能指定inode的数量。这样你就需要将`/var/lib/docker`存放在一个拥有自己的文件系统的单独的设备上，然后在创建文件系统的时候指定它的inode的数量。
 
-- **Inode limits**. Use of the `overlay` storage driver can cause excessive
-inode consumption. This is especially so as the number of images and containers
- on the Docker host grows. A Docker host with a large number of images and lots
- of started and stopped containers can quickly run out of inodes. The `overlay2`
- does not have such an issue.
 
-Unfortunately you can only specify the number of inodes in a filesystem at the
-time of creation. For this reason, you may wish to consider putting
-`/var/lib/docker` on a separate device with its own filesystem, or manually
-specifying the number of inodes when creating the filesystem.
+以下这些通用的最佳实践同样适用于OverlayFS。
 
-The following generic performance best practices also apply to OverlayFS.
+- **固态硬盘设备(SSD)**. 需要更好的存储性能的一个好主意就是更换更好的性能的固态硬盘存储 (SSD)。
 
-- **Solid State Devices (SSD)**. For best performance it is always a good idea
-to use fast storage media such as solid state devices (SSD).
+- **使用数据卷s**. 数据卷提供最好的以及可预测的性能。这是因为它绕过存储驱动，不会增加由精简配置和copy-on-write带来的额外的性能消耗。由于这个原因，你应该将更重负载的数据读写放到数据卷中。
 
-- **Use Data Volumes**. Data volumes provide the best and most predictable
-performance. This is because they bypass the storage driver and do not incur
-any of the potential overheads introduced by thin provisioning and
-copy-on-write. For this reason, you should place heavy write workloads on data
-volumes.
 
-## OverlayFS compatibility
-To summarize the OverlayFS's aspect which is incompatible with other
-filesystems:
+## OverlayFS 兼容性
 
-- **open(2)**. OverlayFS only implements a subset of the POSIX standards.
-This can result in certain OverlayFS operations breaking POSIX standards. One
-such operation is the *copy-up* operation. Suppose that  your application calls
-`fd1=open("foo", O_RDONLY)` and then `fd2=open("foo", O_RDWR)`. In this case,
-your application expects `fd1` and `fd2` to refer to the same file. However, due
-to a copy-up operation that occurs after the first calling to `open(2)`, the
-descriptors refer to different files.
+总结下OverlayFS和其他文件系统不兼容的地方：
 
-`yum` is known to be affected unless the `yum-plugin-ovl` package is installed.
-If the `yum-plugin-ovl` package is not available in your distribution (e.g.
-RHEL/CentOS prior to 6.8 or 7.2), you may need to run `touch /var/lib/rpm/*`
-before running `yum install`.
+- **open(2)**. OverlayFS只实现了POSIX标准中的一个子集，这回导致OverlayFS有不兼容于POSIX标准。一个典型的操作是*copy-up*操作，假设你的程序通过调用`fd1=open("foo", O_RDONLY)`然后 `fd2=open("foo", O_RDWR)`分别以读和读写的方式打开同一个文件。在这种情况下，你的应用程序期望`fd1`和`fd2`指向同一个文件，然而，鉴于copy-up操作只发生在调用`open(2)`的时候，所以文件描述符会指向不同的文件。
 
-- **rename(2)**. OverlayFS does not fully support the `rename(2)` system call.
-Your application needs to detect its failure and fall back to a "copy and
-unlink" strategy.
+`yum` 就会被这个影响，除非你安装了`yum-plugin-ovl`的包才能解决。如果你的发行版不支持`yum-plugin-ovl`的包（比如RHEL/CentOS 6.8或7.2），你需要在运行`yum install`之前先运行`touch /var/lib/rpm/*`来解决这个问题。
+
+- **rename(2)**. OverlayFS 不能完全支持`rename(2)`的系统调用。你的应用程序需要检测它的失败，并通过"copy 和 unlink"的策略去绕过这个问题。
