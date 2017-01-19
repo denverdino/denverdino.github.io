@@ -6,16 +6,13 @@ keywords:
 title: Docker swarm mode overlay network security model
 ---
 
-Overlay networking for Docker Engine swarm mode comes secure out of the box. The
-swarm nodes exchange overlay network information using a gossip protocol. By
-default the nodes encrypt and authenticate information they exchange via gossip
-using the [AES algorithm](https://en.wikipedia.org/wiki/Galois/Counter_Mode) in
-GCM mode. Manager nodes in the swarm rotate the key used to encrypt gossip data
-every 12 hours.
+swarm mode创建的集群提供的`overlay`网络，其安全也是开箱即用的。
+集群节点使用gossip协议交换`overlay`网络的数据。
+默认情况下，集群节点使用GCM模式下的[AES算法](https://en.wikipedia.org/wiki/Galois/Counter_Mode)进行加密和验证。
+群中的管理器节点每12小时更新一次用于gossip加密的秘钥。
 
-You can also encrypt data exchanged between containers on different nodes on the
-overlay network. To enable encryption, when you create an overlay network pass
-the `--opt encrypted` flag:
+您还可以加密`overlay`网络上不同节点上的容器之间传输的数据。
+要启用加密，您需要在创建`overlay`网络时添加`--opt encrypted`标志：
 
 ```bash
 $ docker network create --opt encrypted --driver overlay my-multi-host-network
@@ -23,20 +20,17 @@ $ docker network create --opt encrypted --driver overlay my-multi-host-network
 dt0zvqn0saezzinc8a5g4worx
 ```
 
-When you enable overlay encryption, Docker creates IPSEC tunnels between all the
-nodes where tasks are scheduled for services attached to the overlay network.
-These tunnels also use the AES algorithm in GCM mode and manager nodes
-automatically rotate the keys every 12 hours.
+当启用`overlay`加密时，Docker会在所有节点之间创建IPSEC隧道，这个任务会被下发到每一个连接到`overlay`网络的服务。
+这些隧道还在GCM模式中使用AES算法进行加密，并且管理器节点每12小时自动更新密钥。
 
-## Swarm mode overlay networks and unmanaged containers
 
-Because the overlay networks for swarm mode use encryption keys from the manager
-nodes to encrypt the gossip communications, only containers running as tasks in
-the swarm have access to the keys. Consequently, containers started outside of
-swarm mode using `docker run` (unmanaged containers) cannot attach to the
-overlay network.
+## Swarm mode下的overlay网络和非托管容器
 
-For example:
+因为swarm模式的`overlay`网络使用来自管理器节点的加密密钥来加密gossip通信，
+所以只有作为集群中的任务运行的容器才能访问密钥。
+因此，使用`docker run`（非托管容器）在swarm模式之外启动的容器不能添加到`overlay`网络中。
+
+例如：
 
 ```bash
 $ docker run --network my-multi-host-network nginx
@@ -46,16 +40,13 @@ docker: Error response from daemon: swarm-scoped network
 run`. This network can only be used by a docker service.
 ```
 
-To work around this situation, migrate the unmanaged containers to managed
-services. For instance:
+要解决此问题，请将非托管容器迁移到Swarm模式下管理。 例如：
 
 ```bash
 $ docker service create --network my-multi-host-network my-image
 ```
 
-Because [swarm mode](../../swarm/index.md) is an optional feature, the Docker
-Engine preserves backward compatibility. You can continue to rely on a
-third-party key-value store to support overlay networking if you wish.
-However, switching to swarm-mode is strongly encouraged. In addition to the
-security benefits described in this article, swarm mode enables you to leverage
-the substantially greater scalability provided by the new services API.
+因为[swarm模式](../../swarm/index.md)是一个可选功能，所以Docker Engine保留了向后兼容性。
+如果愿意，您可以继续依赖第三方键值存储来支持`overlay`网络。
+但是，强烈建议用户切换到swarm模式。除了本文中描述的安全优势之外，
+swarm模式还使您能够利用新的服务相关的API，提供的更大的可扩展性。
