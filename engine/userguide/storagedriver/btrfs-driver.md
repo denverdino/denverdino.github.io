@@ -31,9 +31,6 @@ Snapshot是一个时间点的对整个subvolume的读写拷贝。他们直接从
 ![](images/btfs_snapshots.jpg)
 
 Btrfs在需要时为subvolume何snapshot从底层的存储池中分配空间。分配的单位取决于一个*chunk*，并且一般*chunk* ~1GB大小。
-Btfs allocates space to subvolumes and snapshots on demand from an underlying
-pool of storage. The unit of allocation is referred to as a *chunk*, and
-*chunks* are normally ~1GB in size.
 
 Snapshot是Btrfs文件系统的一等公民。这一位这操作他们就像操作常规的subvolumes一样。创建Snapshot的技术是被直接集成在Btrfs文件系统中copy-on-write技术的设计实现。这意味着Btrfs snapshots高效的空间占用以及几乎没有的性能损失。下面这张图展示了subvolume和它的snapshot共享相同的数据。
 
@@ -52,8 +49,7 @@ Docker的`btffs`存储驱动通过Btrfs的subvolume或snapshot存储每个镜像
 
     ![](images/btfs_constructs.jpg)
 
-As of Docker 1.10, image layer IDs no longer correspond to directory names
-under `/var/lib/docker/`.
+Docker 1.10之后，镜像的的ID不再和`/var/lib/docker`目录名相同。
 
 ## 磁盘上的镜像和容器结构
 

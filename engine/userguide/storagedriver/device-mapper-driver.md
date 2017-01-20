@@ -103,22 +103,16 @@ Device Mapper从2.6.9的Linux内核就被包含了进来。它是RHEL的Linux发
 
 ## 配置Docker使用`device mapper`
 
-The `devicemapper` is the default Docker storage driver on some Linux
-distributions. This includes RHEL and most of its forks. Currently, the
-following distributions support the driver:
+`devicemapper`是Docker在某些Linux发行版上的默认存储驱动，这些发行版包括RHEL以及它的大部分下游发行版。目前这个存储驱动支持的发行版包括：
 
 * RHEL/CentOS/Fedora
 * Ubuntu 12.04
 * Ubuntu 14.04
 * Debian
 
-Docker hosts running the `devicemapper` storage driver default to a
-configuration mode known as `loop-lvm`. This mode uses sparse files to build
-the thin pool used by image and container snapshots. The mode is designed to
-work out-of-the-box with no additional configuration. However, production
-deployments should not run under `loop-lvm` mode.
+Docker宿主机默认通过周知的`loop-lvm`配置参数。这个模式使用稀疏文件构建的thin pool作为存储镜像和容器的snapshot。这个模式设计为不需要额外配置的开箱即用的使用体验。不过生产环境不应该使用`loop-lvm`模式部署。
 
-You can detect the mode by viewing the `docker info` command:
+你可以通过`docker info`命令检查这个模式：
 
 ```bash
 $ sudo docker info
@@ -136,13 +130,9 @@ Storage Driver: devicemapper
  [...]
  ```
 
-The output above shows a Docker host running with the `devicemapper` storage
-driver operating in `loop-lvm` mode. This is indicated by the fact that the
-`Data loop file` and a `Metadata loop file` are on files under
-`/var/lib/docker/devicemapper/devicemapper`. These are loopback mounted sparse
-files.
+上面的输出显示`devicemapper`存储驱动配置为`loop-lvm`的模式。并且展示了`Data loop file`和`Metadata loop file`都是在`/var/lib/docker/devicemapper/devicemapper`目录下面。他们是本地挂载的稀疏文件。
 
-### Configure direct-lvm mode for production
+### 在生产环境配置 direct-lvm 模式
 
 在生产环境推荐使用`direct-lvm`模式配置。这个模式直接使用块设备创建thin pool。下面的流程展示如何使用`direct-lvm`配置Docker宿主机使用`devicemapper`驱动。
 
@@ -365,7 +355,8 @@ Logging Driver: json-file
 
 `Data Space`数值展示了这个pool总共有100GB大小。这个例子扩展这个pool到200GB。
 
-1. 罗列设备的大小。
+1. 罗列设备的大小。  
+
 
 	```bash
 	$ sudo ls -lh /var/lib/docker/devicemapper/devicemapper/
@@ -375,13 +366,15 @@ Logging Driver: json-file
 	-rw------- 1 root root 2.0G Mar 31 11:17 metadata
 	```
 
-2. 扩展`data`文件到`metadata`的大小（大约 200GB)。
+2. 扩展`data`文件到`metadata`的大小（大约 200GB)。  
+
 
 	```bash
 	$ sudo truncate -s 214748364800 /var/lib/docker/devicemapper/devicemapper/data
 	```
 
-3. 验证文件大小被改变了.
+3. 验证文件大小被改变了.  
+
 
 	```bash
 	$ sudo ls -lh /var/lib/docker/devicemapper/devicemapper/
@@ -391,7 +384,8 @@ Logging Driver: json-file
 	-rw------- 1 root root 2.0G Apr 19 13:27 metadata
 	```
 
-4. 重载数据的loop设备
+4. 重载数据的loop设备  
+
 
 	```bash
 	$ sudo blockdev --getsize64 /dev/loop0
@@ -405,9 +399,10 @@ Logging Driver: json-file
 	214748364800
 	```
 
-5. 重载devicemapper的thin pool.
+5. 重载devicemapper的thin pool.  
 
-	a. 首先得到pool的名字.
+	a. 首先得到pool的名字.  
+
 
 	```bash
 	$ sudo dmsetup status | grep pool
@@ -418,7 +413,8 @@ Logging Driver: json-file
 
 	名字是冒号前面的字符串。
 
-	b. 首先展示device mapper的table。
+	b. 首先展示device mapper的table。  
+
 
 	```bash
 	$ sudo dmsetup table docker-8:1-123141-pool
@@ -426,11 +422,12 @@ Logging Driver: json-file
 	0 209715200 thin-pool 7:1 7:0 128 32768 1 skip_block_zeroing
 	```
 
-	c. 计算现在的thin的全部的扇区数。
-
+	c. 计算现在的thin的全部的扇区数。  
+ 
 	修改表信息中的第二个数值到映射到512个字节的扇区个数。例如新的loop的大小是200GB，那么久修改第二个数字到419430400。
 
-	d. 使用新的扇区配置重载thin pool。
+	d. 使用新的扇区配置重载thin pool。  
+
 
 	```bash
 	$ sudo dmsetup suspend docker-8:1-123141-pool \
@@ -443,7 +440,7 @@ Logging Driver: json-file
 Docker项目的`contrib`目录的核心发布不包含这个。这些工具很有用但是可能会过时。<a
 href="https://goo.gl/wNfDTi">在这个目录下的`device_tool.go`</a>可以帮助你修改loop-lvm的thin pool大小。
 
-如果需要使用这个工具，首先编译它，然后使用下面的命令修改pool的大小:
+如果需要使用这个工具，首先编译它，然后使用下面的命令修改pool的大小:  
 
 ```bash
 $ ./device_tool resize 200GB

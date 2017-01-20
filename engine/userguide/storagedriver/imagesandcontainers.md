@@ -231,18 +231,10 @@ Docker 1.10的版本之前的Docker会保存镜像的层到镜像层ID同名的�
 
 > **Note:** 在Docker 1.10的内容可寻址的模型下，镜像的历史数据不再保存在每个层的配置文件中。
 > 它现在存储在与整个镜像关联的一个配置文件中。这导致了有一些镜像在执行`docker history`命令时显示出"missing"，这个是正常的可以忽略的行为。
-> 
-> layer. It is now stored as a string of text in a single config file that
-> relates to the overall image. This can result in some image layers showing as
->  "missing" in the output of the `docker history` command. This is normal
->  behaviour and can be ignored.
 >
 > 你可能听说过类似的镜像，称为 *flat images*.
 
 可以注意到，新的镜像`changed-ubuntu`并没有对镜像层都做拷贝。可以看下面这张图，新的镜像与`ubuntu:15.04`镜像共享了底下的几层。
-Notice the new `changed-ubuntu` image does not have its own copies of every
-layer. As can be seen in the diagram below, the new image is sharing its four
-underlying layers with the `ubuntu:15.04` image.
 
 ![](images/saving-space.jpg)
 
