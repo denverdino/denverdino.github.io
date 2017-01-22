@@ -6,70 +6,47 @@ redirect_from:
 title: Administer and maintain a swarm of Docker Engines
 ---
 
-When you run a swarm of Docker Engines, **manager nodes** are the key components
-for managing the swarm and storing the swarm state. It is important to
-understand some key features of manager nodes in order to properly deploy and
-maintain the swarm.
+当你通过swarm运行一组docker engine，管理节点作为关键组件来管理整个swarm并保存swarm的状态。为了部署和维护swarm集群，理解管理节点的关键特性是非常重要的。
 
-This article covers the following swarm administration tasks:
+这篇文章覆盖以下Swarm管理任务:
 
-* [Using a static IP for manager node advertise address](#use-a-static-ip-for-manager-node-advertise-address)
-* [Adding manager nodes for fault tolerance](#add-manager-nodes-for-fault-tolerance)
-* [Distributing manager nodes](#distribute-manager-nodes)
-* [Running manager-only nodes](#run-manager-only-nodes)
-* [Backing up the swarm state](#back-up-the-swarm-state)
-* [Monitoring the swarm health](#monitor-swarm-health)
-* [Troubleshooting a manager node](#troubleshoot-a-manager-node)
-* [Forcefully removing a node](#force-remove-a-node)
-* [Recovering from disaster](#recover-from-disaster)
-* [Forcing the swarm to rebalance](#forcing-the-swarm-to-rebalance)
+* [使用静态IP作为管理节点的广播地址](#use-a-static-ip-for-manager-node-advertise-address)
+* [添加管理节点提高容灾能力](#add-manager-nodes-for-fault-tolerance)
+* [分散式管理节点](#distribute-manager-nodes)
+* [管理节点只有管理功能](#run-manager-only-nodes)
+* [备份Swarm状态](#back-up-the-swarm-state)
+* [监控Swarm健康状态](#monitor-swarm-health)
+* [管理节点故障排除](#troubleshoot-a-manager-node)
+* [强制移除节点](#force-remove-a-node)
+* [灾难恢复](#recover-from-disaster)
+* [强制swarm重新调度](#forcing-the-swarm-to-rebalance)
 
-Refer to [How nodes work](how-swarm-mode-works/nodes.md)
-for a brief overview of Docker Swarm mode and the difference between manager and
-worker nodes.
+参考[节点如何工作](how-swarm-mode-works/nodes.md)，查看Docker Swarm 模式的概要介绍和管理节点与工作节点的不同
 
-## Operating manager nodes in a swarm
 
-Swarm manager nodes use the [Raft Consensus Algorithm](raft.md) to manage the
-swarm state. You only need to understand some general concepts of Raft in
-order to manage a swarm.
+## 在Swarm中运行管理节点
+Swarm 管理节点使用[Raft一致性算法](raft.md)管理Swarm状态信息。为了理解Swarm工作原理，你需要了解一些Raft的基本概念。
 
-There is no limit on the number of manager nodes. The decision about how many
-manager nodes to implement is a trade-off between performance and
-fault-tolerance. Adding manager nodes to a swarm makes the swarm more
-fault-tolerant. However, additional manager nodes reduce write performance
-because more nodes must acknowledge proposals to update the swarm state.
-This means more network round-trip traffic.
+管理节点的数量没有限制，决定管理节点数量取决于性能和容错能力之间的群和权衡；向Swarm中添加越多的管理节点，swarm的容错能力越强。然而由于每个管理节点都要同步swarm状态，则过多的管理节点会降低集群的性能，也意味着更多的网络流量。
 
-Raft requires a majority of managers, also called a quorum, to agree on proposed
-updates to the swarm. A quorum of managers must also agree on node additions
-and removals. Membership operations are subject to the same constraints as state
-replication.
+Raft需要在多个管理节点中选一个领导者（仲裁者），用来确定Swarm的状态更新，同时也会决定节点的添加和删除。成员操作受限于状态响应。
 
-## Use a static IP for manager node advertise address
 
-When initiating a swarm, you have to specify the `--advertise-addr` flag to
-advertise your address to other manager nodes in the swarm. For more
-information, see [Run Docker Engine in swarm mode](swarm-mode.md#configure-the-advertise-address). Because manager nodes are
-meant to be a stable component of the infrastructure, you should use a *fixed
-IP address* for the advertise address to prevent the swarm from becoming
-unstable on machine reboot.
+## 使用一个静态IP作为管理节点的通告地址
 
-If the whole swarm restarts and every manager node subsequently gets a new IP
-address, there is no way for any node to contact an existing manager. Therefore
-the swarm is hung while nodes to contact one another at their old IP addresses.
+当初始化一个swarm集群时，通过配置 `--advertise-addr` 参数来向其他管理节点通告swarm地址。 
 
-Dynamic IP addresses are OK for worker nodes.
+更多信息请参考 [Swarm模式下运行docker engine](swarm-mode.md#configure-the-advertise-address). 由于管理节点作为整个架构中的稳定设施，所以需要适应一个固定的 *IP地址* 以防在机器重启时swarm产生不稳定情况。
 
-## Add manager nodes for fault tolerance
+如果整个swarm重启，并且每个管理节点频繁的获得新的IP地址，工作节点将不能稳定的链接到管理节点，如果工作节点使用老的IP地址去连接管理节点，swarm可能会被挂起而不能工作。
 
-You should maintain an odd number of managers in the swarm to support manager
-node failures. Having an odd number of managers ensures that during a network
-partition, there is a higher chance that a quorum remains available to process
-requests if the network is partitioned into two sets. Keeping a quorum is not
-guaranteed if you encounter more than two network partitions.
+对于工作节点来说动态IP是可以使用的。
 
-| Swarm Size |  Majority  |  Fault Tolerance  |
+## 添加管理节点增强容器能力
+
+Swarm集群中应该配置奇数个管理节点。维持奇数个管理节点可以在网络隔离时，管理节点的首领保持处理请求的能力。当网络被隔离时，不能保证只会维护一个管理节点领导者。
+
+| Swarm 大小 |  管理节点  |  容错能力  |
 |:------------:|:----------:|:-----------------:|
 |      1       |     1      |         0         |
 |      2       |     2      |         0         |
@@ -81,83 +58,50 @@ guaranteed if you encounter more than two network partitions.
 |      8       |     5      |         3         |
 |    **9**     |     5      |       **4**       |
 
-For example, in a swarm with *5 nodes*, if you lose *3 nodes*, you don't have a
-quorum. Therefore you can't add or remove nodes until you recover one of the
-unavailable manager nodes or recover the swarm with disaster recovery
-commands. See [Recover from disaster](#recover-from-disaster).
+例如：一个swarm中有 *5个节点*，如果丢失了 *3个*，将不会有领导者。在恢复不可用管理节点或者使用灾难恢复命令恢复swarm前，不允许向swarm中添加或者删除节点。参考 [灾难恢复](#recover-from-disaster).
 
-While it is possible to scale a swarm down to a single manager node, it is
-impossible to demote the last manager node. This ensures you maintain access to
-the swarm and that the swarm can still process requests. Scaling down to a
-single manager is an unsafe operation and is not recommended. If
-the last node leaves the swarm unexpetedly during the demote operation, the
-swarm will become unavailable until you reboot the node or restart with
-`--force-new-cluster`.
+把Swarm集群伸缩到一个节点是被允许的，但是swarm自己不能删除最后一个节点。这样才能保证可以访问swarm，并处理swarm请求；集群伸缩到一个节点是不安全的、也是不推荐的。如果最后一个节点被从swarm中删除，swarm会不可用，除非重启这个节点或者通过`--force-new-cluster`标签重启swarm。
 
-You manage swarm membership with the `docker swarm` and `docker node`
-subsystems. Refer to [Add nodes to a swarm](join-nodes.md) for more information
-on how to add worker nodes and promote a worker node to be a manager.
+可以通过`docker swarm` 和`docker node`管理swarm节点。参考[向swarm中添加节点](join-nodes.md)，了解如何添加工作节点，升级一个工作节点为管理节点。
 
-## Distribute manager nodes
+## 分布式管理节点
 
-In addition to maintaining an odd number of manager nodes, pay attention to
-datacenter topology when placing managers. For optimal fault-tolerance, distribute
-manager nodes across a minimum of 3 availability-zones to support failures of an
-entire set of machines or common maintenance scenarios. If you suffer a failure
-in any of those zones, the swarm should maintain a quorum of manager nodes
-available to process requests and rebalance workloads.
+使用奇数个管理节点，要多注意数据中心拓扑的地域分布。为了提高容错能力，管理节点分布上要最少跨越3个可用区。这样即使一个可用区出现了问题，swarm会重新选择一个领导者来处理请求，并重新均衡工作流。
 
-| Swarm manager nodes |  Repartition (on 3 Availability zones) |
+| Swarm 管理节点 |  分配情况 (3个可用区) |
 |:-------------------:|:--------------------------------------:|
 | 3                   |                  1-1-1                 |
 | 5                   |                  2-2-1                 |
 | 7                   |                  3-2-2                 |
 | 9                   |                  3-3-3                 |
 
-## Run manager-only nodes
+## 只有管理节点的集群
+管理节点默认也是工作节点。这也意味着调度器会把工作任务分配给管理节点。在管理节点上执行一些小的、非关键的任务风险是比较低的，而且可以通过**限制** *CPU*、*内存* 的使用量来增加安全性。
 
-By default manager nodes also act as a worker nodes. This means the scheduler
-can assign tasks to a manager node. For small and non-critical swarms
-assigning tasks to managers is relatively low-risk as long as you schedule
-services using **resource constraints** for *cpu* and *memory*.
+由于管理节点通过使用raft一致性算法在节点之间保持数据一致性，这会使管理节点对资源缺乏非常敏感。最好是把管理节点独立出来，以免影响swarm的心跳监测或者选主。
 
-However, because manager nodes use the Raft consensus algorithm to replicate data
-in a consistent way, they are sensitive to resource starvation. You should
-isolate managers in your swarm from processes that might block swarm
-operations like swarm heartbeat or leader elections.
-
-To avoid interference with manager node operation, you can drain manager nodes
-to make them unavailable as worker nodes:
+为了避免与管理节点混淆，可以通过对管理节点进行排水操作，以使其不会被用作工作节点：
 
 ```bash
 docker node update --availability drain <NODE>
 ```
 
-When you drain a node, the scheduler reassigns any tasks running on the node to
-other available worker nodes in the swarm. It also prevents the scheduler from
-assigning tasks to the node.
+当对一个节点执行排水操作时，调度器会把在此节点执行的认为重新调度到其他工作节点。同时也不会再给这个节点分配新的任务。
 
-## Back up the swarm state
+## 备份swarm状态信息
 
-Docker manager nodes store the swarm state and manager logs in the following
-directory:
+管理节点在以下目录中保存swarm状态和日志：
 
 ```bash
 /var/lib/docker/swarm/raft
 ```
 
-Back up the `raft` data directory often so that you can use it in case of
-[disaster recovery](#recover-from-disaster). Then you can take the `raft`
-directory of one of the manager nodes to restore to a new swarm.
+经常的备份`raft`目录，以备[灾难恢复](#recover-from-disaster)的时候使用。可以把集群中一个管理节点的`raft`目录转存到一个新的swarm集群。
 
-## Monitor swarm health
 
-You can monitor the health of manager nodes by querying the docker `nodes` API
-in JSON format through the `/nodes` HTTP endpoint. Refer to the [nodes API documentation](../reference/api/docker_remote_api_v1.24.md#36-nodes)
-for more information.
-
-From the command line, run `docker node inspect <id-node>` to query the nodes.
-For instance, to query the reachability of the node as a manager:
+## 监控swarm健康
+可以通过JSON格式的Docker `nodes` API（`nodes`）来监控管理节点的健康状态。参考[节点API文档](../reference/api/docker_remote_api_v1.24.md#36-nodes)了解更多信息；
+在命令行下，执行`docker node inspect <id-node>` 来查看节点信息。例如：检查管理节点是否可以到达：
 
 ```bash
 {% raw %}
@@ -166,7 +110,7 @@ reachable
 {% endraw %}
 ```
 
-To query the status of the node as a worker that accept tasks:
+检查工作节点的状态：
 
 ```bash
 {% raw %}
@@ -174,20 +118,15 @@ docker node inspect manager1 --format "{{ .Status.State }}"
 ready
 {% endraw %}
 ```
+通过上面的命令，可以发现`manager1`即符合`可达的`的条件，又符合`准备好的`的条件，所以manager1既是管理节点，也是工作节点；
 
-From those commands, we can see that `manager1` is both at the status
-`reachable` as a manager and `ready` as a worker.
+一个 `不可达`的健康状态意味着其他管理节点对这个管理节点是不可达的。在这个情况需要额外操作来恢复不可达节点：
 
-An `unreachable` health status means that this particular manager node is unreachable
-from other manager nodes. In this case you need to take action to restore the unreachable
-manager:
+- 重启daemon，观察管理节点是否可达；
+- 重启机器；
+- 如果上面2步不起作用，则需要添加其他管理节点或者把一个工作节点提升为管理节点。同时需要执行`docker node demote <NODE>`和`docker node rm <id-node>`来清理失败的节点。
 
-- Restart the daemon and see if the manager comes back as reachable.
-- Reboot the machine.
-- If neither restarting or rebooting work, you should add another manager node or promote a worker to be a manager node. You also need to cleanly remove the failed node entry from the manager set with `docker node demote <NODE>` and `docker node rm <id-node>`.
-
-Alternatively you can also get an overview of the swarm health from a manager
-node with `docker node ls`:
+可以通过`docker node ls`命令对整个swarm集群的健康状态进行查询。
 
 ```bash
 
@@ -201,22 +140,19 @@ bb1nrq2cswhtbg4mrsqnlx1ck    node03    Accepted    Ready   Active        Reachab
 di9wxgz8dtuh9d2hn089ecqkf    node06    Accepted    Ready   Active
 ```
 
-## Troubleshoot a manager node
+## 管理节点错误排查
+不可以从其他节点拷贝`raft`目录后重启管理节点，这个目录的数据是对节点ID唯一匹配的。一个节点只能使用一个节点ID加入swarm集群一次，所以节点ID是全局唯一的。
 
-You should never restart a manager node by copying the `raft` directory from another node. The data directory is unique to a node ID. A node can only use a node ID once to join the swarm. The node ID space should be globally unique.
+向集群中重新添加管理节点：
 
-To cleanly re-join a manager node to a cluster:
+1.	把管理节点属性降级为工作节点，命令：`docker node demote <NODE>`
+2.	将节点从Swarm中删除，命令：`docker node rm <NODE>`
+3.	以新节点的形式重新加入集群，命令：`docker swarm join`
 
-1. To demote the node to a worker, run `docker node demote <NODE>`.
-2. To remove the node from the swarm, run `docker node rm <NODE>`.
-3. Re-join the node to the swarm with a fresh state using `docker swarm join`.
+更多关于如何添加管理节点信息，请参考[集群中添加节点](join-nodes.md).
 
-For more information on joining a manager node to a swarm, refer to
-[Join nodes to a swarm](join-nodes.md).
-
-## Force remove a node
-
-In most cases, you should shut down a node before removing it from a swarm with the `docker node rm` command. If a node becomes unreachable, unresponsive, or compromised you can forcefully remove the node without shutting it down by passing the `--force` flag. For instance, if `node9` becomes compromised:
+## 强制删除节点
+多数情况下在通过`docker node rm`命令删除节点之前应该先停止节点。如果一个节点变的不可达、无响应或者响应很慢时，你可以通过添加`--force`标签强制删除节点，而不必先去停止他。例如：`node9`变的很慢时：
 
 <!-- bash hint breaks block quote -->
 ```
@@ -229,63 +165,31 @@ $ docker node rm --force node9
 Node node9 removed from swarm
 ```
 
-Before you forcefully remove a manager node, you must first demote it to the
-worker role. Make sure that you always have an odd number of manager nodes if
-you demote or remove a manager
+在强制删除节点前，首先需要把节点降级为工作节点。在降级或者删除节点时，确保一直有奇数个管理节点。
 
-## Recover from disaster
+## 灾难恢复
+swarm对错误是有一定弹性的，可以对任何数量的临时失败节点进行恢复（通过重启机器或重启docker守护进程）
 
-Swarm is resilient to failures and the swarm can recover from any number
-of temporary node failures (machine reboots or crash with restart).
+集群中有`N`个管理节点时，活跃管理节点数量要超过所有管理节点的一半（`(N/2)+1`），以保证swarm能处理请求、维持可用。这意味着swarm集群允许`(N-1)/2`个故障，如果超过这个数量则无法处理集群请求。
 
-In a swarm of `N` managers, there must be a quorum of manager nodes greater than
-50% of the total number of managers (or `(N/2)+1`) in order for the swarm to
-process requests and remain available. This means the swarm can tolerate up to
-`(N-1)/2` permanent failures beyond which requests involving swarm management
-cannot be processed. These types of failures include data corruption or hardware
-failures.
-
-Even if you follow the guidelines here, it is possible that you can lose a
-quorum of manager nodes. If you can't recover the quorum by conventional
-means such as restarting faulty nodes, you can recover the swarm by running
-`docker swarm init --force-new-cluster` on a manager node.
+即使您遵循本指南，也可能会丢失仲裁节点。如果无法通过常规方法（如重启故障节点）来恢复仲裁节点，则可以通过在管理器节点上运行`docker swarm init --force-new-cluster`来恢复该swarm。
 
 ```bash
 # From the node to recover
 docker swarm init --force-new-cluster --advertise-addr node01:2377
 ```
 
-The `--force-new-cluster` flag puts the Docker Engine into swarm mode as a
-manager node of a single-node swarm. It discards swarm membership information
-that existed before the loss of the quorum but it retains data necessary to the
-Swarm such as services, tasks and the list of worker nodes.
+`--force-new-cluster`标志将Docker守护进程置于swarm模式。 它丢弃在丢失仲裁之前存在的成员信息，但它保留Swarm所需的数据，例如服务，任务和工作节点列表。
 
-## Forcing the swarm to rebalance
+## 强制集群重新均衡
+一般来说，你不需要强制swarm重新平衡它的任务。 当您将新节点添加到群集，或者节点在一段时间的不可用性之后重新连接到群集时，群集不会自动向空闲节点调度工作任务。如果集群为了平衡而周期性地将任务转移到不同的节点，则使用这些任务的客户端会被中断服务。为了避免中断正在运行的服务，并在整个群集中达到平衡。当新任务启动时，或者当运行任务的节点不可用时，这些任务被重新调度给不太繁忙的节点。目标是最大限度的平衡，和最小范围的服务干扰。
 
-Generally, you do not need to force the swarm to rebalance its tasks. When you
-add a new node to a swarm, or a node reconnects to the swarm after a
-period of unavailability, the swarm does not automatically give a workload to
-the idle node. This is a design decision. If the swarm periodically shifted tasks
-to different nodes for the sake of balance, the clients using those tasks would
-be disrupted. The goal is to avoid disrupting running services for the sake of
-balance across the swarm. When new tasks start, or when a node with running
-tasks becomes unavailable, those tasks are given to less busy nodes. The goal
-is eventual balance, with minimal disruption to the end user.
+如果你不介意中断正在运行的任务，更关心负载平衡的状态，可以临时将服务扩展来强制进行群集负载平衡。
 
-If you are concerned about an even balance of load and don't mind disrupting
-running tasks, you can force your swarm to re-balance by temporarily scaling
-the service upward.
+使用`docker service inspect --pretty <servicename>`可查看已配置的服务规模。 使用`docker service scale`时，具有最低任务数的节点将被定向为接收新的工作任务。您的群组中可能有多个负载不足的节点。您可能需要通过多次增量来扩展服务，以实现所有节点上达到平衡。
 
-Use `docker service inspect --pretty <servicename>` to see the configured scale
-of a service. When you use `docker service scale`, the nodes with the lowest
-number of tasks are targeted to receive the new workloads. There may be multiple
-under-loaded nodes in your swarm. You may need to scale the service up by modest
-increments a few times to achieve the balance you want across all the nodes.
+当负载平衡让您满意时，您可以将服务缩小到原始比例。您可以使用`docker service ps`来评估多节点的服务均衡情况。
 
-When the load is balanced to your satisfaction, you can scale the service back
-down to the original scale. You can use `docker service ps` to assess the current
-balance of your service across nodes.
-
-See also
-[`docker service scale`](../reference/commandline/service_scale.md) and
+参考
+[`docker service scale`](../reference/commandline/service_scale.md) 和
 [`docker service ps`](../reference/commandline/service_ps.md).

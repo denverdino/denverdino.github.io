@@ -8,95 +8,85 @@ title: Dockerize PostgreSQL
 > - **If you don't like sudo** then see [*Giving non-root
 >   access*](../installation/binaries.md#giving-non-root-access)
 
-## Installing PostgreSQL on Docker
+## 在 Docker 上安装 PostgreSQL
 
-Assuming there is no Docker image that suits your needs on the [Docker
-Hub](http://hub.docker.com), you can create one yourself.
+如果在 [Docker Hub](http://hub.docker.com) 上面没有镜像能够满足您需求，您可以自己制作一个镜像。
 
-Start by creating a new `Dockerfile`:
+第一步，创建一个新的 `Dockerfile` :
 
 > **Note**:
-This PostgreSQL setup is for development-only purposes. Refer to the
-PostgreSQL documentation to fine-tune these settings so that it is
-suitably secure.
+本篇  PostgreSQL 引导文档只适用于开发环境。请参考 PostgreSQL 的文档来调整您的配置文件，以确保 PostgreSQL 在线上是有安全保障的。
 
 ```dockerfile
 #
-# example Dockerfile for https://docs.docker.com/examples/postgresql_service/
+# Dockerfile 示例文档地址 https://docs.docker.com/examples/postgresql_service/
 #
 
 FROM ubuntu
 MAINTAINER SvenDowideit@docker.com
 
-# Add the PostgreSQL PGP key to verify their Debian packages.
-# It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc
+# 添加 PostgreSQL 的PGP键以验证其 Debian 安装包, 
+# 其值应该和 https://www.postgresql.org/media/keys/ACCC4CF8.asc 一样
 RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 
-# Add PostgreSQL's repository. It contains the most recent stable release
-#     of PostgreSQL, ``9.3``.
+# 添加 PostgreSQL's 仓库. 该仓库包涵了PostgreSQL 最新的稳定版本``9.3``.
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
-# Install ``python-software-properties``, ``software-properties-common`` and PostgreSQL 9.3
-#  There are some warnings (in red) that show up during the build. You can hide
-#  them by prefixing each apt-get statement with DEBIAN_FRONTEND=noninteractive
+# 安装 ``python-software-properties``, ``software-properties-common`` 和 PostgreSQL 9.3
+# 在打包镜像期间会有一些告警信息（红色字体）显示出来。
+# 您可以通过在每个apt-get 命令之前添加前缀 DEBIAN_FRONTEND=noninteractive 来隐藏告警信息
 RUN apt-get update && apt-get install -y python-software-properties software-properties-common postgresql-9.3 postgresql-client-9.3 postgresql-contrib-9.3
 
-# Note: The official Debian and Ubuntu images automatically ``apt-get clean``
-# after each ``apt-get``
+# 提示: 官方的 Debian and Ubuntu 镜像会在每个 ``apt-get``命令之后自动执行 ``apt-get clean`` 命令 
 
-# Run the rest of the commands as the ``postgres`` user created by the ``postgres-9.3`` package when it was ``apt-get installed``
+# 其他的命令以用户 ``postgres`` 的身份来运行。
+# 该用户是在使用命令 ``apt-get installed`` 安装 ``postgres-9.3`` 安装包时创建的
 USER postgres
 
-# Create a PostgreSQL role named ``docker`` with ``docker`` as the password and
-# then create a database `docker` owned by the ``docker`` role.
-# Note: here we use ``&&\`` to run commands one after the other - the ``\``
-#       allows the RUN command to span multiple lines.
+# 创建一个 用户名、密码都是 ``docker`` 的 PostgreSQL 角色，然后再创建一个由该角色拥有的数据库 `docker`。
+# 注意: 这里我们使用符号 ``&&\`` 来链接每一个命令，因为字符 ``\``允许将一条 RUN 命令拆分为多行显示
 RUN    /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
     createdb -O docker docker
 
-# Adjust PostgreSQL configuration so that remote connections to the
-# database are possible.
+# 请调整 PostgreSQL 的配置，以便能够远程连接数据库。
 RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf
 
-# And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
+# 给 ``/etc/postgresql/9.3/main/postgresql.conf`` 配置文件添加 ``listen_addresses`` 地址监听配置项
 RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
 
-# Expose the PostgreSQL port
+# 对外暴露 PostgreSQL 端口
 EXPOSE 5432
 
-# Add VOLUMEs to allow backup of config, logs and databases
+# 添加数据卷来备份配置文件、日志文件和数据库实例
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
-# Set the default command to run when starting the container
+# 配置容器运行时需要默认执行的命令、脚本
 CMD ["/usr/lib/postgresql/9.3/bin/postgres", "-D", "/var/lib/postgresql/9.3/main", "-c", "config_file=/etc/postgresql/9.3/main/postgresql.conf"]
+
 ```
 
-Build an image from the Dockerfile assign it a name.
+使用刚才的 Dockerfile 来构建镜像，并且给它指定一个名字。
 
 ```bash
 $ docker build -t eg_postgresql .
 ```
 
-Run the PostgreSQL server container (in the foreground):
+启动 PostgreSQL 服务容器 (前台运行):
 
 ```bash
 $ docker run --rm -P --name pg_test eg_postgresql
 ```
 
-There are 2 ways to connect to the PostgreSQL server. We can use [*Link
-Containers*](../userguide/networking/default_network/dockerlinks.md), or we can access it from our host
-(or the network).
+有两种方式可以连接到 PostgreSQL 服务器. 我们可以使用 [*Link
+Containers*](../userguide/networking/default_network/dockerlinks.md), 或者我们可以通过自己的主机连接（或者通过网络）。
 
-> **Note**: The `--rm` removes the container and its image when
-the container exits successfully.
 
-### Using container linking
+> **注意**: 参数 `--rm` 会在容器成功退出后删除容器和它对应的镜像。
 
-Containers can be linked to another container's ports directly using
-`-link remote_name:local_alias` in the client's
-`docker run`. This will set a number of environment
-variables that can then be used to connect:
+### 使用 container link
+
+在客户端的 `docker run` 命令中使用参数 `-link remote_name:local_alias` 可以让一个容器直接连接到另外一个容器的端口上。该参数会设置两个容器连接时需要使用的一系列的环境变量：
 
 ```bash
 $ docker run --rm -t -i --link pg_test:pg eg_postgresql bash
@@ -104,12 +94,9 @@ $ docker run --rm -t -i --link pg_test:pg eg_postgresql bash
 postgres@7ef98b1b7243:/$ psql -h $PG_PORT_5432_TCP_ADDR -p $PG_PORT_5432_TCP_PORT -d docker -U docker --password
 ```
 
-### Connecting from your host system
+### 从您的主机操作系统上连接
 
-Assuming you have the postgresql-client installed, you can use the
-host-mapped port to test as well. You need to use `docker ps`
-to find out what local host port the container is mapped to
-first:
+如果您已经安装了postgresql的客户端, 您也可以使用主机映射的端口来做连接测试。首先，您需要使用命令`docker ps` 来查看容器映射到宿主机的具体的端口号，然后再使用客户端命令连接：
 
 ```bash
 $ docker ps
@@ -120,10 +107,9 @@ CONTAINER ID        IMAGE                  COMMAND                CREATED       
 $ psql -h localhost -p 49153 -d docker -U docker --password
 ```
 
-### Testing the database
+### 测试数据库
 
-Once you have authenticated and have a `docker =#`
-prompt, you can create a table and populate it.
+当您通过了权限验证并且界面出现了 `docker =#` 输入提示, 您就可以创建一个数据表并且存数据了。
 
 ```sql
 psql (9.3.1)
@@ -143,10 +129,9 @@ $ docker=# select * from cities;
 (1 row)
 ```
 
-### Using the container volumes
+### 使用容器数据卷
 
-You can use the defined volumes to inspect the PostgreSQL log files and
-to backup your configuration and data:
+您可以使用具名数据卷来查看 PostgreSQL的日志文件，也可以备份您的配置文件和数据：
 
 ```bash
 $ docker run --rm --volumes-from pg_test -t -i busybox sh

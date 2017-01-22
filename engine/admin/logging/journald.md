@@ -6,80 +6,65 @@ redirect_from:
 title: Journald logging driver
 ---
 
-The `journald` logging driver sends container logs to the [systemd
-journal](http://www.freedesktop.org/software/systemd/man/systemd-journald.service.html).
-Log entries can be retrieved using the `journalctl` command, through use of the
-journal API, or using the `docker logs` command.
+`journald`日志驱动程序将容器日志发送到[systemd journald](http://www.freedesktop.org/software/systemd/man/systemd-journald.service.html)。
+日志消息可以使用`journalctl`命令、journal API、或使用`docker logs`命令获取。
 
-In addition to the text of the log message itself, the `journald` log driver
-stores the following metadata in the journal with each message:
+除了日志消息本身的文本，`journald`日志驱动程序在每个消息的日志中存储以下元数据：
 
-| Field               | Description |
-----------------------|-------------|
-| `CONTAINER_ID`      | The container ID truncated to 12 characters. |
-| `CONTAINER_ID_FULL` | The full 64-character container ID. |
-| `CONTAINER_NAME`    | The container name at the time it was started. If you use `docker rename` to rename a container, the new name is not reflected in the journal entries. |
-| `CONTAINER_TAG`     | The container tag ([log tag option documentation](log_tags.md)). |
+|字段|说明|
+---------------------- | ------------- |
+| `CONTAINER_ID` |容器ID截断为12个字符。 |
+| `CONTAINER_ID_FULL` |完整的64个字符的容器ID。 |
+| `CONTAINER_NAME` |启动时的容器名称。如果使用`docker rename`重命名容器，新名称不会反映在日记中。 |
+| `CONTAINER_TAG` |容器标签（[日志标签文档](log_tags.md)）。 |
 
-## Usage
+## 用法
 
-You can configure the default logging driver by passing the `--log-driver`
-option to the Docker daemon:
+您可以通过设置`--log-driver'参数来给Docker守护进程配置默认日志驱动程序：
 
     dockerd --log-driver=journald
 
-You can set the logging driver for a specific container by using the
-`--log-driver` option to `docker run`:
+您可以在`docker run`时使用`--log-driver`选项为特定容器设置日志驱动程序：
 
     docker run --log-driver=journald ...
 
-## Options
 
-Users can use the `--log-opt NAME=VALUE` flag to specify additional journald
-logging driver options.
+## 选项
 
-### tag
+用户可以使用`--log-opt NAME=VALUE`参数来指定journald日志驱动程序的其他选项。
 
-Specify template to set `CONTAINER_TAG` value in journald logs. Refer to
-[log tag option documentation](log_tags.md) for customizing the log tag format.
+### 标签
 
-### labels and env
+指定模板以在journald日志中设置“CONTAINER_TAG”值。自定义日志标记格式请参考[日志标签文档](log_tags.md)。
 
-The `labels` and `env` options each take a comma-separated list of keys. If
-there is collision between `label` and `env` keys, the value of the `env` takes
-precedence. Both options add additional metadata in the journal with each
-message.
+### 标签和env
 
-## Note regarding container names
+`labels`和`env`选项接受使用逗号分隔的键列表。如果`label`和`env`之间有冲突，`env`的值优先。两个选项都会在日志中添加元数据。
 
-The value logged in the `CONTAINER_NAME` field is the container name that was
-set at startup.  If you use `docker rename` to rename a container, the new name
-will not be reflected in the journal entries. Journal entries will continue to
-use the original name.
+## 关于容器名的注释
 
-## Retrieving log messages with journalctl
+“CONTAINER_NAME”字段中记录的值是容器启动时的名称。如果使用`docker rename`重命名容器，新的名称
+将不会反映在日记中。日记将继续使用原名称。
 
-You can use the `journalctl` command to retrieve log messages.  You
-can apply filter expressions to limit the retrieved messages to a
-specific container.  For example, to retrieve all log messages from a
-container referenced by name:
+## 使用journalctl检索日志消息
+
+您可以使用`journalctl`命令检索日志消息。
+
+您可以使用过滤器表达式来检索特定容器的日志。例如，要从所有日志中检索出特定名字容器的日志：
 
     # journalctl CONTAINER_NAME=webserver
 
-You can make use of additional filters to further limit the messages
-retrieved.  For example, to see just those messages generated since
-the system last booted:
+您可以使用其他过滤器来进一步限定日志检索。例如，只查看上次系统重启之后的日志：
 
     # journalctl -b CONTAINER_NAME=webserver
 
-Or to retrieve log messages in JSON format with complete metadata:
+或者检索JSON格式的带有完整元数据的日志：
 
     # journalctl -o json CONTAINER_NAME=webserver
 
-## Retrieving log messages with the journal API
+## 使用journal API检索日志消息
 
-This example uses the `systemd` Python module to retrieve container
-logs:
+这个例子使用`systemd` Python模块来检索容器日志：
 
     import systemd.journal
 
@@ -88,3 +73,4 @@ logs:
 
     for msg in reader:
       print '{CONTAINER_ID_FULL}: {MESSAGE}'.format(**msg)
+

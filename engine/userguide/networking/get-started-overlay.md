@@ -4,30 +4,26 @@ keywords: Examples, Usage, network, docker, documentation, user guide, multihost
 title: Get started with multi-host networking
 ---
 
-This article uses an example to explain the basics of creating a multi-host
-network. Docker Engine supports multi-host networking out-of-the-box through the
-`overlay` network driver.  Unlike `bridge` networks, overlay networks require
-some pre-existing conditions before you can create one:
+本文将通过示例来为你说明创建多主机网络的一些基础知识。
+Docker Engine通过`overlay`网络驱动程序支持多主机网络开箱即用。
+与`bridge`网络驱动不同，在创建`overlay`网络之前，需要一些先决条件：
 
 * [Docker Engine running in swarm mode](#overlay-networking-and-swarm-mode)
 
-OR
+或
 
 * [A cluster of hosts using a key value store](#overlay-networking-with-an-external-key-value-store)
 
-## Overlay networking and swarm mode
+## Overlay网络和swarm mode
 
-Using docker engine running in [swarm mode](../../swarm/swarm-mode.md), you can create an overlay network on a manager node.
+使用[swarm mode](../../ swarm/swarm-mode.md)管理下运行的docker engine，可以在管理器节点上创建`overlay`v网络。
 
-The swarm makes the overlay network available only to nodes in the swarm that
-require it for a service. When you create a service that uses an overlay
-network, the manager node automatically extends the overlay network to nodes
-that run service tasks.
+swarm下创建的`overlay`网络仅对swarm管理下的节点可用。
+当你创建一个使用`overlay`网络的服务时，管理节点将会自动将你运行该服务的节点加入到`overlay`网络中。
 
-To learn more about running Docker Engine in swarm mode, refer to the
-[Swarm mode overview](../../swarm/index.md).
+要了解有关在swarm mode下运行Docker Engine的更多信息，请参阅[Swarm mode overview](../../swarm/index.md)。
 
-The example below shows how to create a network and use it for a service from a manager node in the swarm:
+下面的示例将展示如何创建`overlay`网络，并将其用于在swarm中管理的节点上的服务：
 
 ```bash
 # Create an overlay network `my-multi-host-network`.
@@ -45,94 +41,78 @@ $ docker service create --replicas 2 --network my-multi-host-network --name my-w
 716thylsndqma81j6kkkb5aus
 ```
 
-Overlay networks for a swarm are not available to unmanaged containers. For more information refer to [Docker swarm mode overlay network security model](overlay-security-model.md).
+对于一个集群的`overlay`网络，不可用将其用于一个非集群管理的容器。
+有关更多信息，请参阅[Docker swarm mode overlay network security model](overlay-security-model.md)。
 
-See also [Attach services to an overlay network](../../swarm/networking.md). 
+另请参见[Attach services to an overlay network](../../swarm/networking.md)。
 
-## Overlay networking with an external key-value store
+## 依赖外置的key-value存储的`Overlay`网络
 
-To use an Docker engine with an external key-value store, you need the
-following:
+要使用依赖外部key-value存储的Docker Engine，您需要以下内容：
 
-* Access to the key-value store. Docker supports Consul, Etcd, and ZooKeeper
-(Distributed store) key-value stores.
-* A cluster of hosts with connectivity to the key-value store.
-* A properly configured Engine `daemon` on each host in the cluster.
-* Hosts within the cluster must have unique hostnames because the key-value
-store uses the hostnames to identify cluster members.
+* 可访问的key-value存储。 Docker支持Consul，Etcd和ZooKeeper（分布式存储）key-value存储。
+* 在集群的每个主机可以连接到key-value存储。
+* 在集群的每个主机都正确配置了Docker daemon。
+* 群集中的主机必须具有唯一的主机名，因为key-value存储使用主机名来标识集群成员。
 
-Though Docker Machine and Docker Swarm are not mandatory to experience Docker
-multi-host networking with a key-value store, this example uses them to
-illustrate how they are integrated. You'll use Machine to create both the
-key-value store server and the host cluster. This example creates a swarm
-cluster.
+尽管试用key-value存储的Docker多主机网络时，Docker Machine和Docker Swarm不是必须的。
+但在本示例中，我们将使用它们来说明它们是如何集成的。 您将使用Machine创建键值存储服务器和主机集群。 此示例创建一个群集群。
 
->**Note:** Docker Engine running in swarm mode is not compatible with networking
-with an external key-value store.
+>**注意：** 在swarm mode下运行的Docker Engine与使用外部key-value存储管理的网络不兼容。
 
-### Prerequisites
+### 前置依赖
 
-Before you begin, make sure you have a system on your network with the latest
-version of Docker Engine and Docker Machine installed. The example also relies
-on VirtualBox. If you installed on a Mac or Windows with Docker Toolbox, you
-have all of these installed already.
+在开始之前，请确保您的网络上有一个安装了最新版本的Docker Engine和Docker Machine的系统，该示例还依赖于VirtualBox。
+如果您在Mac或Windows上使用Docker Toolbox的话，那您就已经安装了所有需要的东西。
 
-If you have not already done so, make sure you upgrade Docker Engine and Docker
-Machine to the latest versions.
+如果您还没有这样做，请确保将Docker Engine和Docker Machine升级到最新版本。
 
+### 设置key-value存储
 
-### Set up a key-value store
+`overlay`网络依赖key-value存储。key-value存储保存了有关网络状态的一些信息，包括发现，网络，端点，IP地址等。
+Docker支持Consul，Etcd和ZooKeeper键值存储。 这个例子使用了Consul。
 
-An overlay network requires a key-value store. The key-value store holds
-information about the network state which includes discovery, networks,
-endpoints, IP addresses, and more. Docker supports Consul, Etcd, and ZooKeeper
-key-value stores. This example uses Consul.
+1. 登录到已经做好前置依赖准备的系统上，安装好Docker Engine，Docker Machine，VirtualBox的系统
 
-1. Log into a system prepared with the prerequisite Docker Engine, Docker Machine, and VirtualBox software.
-
-2. Provision a VirtualBox machine called `mh-keystore`.
+2. 提供一个名为`mh-keystore`的VirtualBox虚拟机。
 
 		$ docker-machine create -d virtualbox mh-keystore
 
-	When you provision a new machine, the process adds Docker Engine to the
-	host. This means rather than installing Consul manually, you can create an
-	instance using the [consul image from Docker
-	Hub](https://hub.docker.com/r/progrium/consul/). You'll do this in the next step.
+    当你准备一个新的机器时，该进程会将Docker Engine添加到主机。
+    这意味着，不是手动安装Consul，您可以使用[来自Docker Hub的consul镜像](https://hub.docker.com/r/progrium/consul/)来创建一个实例。
+    您将在下一步中执行此操作。
 
-3. Set your local environment to the `mh-keystore` machine.
+3. 设置你的本地环境为`mh-keystore`机器的环境
 
 		$  eval "$(docker-machine env mh-keystore)"
 
-4. Start a `progrium/consul` container running on the `mh-keystore` machine.
+4. 在`mh-keystore`机器上启动一个`progrium/consul`的容器
 
 		$  docker run -d \
 			-p "8500:8500" \
 			-h "consul" \
 			progrium/consul -server -bootstrap
 
-	The client starts a `progrium/consul` image running in the
-	`mh-keystore` machine. The server is called `consul` and is
-	listening on port `8500`.
+    客户端启动在`mh-keystore`机器运行的`progrium/consul`镜像。
+    服务器被称为`consul`，正在监听`8500`端口。
 
-5. Run the `docker ps` command to see the `consul` container.
+5. 允许`docker ps`命令可以看到正在运行的`consul`容器
 
 		$ docker ps
 
 		CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                                                                            NAMES
 		4d51392253b3        progrium/consul     "/bin/start -server -"   25 minutes ago      Up 25 minutes       53/tcp, 53/udp, 8300-8302/tcp, 0.0.0.0:8500->8500/tcp, 8400/tcp, 8301-8302/udp   admiring_panini
 
-Keep your terminal open and move onto the next step.
+继续保持你打开着的终端，进入到下一节
 
 
-### Create a Swarm cluster
+### 创建swarm集群
 
-In this step, you use `docker-machine` to provision the hosts for your network.
-At this point, you won't actually create the network. You'll create several
-machines in VirtualBox. One of the machines will act as the swarm master;
-you'll create that first. As you create each host, you'll pass the Engine on
-that machine options that are needed by the `overlay` network driver.
+在此步骤中，您将使用`docker-machine`为您的网络配置主机。此时，您不会真正的创建网络。
+您将在VirtualBox中创建几台机器。你将创建的第一个机器为主(master)。
+在创建每个主机时，您将提供`overlay`网络相关的参数。
 
-1. Create a swarm master.
+1. 创建Swarm master
 
 		$ docker-machine create \
 		-d virtualbox \
@@ -142,9 +122,11 @@ that machine options that are needed by the `overlay` network driver.
 		--engine-opt="cluster-advertise=eth1:2376" \
 		mhs-demo0
 
-	At creation time, you supply the Engine `daemon` with the ` --cluster-store` option. This option tells the Engine the location of the key-value store for the `overlay` network. The bash expansion `$(docker-machine ip mh-keystore)` resolves to the IP address of the Consul server you created in "STEP 1". The `--cluster-advertise` option advertises the machine on the network.
+    在创建机器时，您将为`daemon`提供`--cluster-store`选项。此选项将确定`overlay`网络的键值存储的位置。
+    bash表达式`$（docker-machine ip mh-keystore）`将解析为在`STEP 1`中创建的Consul服务器的IP地址。
+    `--cluster-advertise`选项在网络上进行广播。
 
-2. Create another host and add it to the swarm cluster.
+2. 创建其他机器并加入Swarm集群
 
 		$ docker-machine create -d virtualbox \
 			--swarm \
@@ -153,7 +135,7 @@ that machine options that are needed by the `overlay` network driver.
 			--engine-opt="cluster-advertise=eth1:2376" \
 		  mhs-demo1
 
-3. List your machines to confirm they are all up and running.
+3. 列出你的所有机器，确认他们都在运行中
 
 		$ docker-machine ls
 
@@ -163,21 +145,21 @@ that machine options that are needed by the `overlay` network driver.
 		mhs-demo0    -        virtualbox   Running   tcp://192.168.99.104:2376   mhs-demo0 (master)
 		mhs-demo1    -        virtualbox   Running   tcp://192.168.99.105:2376   mhs-demo0
 
-At this point you have a set of hosts running on your network. You are ready to create a multi-host network for containers using these hosts.
+此时，您有一组在网络上运行的主机。 您已准备好为使用这些主机的容器创建多主机网络的环境了。
 
-Leave your terminal open and go onto the next step.
+保持您的终端打开并进入下一步。
 
-### Create the overlay Network
+### 创建一个overlay网络
 
-To create an overlay network
+为了创建一个overlay网络
 
-1. Set your docker environment to the swarm master.
+1. 将你宿主机的环境设置为swarm master机器的环境
 
 		$ eval $(docker-machine env --swarm mhs-demo0)
 
-	Using the `--swarm` flag with `docker-machine` restricts the `docker` commands to swarm information alone.
+    在`docker-machine`命令中使用`--swarm`标志可以限制`docker`命令只展示swarm相关信息。
 
-2. Use the `docker info` command to view the swarm.
+2. 使用`docker info`命令来看一下swarm集群的状态
 
 		$ docker info
 
@@ -201,21 +183,19 @@ To create an overlay network
 		Total Memory: 2.043 GiB
 		Name: 30438ece0915
 
-	From this information, you can see that you are running three containers and two images on the Master.
+    从此信息，您可以看到集群中运行着三个容器，然后两个运行在Masters节点上。
 
-3. Create your `overlay` network.
+3. 创建你的`overlay`网络
 
 		$ docker network create --driver overlay --subnet=10.0.9.0/24 my-net
 
-	You only need to create the network on a single host in the cluster. In this case, you used the swarm master but you could easily have run it on any host in the cluster.
+    您只需在群集中的某一台机器上创建网络。
+    在这个例子中，您使用了swarm master机器运行它，但您实际上可以在群集中的任何主机上运行它。
 
-> **Note** : It is highly recommended to use the `--subnet` option when creating
-> a network. If the `--subnet` is not specified, the docker daemon automatically
-> chooses and assigns a subnet for the network and it could overlap with another subnet
-> in your infrastructure that is not managed by docker. Such overlaps can cause
-> connectivity issues or failures when containers are connected to that network.
+> **Note** : 强烈建议你在创建网络的时候使用`--subnet`参数。如果不指定`--subnet`参数，Docker Daemon将为该网络自动选择一个子网。
+> 这很可能会和你基础设施中另一个不由docker管理的子网相重叠，当容器连接到这样的网络时，这种子网的重叠很有可能导致连接问题或故障。
 
-4. Check that the network is running:
+4. 检查网络是否正在运行
 
 		$ docker network ls
 
@@ -228,11 +208,10 @@ To create an overlay network
 		d0bb78cbe7bd        mhs-demo1/bridge    bridge
 		1c0eb8f69ebb        mhs-demo1/none      null
 
-	As you are in the swarm master environment, you see all the networks on all
-	the swarm agents: the default networks on each engine and the single overlay
-	network. Notice that each `NETWORK ID` is unique.
+    由于您处于swarm master的环境中，您将看到所有swarm agent上的所有网络：
+    每个Docker Engine上的默认网络和单个`overlay`网络。请注意，每个`NETWORK ID`是唯一的。
 
-5. Switch to each swarm agent in turn and list the networks.
+5. 分别切换到每一个swarm agent，列出他们的网络
 
 		$ eval $(docker-machine env mhs-demo0)
 
@@ -254,22 +233,23 @@ To create an overlay network
 		412c2496d0eb        host                host
 		6b07d0be843f        my-net              overlay
 
-  Both agents report they have the `my-net` network with the `6b07d0be843f` ID.
-	You now have a multi-host container network running!
+    每一个agent都返回了`my-net`网络，并且`NETWORK ID`是一致的。
+    现在你就有了一个正在运行中的跨主机网络了。
 
-### Run an application on your Network
+### 在你的网络上运行一个应用
 
+当你的网络创建之后，您就可以在任何主机上启动容器，并将其自动加入到网络中。
 Once your network is created, you can start a container on any of the hosts and it automatically is part of the network.
 
-1. Point your environment to the swarm master.
+1. 将本地环境切换到Swarm master的环境
 
 		$ eval $(docker-machine env --swarm mhs-demo0)
 
-2. Start an Nginx web server on the `mhs-demo0` instance.
+2. 在`mhs-demo0`实例上启动一个Nginx服务
 
 		$ docker run -itd --name=web --network=my-net --env="constraint:node==mhs-demo0" nginx
 
-4. Run a BusyBox instance on the `mhs-demo1` instance and get the contents of the Nginx server's home page.
+3. 启动一个BusyBox的服务在`mhs-demo1`实例上，然后获取一下Nginx主页的内容
 
 		$ docker run -it --rm --network=my-net --env="constraint:node==mhs-demo1" busybox wget -O- http://web
 
@@ -307,19 +287,18 @@ Once your network is created, you can start a container on any of the hosts and 
 		</html>
 		-                    100% |*******************************|   612   0:00:00 ETA
 
-### Check external connectivity
 
-As you've seen, Docker's built-in overlay network driver provides out-of-the-box
-connectivity between the containers on multiple hosts within the same network.
-Additionally, containers connected to the multi-host network are automatically
-connected to the `docker_gwbridge` network. This network allows the containers
-to have external connectivity outside of their cluster.
+### 检查外部连接
 
-1. Change your environment to the swarm agent.
+正如您所见，Docker的内置`overlay`网络驱动程序在同一网络中的多个主机上的容器之间提供了开箱即用的连接。
+此外，连接到多主机网络的容器也会自动连接到`docker_gwbridge`网络。
+此网络允许容器链接到外部网络。
+
+1. 切换你的环境到swarm agent节点
 
 		$ eval $(docker-machine env mhs-demo1)
 
-2. View the `docker_gwbridge` network, by listing the networks.
+2. 列出当前网络，你会发现`docker_gwbridge`网络
 
 		$ docker network ls
 
@@ -330,7 +309,7 @@ to have external connectivity outside of their cluster.
 		1aeead6dd890        host                host
 		e1dbd5dff8be        docker_gwbridge     bridge
 
-3. Repeat steps 1 and 2 on the swarm master.
+3. 同理，重复上面两步，观察swarm master节点
 
 		$ eval $(docker-machine env mhs-demo0)
 
@@ -343,7 +322,7 @@ to have external connectivity outside of their cluster.
 		412c2496d0eb        host                host
 		97102a22e8d2        docker_gwbridge     bridge
 
-2. Check the Nginx container's network interfaces.
+4. 检查Nginx容器的网络接口
 
 		$ docker exec web ip addr
 
@@ -366,17 +345,15 @@ to have external connectivity outside of their cluster.
 		inet6 fe80::42:acff:fe12:2/64 scope link
 		    valid_lft forever preferred_lft forever
 
-	The `eth0` interface represents the container interface that is connected to
-	the `my-net` overlay network. While the `eth1` interface represents the
-	container interface that is connected to the `docker_gwbridge` network.
+    `eth0`接口表示连接了`my-net`网络。
+    `eth1`接口表示连接了`docker_gwbridge`网络。
 
-### Extra Credit with Docker Compose
+### Docker Compose相关
 
-Please refer to the Networking feature introduced in [Compose V2 format]
-(https://docs.docker.com/compose/networking/) and execute the
-multi-host networking scenario in the swarm cluster used above.
+请参阅[Compose V2格式](https://docs.docker.com/compose/networking/)中介绍的网络功能。
+并在上述多主机网络场景中执行。
 
-## Related information
+## 相关文档
 
 * [Understand Docker container networks](index.md)
 * [Work with network commands](work-with-networks.md)

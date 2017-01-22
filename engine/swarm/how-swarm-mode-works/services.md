@@ -4,91 +4,50 @@ keywords: docker, container, cluster, swarm mode, node
 title: How services work
 ---
 
-To deploy an application image when Docker Engine is in swarm mode, you create a
-service. Frequently a service will be the image for a microservice within the
-context of some larger application. Examples of services might include an HTTP
-server, a database, or any other type of executable program that you wish to run
-in a distributed environment.
+要在Docker 引擎处于swarm模式时部署应用，您需要创建一个服务。通常，服务是在一些较大应用上下文中的微服务映像。服务的示例包括HTTP服务器、数据库或您希望在分布式环境中运行的任何其他类型的可执行程序。
 
-When you create a service, you specify which container image to use and which
-commands to execute inside running containers. You also define options for the
-service including:
+创建服务时，您可以指定要使用的容器镜像以及在运行容器时执行的命令。您还定义服务的选项，包括：
 
-* the port where the swarm will make the service available outside the swarm
-* an overlay network for the service to connect to other services in the swarm
-* CPU and memory limits and reservations
-* a rolling update policy
-* the number of replicas of the image to run in the swarm
+* 集群将在外部提供服务端口；
+* overlay网络，用于服务连接到群中的其他服务；
+* CPU和内存限制和预留额度；
+* 滚动更新策略；
+* 要在集群中运行的容器数；
 
-## Services, tasks, and containers
+## 服务，任务和容器
 
-When you deploy the service to the swarm, the swarm manager accepts your service
-definition as the desired state for the service. Then it schedules the service
-on nodes in the swarm as one or more replica tasks. The tasks run independently
-of each other on nodes in the swarm.
+当您将服务部署到群集时，swarm管理节点接收服务信息，并作为服务状态。然后它在swarm节点上将服务调度为一个或多个副本任务。这些任务在集群的节点上彼此独立地运行。
 
-For example, imagine you want to load balance between three instances of an HTTP
-listener. The diagram below shows an HTTP listener service with three replicas.
-Each of the three instances of the listener is a task in the swarm.
+例如，假设您希望在HTTP侦听器的三个实例之间加载平衡。下图显示了具有三个副本的HTTP侦听器服务。侦听器的三个实例中的每一个都是集群中独立的任务。
 
 ![services diagram](../images/services-diagram.png)
 
-A container is an isolated process.  In the swarm mode model, each task invokes
-exactly one container. A task is analogous to a “slot” where the scheduler
-places a container. Once the container is live, the scheduler recognizes that
-the task is in a running state.  If the container fails health checks or
-terminates, the task terminates.
+容器是一个孤立的进程。在swarm模式中，每个任务运行一个容器。任务类似于调度器放置在容器的“槽”。一旦容器启动，调度程序就会识别任务处于运行状态。如果容器运行状况检查为失败或终止，任务将终止。
 
-## Tasks and scheduling
+## 任务和调度
 
-A task is the atomic unit of scheduling within a swarm.  When you declare a
-desired service state by creating or updating a service, the orchestrator
-realizes the desired state by scheduling tasks. For instance, the you define a
-service that instructs the orchestrator to keep three instances of a HTTP
-listener running at all times. The orchestrator responds by creating three
-tasks. Each task is a slot that the scheduler fills by spawning a container. The
-container is the instantiation of the task. If a HTTP listener task subsequently
-fails its health check or crashes, the orchestrator creates a new replica task
-that spawns a new container.
+任务是集群内调度的原子单位。当通过创建或更新服务来声明服务状态时，调度器通过调度任务来实现所需的状态。例如，您定义一个服务，指示调度器保持HTTP侦听器的三个实例始终运行。调度器会创建三个任务，每个任务是一个槽，调度器通过生成容器来填充。容器是任务的实例化。如果HTTP侦听器任务随后健康检查失败或崩溃，则调度器器会创建一个新的副本，并生成新容器。
 
-A task is a one-directional mechanism. It progresses monotonically through a
-series of states: assigned, prepared, running, etc.  If the task fails the
-orchestrator removes the task and its container and then creates a new task to
-replace it according to the desired state specified by the service.
+任务是单向的。它通过一系列状态单调地执行：分配，准备，运行等。如果任务失败，调度器会删除任务及其容器，然后根据服务指定的期望状态创建新任务来替换它。
 
-The underlying logic of Docker swarm mode is a general purpose scheduler and
-orchestrator.  The service and task abstractions themselves are unaware of the
-containers they implement.  Hypothetically, you could implement other types of
-tasks such as virtual machine tasks or non-containerized process tasks.  The
-scheduler and orchestrator are agnostic about their type of task. However, the
-current version of Docker only supports container tasks.
+Docker swarm模式的基本逻辑是通用调度器和协调器。服务和任务不知道它们实现的容器。假设你可以实现其他类型的任务，如虚拟机任务或非容器化的流程任务。调度器和协调器对它们运行的任务类型是不可知的。但是，当前版本的Docker仅支持容器任务。
 
-The diagram below shows how swarm mode accepts service create requests and
-schedules tasks to worker nodes.
+下图显示了swarm模式如何接受服务创建请求和将任务调度到工作节点。
 
 ![services flow](../images/service-lifecycle.png)
 
-## Replicated and global services
+## 复制的和全局的服务
+有两种类型的服务部署，复制和全局。
 
-There are two types of service deployments, replicated and global.
+对于复制类型服务，可以指定要运行任务的数量。例如，您决定部署具有三个副本的HTTP服务，每个副本都提供相同的内容。
 
-For a replicated service, you specify the number of identical tasks you want to
-run. For example, you decide to deploy an HTTP service with three replicas, each
-serving the same content.
+全局服务是在每个节点上运行一个任务的服务。没有预先指定数量的任务。每次向swarm中添加节点时，协调器都会创建一个任务，并且调度器会将任务分配给新节点。全局服务的典型应用场景是监视代理、防病毒扫描或其他类型的容器（您希望在集群中的每个节点上运行）。
 
-A global service is a service that runs one task on every node. There is no
-pre-specified number of tasks. Each time you add a node to the swarm, the
-orchestrator creates a task and the scheduler assigns the task to the new node.
-Good candidates for global services are monitoring agents, an anti-virus
-scanners or other types of containers that you want to run on every node in the
-swarm.
-
-The diagram below shows a three-service replica in yellow and a global service
-in gray.
+下图黄色的表示复制类型的三个服务，灰色表示全局类型服务。
 
 ![global vs replicated services](../images/replicated-vs-global.png)
 
-## Learn More
+## 更多
 
-* Read about how swarm mode [nodes](services.md) work.
-* Learn how [PKI](pki.md) works in swarm mode.
+* 参考Swarm模式下 [节点](services.md) 如何工作.
+* 参考Swarm模式下 [PKI](pki.md) 如何工作.

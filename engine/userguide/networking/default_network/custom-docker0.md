@@ -4,21 +4,20 @@ keywords: docker, bridge, docker0, network
 title: Customize the docker0 bridge
 ---
 
-The information in this section explains how to customize the Docker default bridge. This is a `bridge` network named `bridge` created automatically when you install Docker.
+本节中的信息说明如何自定义Docker默认网桥。 这是在安装Docker时自动创建的以`bridge`命名的`bridge`网络。
 
-**Note**: The [Docker networks feature](../index.md) allows you to create user-defined networks in addition to the default bridge network.
+**注意**：[Docker网络功能](../index.md)允许您创建除默认网桥网络之外的用户定义网络。
 
-By default, the Docker server creates and configures the host system's `docker0` interface as an _Ethernet bridge_ inside the Linux kernel that can pass packets back and forth between other physical or virtual network interfaces so that they behave as a single Ethernet network.
+默认情况下，Docker服务器创建和配置主机系统的`docker0`接口作为Linux内核中的 _Ethernet bridge_ 网桥，可以在其他物理或虚拟网络接口之间来回传递数据包，使其作为单个以太网网络运行。
 
-Docker configures `docker0` with an IP address, netmask and IP allocation range. The host machine can both receive and send packets to containers connected to the bridge, and gives it an MTU -- the _maximum transmission unit_ or largest packet length that the interface will allow -- of 1,500 bytes. These options are configurable at server startup:
+Docker使用IP地址，网络掩码和IP分配范围来配置`docker0`。主机可以接收和发送分组包到连接到网桥的容器，并且给它一个MTU——接口允许的最大传输单元或最大分组长度——1,500字节。这些选项可在服务器启动时配置：
+- `--bip=CIDR`——使用标准CIDR符号（如192.168.1.5/24）为`docker0`网桥提供特定的IP地址和网络掩码。
 
-- `--bip=CIDR` -- supply a specific IP address and netmask for the `docker0` bridge, using standard CIDR notation like `192.168.1.5/24`.
+- `--fixed-cidr=CIDR`——使用标准CIDR符号（如172.16.1.0/28）从`docker0`子网限制IP范围。此范围必须是固定IP（例如：10.20.0.0/16）的IPv4范围，并且必须是网桥IP范围的一个子集（`docker0`或由`--bridge`设置的）。 例如，`--fixed-cidr=192.168.1.0/25`，您的容器的IP将从`192.168.1.0/24`子网的前半部分中选择。
 
-- `--fixed-cidr=CIDR` -- restrict the IP range from the `docker0` subnet, using the standard CIDR notation like `172.16.1.0/28`. This range must be an IPv4 range for fixed IPs (ex: 10.20.0.0/16) and must be a subset of the bridge IP range (`docker0` or set using `--bridge`). For example with `--fixed-cidr=192.168.1.0/25`, IPs for your containers will be chosen from the first half of `192.168.1.0/24` subnet.
+- `--mtu=BYTES` ——覆盖`docker0`上的最大包长度。
 
-- `--mtu=BYTES` -- override the maximum packet length on `docker0`.
-
-Once you have one or more containers up and running, you can confirm that Docker has properly connected them to the `docker0` bridge by running the `brctl` command on the host machine and looking at the `interfaces` column of the output.  Here is a host with two different containers connected:
+一旦启动并运行一个或多个容器，您可以通过在主机上运行`brctl`命令并查看输出的`interfaces`列，确认Docker已正确连接到`docker0`网桥。这里是连接两个不同容器的主机：
 
 ```
 # Display bridge info
@@ -30,9 +29,9 @@ docker0         8000.3a1d7362b4ee       no              veth65f9
                                                         vethdda6
 ```
 
-If the `brctl` command is not installed on your Docker host, then on Ubuntu you should be able to run `sudo apt-get install bridge-utils` to install it.
+如果在Docker主机上没有安装`brctl`命令，那么在Ubuntu上您应该可以运行`sudo apt-get install bridge-utils`来安装它。
 
-Finally, the `docker0` Ethernet bridge settings are used every time you create a new container.  Docker selects a free IP address from the range available on the bridge each time you `docker run` a new container, and configures the container's `eth0` interface with that IP address and the bridge's netmask.  The Docker host's own IP address on the bridge is used as the default gateway by which each container reaches the rest of the Internet.
+最后，每次创建新容器时都使用`docker0`以太网网桥设置。Docker在您每次执行`docker run`命令运行新容器时从网桥中选择一个可用的IP地址，并使用该IP地址和网桥的网络掩码配置容器的`eth0`接口。Docker主机在网桥上的自己的IP地址被用作每个容器到达互联网其余部分的默认网关。
 
 ```
 # The network, as seen from a container
@@ -56,4 +55,4 @@ default via 172.17.42.1 dev eth0
 root@f38c87f2a42d:/# exit
 ```
 
-Remember that the Docker host will not be willing to forward container packets out on to the Internet unless its `ip_forward` system setting is `1` -- see the section on [Communicating to the outside world](container-communication.md#communicating-to-the-outside-world) for details.
+请记住，Docker主机不会愿意将容器包转发到Internet，除非其`ip_forward`系统设置为1——有关详细信息，请参阅[与外部通信](container-communication.md#communicating-to-the-outside-world)一节。

@@ -4,32 +4,26 @@ keywords: trust, security, root,  keys, repository, sandbox
 title: Play in a content trust sandbox
 ---
 
-This page explains how to set up and use a sandbox for experimenting with trust.
-The sandbox allows you to configure and try trust operations locally without
-impacting your production images.
+本页解释了如何安装和使用一个沙箱来体验信任。
+沙箱允许你在本地配置和尝试信任操作，而不影响你的生产环境镜像。
 
-Before working through this sandbox, you should have read through the [trust
-overview](content_trust.md).
+在操作沙箱之前，你应该已经阅读了 [Docker 内容信任](content_trust.md).
 
-### Prerequisites
+### 前提条件
 
-These instructions assume you are running in Linux or macOS. You can run
-this sandbox on a local machine or on a virtual machine. You will need to
-have privileges to run docker commands on your local machine or in the VM.
+这些操作引导假设你在Linux或macOS上运行。你可以在本机或虚拟机上运行这个沙箱。
+你将需要提供权限去运行Docker命令在你的本机或虚拟机。
 
-This sandbox requires you to install two Docker tools: Docker Engine >= 1.10.0
-and Docker Compose >= 1.6.0. To install the Docker Engine, choose from the
-[list of supported platforms](../../installation/index.md). To install
-Docker Compose, see the
-[detailed instructions here](/compose/install/).
+这个沙箱需要你安装两个Docker工具： Docker Engine >= 1.10.0和 Docker Compose >= 1.6.0。
+要安装Docker Engine，从这里选择[支持平台列表](../../installation/index.md). 
+要安装Docker Compose, 参见[详细操作](/compose/install/).
 
-Finally, you'll need to have a text editor installed on your local system or VM.
+最后，你将需要在你本机或虚拟机上安装一个文本编辑器。
 
-## What is in the sandbox?
+## 什么是沙箱?
 
-If you are just using trust out-of-the-box you only need your Docker Engine
-client and access to the Docker Hub. The sandbox mimics a
-production trust environment, and sets up these additional components.
+如果你只是开箱即用信任，你只需要用Docker Engine客户端并访问Docker Hub。沙箱最小化一个产品信任环境，并且安装这些额外的组件。
+
 
 | Container       | Description                                                                                                                                 |
 |-----------------|---------------------------------------------------------------------------------------------------------------------------------------------|
@@ -37,42 +31,35 @@ production trust environment, and sets up these additional components.
 | Registry server | A local registry service.                                                                                                                 |
 | Notary server   | The service that does all the heavy-lifting of managing trust                                                                               |
 
-This means you will be running your own content trust (Notary) server and registry.
-If you work exclusively with the Docker Hub, you would not need with these components.
-They are built into the Docker Hub for you. For the sandbox, however, you build
-your own entire, mock production environment.
+这意味着你将运行你自己的内容信任（Notary）服务和registry。如果你只是使用Docker Hub，你不需要这些组件。
+这些已经内置在Docker Hub。对于沙箱而言，无论如何，你构建了你自己完整的模拟产品环境。
 
-Within the `trustsandbox` container, you interact with your local registry rather
-than the Docker Hub. This means your everyday image repositories are not used.
-They are protected while you play.
+通过`trustsandbox`容器，你和本地registry而不是Docker Hub交互。
+这意味着你每天使用的镜像仓库没有被使用。他们被保护起来。
 
-When you play in the sandbox, you'll also create root and repository keys. The
-sandbox is configured to store all the keys and files inside the `trustsandbox`
-container. Since the keys you create in the sandbox are for play only,
-destroying the container destroys them as well.
+当你在沙箱里测试，你也将创建根秘钥和仓库秘钥。
+这个沙箱被配置为存储`trustsandbox`容器里的所有的秘钥和文件。
+因为在沙箱里创建的这些秘钥只是用来测试，消耗了容器也会销毁他们。
 
-By using a docker-in-docker image for the `trustsandbox` container, you will also
-not pollute your real docker daemon cache with any images you push and pull.  The
-images will instead be stored in an anonymous volume attached to this container,
-and can be destroyed after you destroy the container.
+通过使用docker-in-docker镜像来运行`trustsandbox`容器，你将不会污染你的真正docker daemon缓存（这些缓存保存了你之前上传下载的镜像）。
+这些镜像会被存储在容器的一个匿名卷，可以在销毁容器后销毁。
 
-## Build the sandbox
+## 构建沙箱
 
-In this section, you'll use Docker Compose to specify how to set up and link together
-the `trustsandbox` container, the Notary server, and the Registry server.
+这个部分，你将使用Docker Compose去指定如何安装和连接`trustsandbox`容器Notary server和、Registry server。
 
 
-1. Create a new `trustsandbox` directory and change into it.
+1. 创建一个新的 `trustsandbox` 目录并切换到该目录。
 
         $ mkdir trustsandbox
         $ cd trustsandbox
 
-2. Create a filed called `docker-compose.yml` with your favorite editor.  For example, using vim:
+2. 用你喜欢的编辑器创建文件`docker-compose.yml`。例如使用vim:
 
         $ touch docker-compose.yml
         $ vim docker-compose.yml
 
-3. Add the following to the new file.
+3. 在这个新文件里添加以下内容：
 
         version: "2"
         services:
@@ -111,30 +98,30 @@ the `trustsandbox` container, the Notary server, and the Registry server.
           sandbox:
             external: false
 
-4. Save and close the file.
+4. 保存并关闭文件.
 
-5. Run the containers on your local system.
+5. 在本地运行容器
 
         $ docker-compose up -d
 
-    The first time you run this, the docker-in-docker, Notary server, and registry
-    images will be first downloaded from Docker Hub.
+    当你第一次运行，docker-in-docker, Notary server, 和 registry的镜像会从Docker Hub下载。
+    
 
 
-## Playing in the sandbox
+## 在沙箱里测试
 
-Now that everything is setup, you can go into your `trustsandbox` container and
-start testing Docker content trust.  From your host machine, obtain a shell
-in the `trustsandbox` container.
+当一切准备好，你可以进入`trustsandbox`容器并开始测试Docker内容安全。
+从你的宿主机，打开`trustsandbox`容器的shell.
+
 
     $ docker exec -it trustsandbox sh
     / #
 
-### Test some trust operations
+### 测试一些信任操作
 
-Now, you'll pull some images from within the `trustsandbox` container.
+现在，你可以在`trustsandbox`容器里拉取一些镜像。
 
-1. Download a `docker` image to test with.
+1.下载一个 `docker` 镜像去测试.
 
         / # docker pull docker/trusttest
         docker pull docker/trusttest
@@ -146,30 +133,30 @@ Now, you'll pull some images from within the `trustsandbox` container.
         Digest: sha256:d149ab53f8718e987c3a3024bb8aa0e2caadf6c0328f1d9d850b2a2a67f2819a
         Status: Downloaded newer image for docker/trusttest:latest
 
-2. Tag it to be pushed to our sandbox registry:
+2. 对它打一个tag，标记为推送到沙箱 registry:
 
         / # docker tag docker/trusttest sandboxregistry:5000/test/trusttest:latest
 
-3. Enable content trust.
+3. 开启内容信任
 
         / # export DOCKER_CONTENT_TRUST=1
 
-4. Identify the trust server.
+4. 识别信任服务器
 
         / # export DOCKER_CONTENT_TRUST_SERVER=https://notaryserver:4443
 
     This step is only necessary because the sandbox is using its own server.
     Normally, if you are using the Docker Public Hub this step isn't necessary.
 
-5. Pull the test image.
+5. 拉取测试镜像.
 
         / # docker pull sandboxregistry:5000/test/trusttest
         Using default tag: latest
         Error: remote trust data does not exist for sandboxregistry:5000/test/trusttest: notaryserver:4443 does not have trust data for sandboxregistry:5000/test/trusttest
 
-      You see an error, because this content doesn't exist on the `notaryserver` yet.
+      你会看到一个错误，因为`notaryserver`上还没有内容。
 
-6. Push and sign the trusted image.
+6. 推送并加签这个信任镜像。
 
         / # docker push sandboxregistry:5000/test/trusttest:latest
         The push refers to a repository [sandboxregistry:5000/test/trusttest]
@@ -190,9 +177,9 @@ Now, you'll pull some images from within the `trustsandbox` container.
         Finished initializing "sandboxregistry:5000/test/trusttest"
         Successfully signed "sandboxregistry:5000/test/trusttest":latest
 
-    Because you are pushing this repository for the first time, docker creates new root and repository keys and asks you for passphrases with which to encrypt them.  If you push again after this, it will only ask you for repository passphrase so it can decrypt the key and sign again.
+    因为你第一次推送到这个仓库，docker创建了新的根秘钥和仓库秘钥，并且向你要加密口令。如果你第二次推送，它只会向你要仓库口令去解密秘钥并再次加签。
 
-7. Try pulling the image you just pushed:
+7. 尝试拉取你刚才推送的镜像:
 
         / # docker pull sandboxregistry:5000/test/trusttest
         Using default tag: latest
@@ -203,21 +190,19 @@ Now, you'll pull some images from within the `trustsandbox` container.
         Tagging sandboxregistry:5000/test/trusttest@sha256:ebf59c538accdf160ef435f1a19938ab8c0d6bd96aef8d4ddd1b379edf15a926 as sandboxregistry:5000/test/trusttest:latest
 
 
-### Test with malicious images
+### 用恶意镜像测试
 
-What happens when data is corrupted and you try to pull it when trust is
-enabled? In this section, you go into the `sandboxregistry` and tamper with some
-data. Then, you try and pull it.
+当信任内容开启，如果你尝试拉取数据损坏的镜像会发生什么？这个部分，你可以进入`sandboxregistry`，
+并篡改一些数据。然后你尝试拉取它。
 
-1. Leave the `trustsandbox` shell and and container running.
+1. 离开`trustsandbox` shell并保持容器运行.
 
-2. Open a new interactive terminal from your host, and obtain a shell into the
-`sandboxregistry` container.
+2. 在你的机器上开启一个新的交互终端，重新在`sandboxregistry`容器里打开一个shell。
 
         $ docker exec -it sandboxregistry bash
         root@65084fc6f047:/#
 
-3. List the layers for the `test/trusttest` image you pushed:
+3. 列出`test/trusttest` 镜像的层信息:
 
         root@65084fc6f047:/# ls -l /var/lib/registry/docker/registry/v2/repositories/test/trusttest/_layers/sha256
         total 12
@@ -225,17 +210,17 @@ data. Then, you try and pull it.
         drwxr-xr-x 2 root root 4096 Jun 10 17:26 aac0c133338db2b18ff054943cee3267fe50c75cdee969aed88b1992539ed042
         drwxr-xr-x 2 root root 4096 Jun 10 17:26 cc7629d1331a7362b5e5126beb5bf15ca0bf67eb41eab994c719a45de53255cd
 
-4. Change into the registry storage for one of those layers (note that this is in a different directory)
+4. 切换到registry存储目录中该镜像的其中一层（注意这是一个不同的目录）
 
         root@65084fc6f047:/# cd /var/lib/registry/docker/registry/v2/blobs/sha256/aa/aac0c133338db2b18ff054943cee3267fe50c75cdee969aed88b1992539ed042
 
-5. Add malicious data to one of the trusttest layers:
+5. 增加恶意数据到其中一个信任层:
 
         root@65084fc6f047:/# echo "Malicious data" > data
 
-6. Go back to your `trustsandbox` terminal.
+6. 回到你的`trustsandbox` 终端.
 
-7. List the trusttest image.
+7. 列出信任镜像
 
         / # docker images | grep trusttest
         REPOSITORY                            TAG                 IMAGE ID            CREATED             SIZE
@@ -243,7 +228,7 @@ data. Then, you try and pull it.
         sandboxregistry:5000/test/trusttest   latest              cc7629d1331a        11 months ago       5.025 MB
         sandboxregistry:5000/test/trusttest   <none>              cc7629d1331a        11 months ago       5.025 MB
 
-8. Remove the `trusttest:latest` image from our local cache.
+8. 从本地缓存中删除 `trusttest:latest` 镜像。
 
         / # docker rmi -f cc7629d1331a
         Untagged: docker/trusttest:latest
@@ -253,11 +238,9 @@ data. Then, you try and pull it.
         Deleted: sha256:2a1f6535dc6816ffadcdbe20590045e6cbf048d63fd4cc753a684c9bc01abeea
         Deleted: sha256:c22f7bc058a9a8ffeb32989b5d3338787e73855bf224af7aa162823da015d44c
 
-    Docker does not re-download images that it already has cached, but we want
-    Docker to attempt to download the tampered image from the registry and reject
-    it because it is invalid.
+    Docker不会重新下载已经缓存的镜像，但是我们想让Docker下载这个篡改的镜像并且因为它不正确而拒绝。
 
-8. Pull the image again.  This will download the image from the registry, because we don't have it cached.
+8. 重新下载镜像。这次会从registry下载，因为没有缓存。
 
         / # docker pull sandboxregistry:5000/test/trusttest
         Using default tag: latest
@@ -268,20 +251,16 @@ data. Then, you try and pull it.
         a3ed95caeb02: Download complete
         error pulling image configuration: unexpected EOF
 
-      You'll see the pull did not complete because the trust system was
-      unable to verify the image.
+      你将发现下载没有结束，因为信任系统不能校验镜像。
 
-## More play in the sandbox
+## 更多沙箱尝试
 
-Now, that you have a full Docker content trust sandbox on your local system,
-feel free to play with it and see how it behaves. If you find any security
-issues with Docker, feel free to send us an email at <security@docker.com>.
+现在，你在本机有了一个完整的Docker信任安全沙箱，可以随意玩耍并看看有什么会发生。
+如果你发现了任何安全问题，请随时给我们发邮件<security@docker.com>。
 
 
-## Cleaning up your sandbox
+## 清除沙箱
 
-When you are done, and want to clean up all the services you've started and any
-anonymous volumes that have been created, just run the following command in the
-directory where you've created your Docker Compose file:
+当你测试结束，希望清理所有你启动的服务和创建的匿名卷，只要在创建Docker Compose文件目录运行下面的命令：
 
         $ docker-compose down -v

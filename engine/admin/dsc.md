@@ -48,7 +48,7 @@ apt-get update
 apt-get install docker-engine
 ```
 
-确保您当前的工作目录设置为“DockerClientDSC”源并将DockerClient配置加载到当前的PowerShell中会话
+确保您当前的工作目录设置为“DockerClientDSC”，并将DockerClient配置加载到当前的PowerShell中会话
 
 ```powershell
 . .\DockerClient.ps1

@@ -4,61 +4,51 @@ keywords: gcplogs, google, docker, logging, driver
 title: Google Cloud Logging driver
 ---
 
-The Google Cloud Logging driver sends container logs to <a
-href="https://cloud.google.com/logging/docs/" target="_blank">Google Cloud
-Logging</a>.
+Google Cloud Logging驱动程序会将容器日志发送到
+<a href="https://cloud.google.com/logging/docs/" target="_blank">Google Cloud Logging</a>。
 
-## Usage
+## 用法
 
-You can configure the default logging driver by passing the `--log-driver`
-option to the Docker daemon:
+您可以通过设置`--log-driver'参数来给Docker守护进程配置默认日志驱动程序：
 
     dockerd --log-driver=gcplogs
 
-You can set the logging driver for a specific container by using the
-`--log-driver` option to `docker run`:
+您可以在`docker run`时使用`--log-driver`选项为特定容器设置日志驱动程序：
 
     docker run --log-driver=gcplogs ...
 
-This log driver does not implement a reader so it is incompatible with
-`docker logs`.
+这个日志驱动程序没有实现日志阅读器，所以它不兼容`docker logs`。
 
-If Docker detects that it is running in a Google Cloud Project, it will discover
-configuration from the <a href="https://cloud.google.com/compute/docs/metadata"
-target="_blank">instance metadata service</a>. Otherwise, the user must specify
-which project to log to using the `--gcp-project` log option and Docker will
-attempt to obtain credentials from the <a
-href="https://developers.google.com/identity/protocols/application-default-credentials"
-target="_blank">Google Application Default Credential</a>. The `--gcp-project`
-takes precedence over information discovered from the metadata server so a
-Docker daemon running in a Google Cloud Project can be overridden to log to a
-different Google Cloud Project using `--gcp-project`.
+如果Docker检测到它正在Google Cloud Project中运行，它会从
+<a href="https://cloud.google.com/compute/docs/metadata" target="_blank">实例元数据服务</a>
+中获取配置。
 
-Docker fetches the values for zone, instance name and instance id from Google
-Cloud metadata server. Those values can be provided via options if metadata
-server is not available. They will not override the values from metadata server.
+否则，用户必须用`--gcp-project`选项来标明把日志存储到哪个项目中，而且Docker会尝试从
+<a href="https://developers.google.com/identity/protocols/application-default-credentials" target="_blank">Google应用程式预设凭证</a>
+中获取凭证信息。 
 
-## gcplogs options
+`--gcp-project`参数优先于从元数据服务器发现的信息，因此在Goo:le Cloud Project中运行的Docker守护程序可以用该参数将日志记录到另外的项目中。
 
-You can use the `--log-opt NAME=VALUE` flag to specify these additional Google
-Cloud Logging driver options:
+Docker从Google云元数据服务器中获取区域，实例名称和实例ID的值。
+如果元数据服务器不可用，这些值可以通过参数提供。参数不会覆盖从元数据服务器中获取的值。
 
-| Option                      | Required | Description                                                                                                                                 |
-|-----------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `gcp-project`               | optional | Which GCP project to log to. Defaults to discovering this value from the GCE metadata service.                                              |
-| `gcp-log-cmd`               | optional | Whether to log the command that the container was started with. Defaults to false.                                                          |
-| `labels`                    | optional | Comma-separated list of keys of labels, which should be included in message, if these labels are specified for container.                   |
-| `env`                       | optional | Comma-separated list of keys of environment variables, which should be included in message, if these variables are specified for container. |
-| `gcp-meta-zone`             | optional | Zone name for the instance. |
-| `gcp-meta-name`             | optional | Instance name. |
-| `gcp-meta-id`               | optional | Instance ID. |
+## gcplogs选项
 
-If there is collision between `label` and `env` keys, the value of the `env`
-takes precedence. Both options add additional fields to the attributes of a
-logging message.
+您可以使用`--log-opt NAME=VALUE`参数指定Google Logging驱动程序的其他选项：
 
-Below is an example of the logging options required to log to the default
-logging destination which is discovered by querying the GCE metadata server.
+| 选项 | 是否必需 | 说明 |
+| ----------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gcp-project` |可选|日志记录到哪个GCP项目中。默认从GCE元数据服务发现此值。 |
+| `gcp-log-cmd` |可选|是否记录容器的启动命令。默认为false。|
+| `labels` |可选|以逗号分隔的标签名称列表，如果为容器指定这些标签，则应包含在消息中。 |
+| `env` |可选|以逗号分隔的环境变量的名称列表，如果为容器指定这些变量，则应包含在消息中。 |
+| `gcp-meta-zone` |可选|实例所在区域的名称。 |
+| `gcp-meta-name` |可选|实例名称。 |
+| `gcp-meta-id`|可选|实例ID。 |
+
+如果`label`和`env`名称之间有冲突，`env`的值优先。两个选项都向日志消息中添加附加字段。
+
+以下是日志选项的一个示例，该示例发送日志到通过GCE元数据服务器获得的默认日志记录地。
 
     docker run --log-driver=gcplogs \
         --log-opt labels=location \
@@ -68,15 +58,13 @@ logging destination which is discovered by querying the GCE metadata server.
         --label location=west \
         your/application
 
-This configuration also directs the driver to include in the payload the label
-`location`, the environment variable `ENV`, and the command used to start the
-container.
+该配置还指示驱动程序在日志中包含标签`location`，环境变量`ENV`，以及容器的启动命令。
 
-An example of the logging options for running outside of GCE (the daemon must be
-configured with GOOGLE_APPLICATION_CREDENTIALS):
+下面是使用外部GCE的参数示例（守护程序必须已配置了GOOGLE_APPLICATION_CREDENTIALS选项）：
 
     docker run --log-driver=gcplogs \
         --log-opt gcp-project=test-project
         --log-opt gcp-meta-zone=west1 \
         --log-opt gcp-meta-name=`hostname` \
         your/application
+

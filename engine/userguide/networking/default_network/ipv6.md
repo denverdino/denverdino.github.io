@@ -4,40 +4,23 @@ keywords: docker, network, IPv6
 title: IPv6 with Docker
 ---
 
-The information in this section explains IPv6 with the Docker default bridge.
-This is a `bridge` network named `bridge` created automatically when you install
-Docker.
+本节中的信息说明了使用Docker默认网桥的IPv6。这是在安装Docker时自动创建的以`bridge`命名的`bridge`网络。
 
-As we are [running out of IPv4
-addresses](http://en.wikipedia.org/wiki/IPv4_address_exhaustion) the IETF has
-standardized an IPv4 successor, [Internet Protocol Version
-6](http://en.wikipedia.org/wiki/IPv6) , in [RFC
-2460](https://www.ietf.org/rfc/rfc2460.txt). Both protocols, IPv4 and IPv6,
-reside on layer 3 of the [OSI model](http://en.wikipedia.org/wiki/OSI_model).
+由于我们[用尽了IPv4地址](http://en.wikipedia.org/wiki/IPv4_address_exhaustion)，IETF已经在[RFC 2460](http://en.wikipedia.org/wiki/IPv6)中标准化了IPv4后续版本的[Internet协议版本6](http://en.wikipedia.org/wiki/IPv6).这两种协议位于[OSI模型](http://en.wikipedia.org/wiki/OSI_model)的第3层。
 
 ## How IPv6 works on Docker
 
-By default, the Docker server configures the container network for IPv4 only.
-You can enable IPv4/IPv6 dualstack support by running the Docker daemon with the
-`--ipv6` flag. Docker will set up the bridge `docker0` with the IPv6 [link-local
-address](http://en.wikipedia.org/wiki/Link-local_address) `fe80::1`.
+默认情况下，Docker服务器仅为IPv4配置容器网络。 您可以通过使用`--ipv6`标志运行Docker守护程序来启用IPv4/IPv6双栈支持。 Docker将使用IPv6[链接本地地址](http://en.wikipedia.org/wiki/Link-local_address)`fe80::1`设置桥接器`docker0`。
 
-By default, containers that are created will only get a link-local IPv6 address.
-To assign globally routable IPv6 addresses to your containers you have to
-specify an IPv6 subnet to pick the addresses from. Set the IPv6 subnet via the
-`--fixed-cidr-v6` parameter when starting Docker daemon:
+默认情况下，创建的容器只能获取链接本地IPv6地址。要为您的容器分配全局可路由的IPv6地址，您必须指定一个IPv6子网来选择地址。在启动Docker守护程序时通过`--fixed-cidr-v6`参数设置IPv6子网：
 
 ```
 dockerd --ipv6 --fixed-cidr-v6="2001:db8:1::/64"
 ```
 
-The subnet for Docker containers should at least have a size of `/80`. This way
-an IPv6 address can end with the container's MAC address and you prevent NDP
-neighbor cache invalidation issues in the Docker layer.
+Docker容器的子网至少应该有`/80`的大小。这样，IPv6地址可以以容器的MAC地址结尾，并防止Docker层中的NDP邻居缓存无效问题。
 
-With the `--fixed-cidr-v6` parameter set Docker will add a new route to the
-routing table. Further IPv6 routing will be enabled (you may prevent this by
-starting dockerd with `--ip-forward=false`):
+使用`--fixed-cidr-v6`参数集，Docker将向路由表添加一个新路由。 将启用更多的IPv6路由（您可以通过使用`--ip-forward=false`启动dockerd来阻止此操作）：
 
 ```
 $ ip -6 route add 2001:db8:1::/64 dev docker0
@@ -47,13 +30,9 @@ $ sysctl net.ipv6.conf.default.forwarding=1
 $ sysctl net.ipv6.conf.all.forwarding=1
 ```
 
-All traffic to the subnet `2001:db8:1::/64` will now be routed via the `docker0` interface.
+到子网`2001:db8:1::/64`的所有流量现在将通过`docker0`接口路由。
 
-Be aware that IPv6 forwarding may interfere with your existing IPv6
-configuration: If you are using Router Advertisements to get IPv6 settings for
-your host's interfaces you should set `accept_ra` to `2`. Otherwise IPv6 enabled
-forwarding will result in rejecting Router Advertisements. E.g., if you want to
-configure `eth0` via Router Advertisements you should set:
+请注意，IPv6转发可能会干扰您现有的IPv6配置：如果您使用路由器广告获取主机接口的IPv6设置，您应该将accept_ra设置为2.否则启用IPv6的转发将导致拒绝路由器广播。 例如，如果您想通过路由器广告配置eth0，您应该设置：
 
 ```
 $ sysctl net.ipv6.conf.eth0.accept_ra=2
@@ -61,9 +40,7 @@ $ sysctl net.ipv6.conf.eth0.accept_ra=2
 
 ![](images/ipv6_basic_host_config.svg)
 
-Every new container will get an IPv6 address from the defined subnet. Further a
-default route will be added on `eth0` in the container via the address specified
-by the daemon option `--default-gateway-v6` if present, otherwise via `fe80::1`:
+每个新容器将从定义的子网获取IPv6地址。 此外，默认路由将通过daemon选项`--default-gateway-v6`（如果存在）指定的地址添加到容器中的`eth0`上，否则通过`fe80::1`：
 
 ```
 docker run -it ubuntu bash -c "ip -6 addr show dev eth0; ip -6 route show"
@@ -79,34 +56,17 @@ fe80::/64 dev eth0  proto kernel  metric 256
 default via fe80::1 dev eth0  metric 1024
 ```
 
-In this example the Docker container is assigned a link-local address with the
-network suffix `/64` (here: `fe80::42:acff:fe11:3/64`) and a globally routable
-IPv6 address (here: `2001:db8:1:0:0:242:ac11:3/64`). The container will create
-connections to addresses outside of the `2001:db8:1::/64` network via the
-link-local gateway at `fe80::1` on `eth0`.
+在这个例子中，Docker容器被分配一个具有网络后缀`/64`（这里：fe80::42:acff:fe11:3/64）的链接本地地址和全局可路由的IPv6地址（这里：2001:db8:0:0:242:ac11:3/64）。容器将通过`eth0`上的`fe80::1`处的链接本地网关创建到`2001:db8:1::/64`网络外部的地址的连接。
 
-Often servers or virtual machines get a `/64` IPv6 subnet assigned (e.g.
-`2001:db8:23:42::/64`). In this case you can split it up further and provide
-Docker a `/80` subnet while using a separate `/80` subnet for other applications
-on the host:
+通常，服务器或虚拟机会分配一个 `/64` IPv6子网（例如`2001:db8:23:42::/64`）。 在这种情况下，您可以进一步拆分它，并提供Docker 一个 `/80` 子网，同时使用单独的`/80`子网用于主机上的其他应用程序：
 
 ![](images/ipv6_slash64_subnet_config.svg)
 
-In this setup the subnet `2001:db8:23:42::/80` with a range from
-`2001:db8:23:42:0:0:0:0` to `2001:db8:23:42:0:ffff:ffff:ffff` is attached to
-`eth0`, with the host listening at `2001:db8:23:42::1`. The subnet
-`2001:db8:23:42:1::/80` with an address range from `2001:db8:23:42:1:0:0:0` to
-`2001:db8:23:42:1:ffff:ffff:ffff` is attached to `docker0` and will be used by
-containers.
+在此设置中，`2001:db8:23:42:0:0:0:0` 至 `2001:db8:23:42:0:ffff:ffff:ffff` 附加到eth0，主机监听 `2001:db8:23:42::1` 。`2001:db8:23:42:1:0:0:0`到`2001:db8:23:42:1:ffff:ffff`地址范围的子网`2001:db8:23:42:1::/ffff`附加到`docker0`并将被容器使用。
 
-### Using NDP proxying
+### 使用NDP代理
 
-If your Docker host is the only part of an IPv6 subnet but has not got an IPv6
-subnet assigned you can use NDP proxying to connect your containers via IPv6 to
-the internet. For example your host with the IPv6 address `2001:db8::c001`, is
-part of the subnet `2001:db8::/64` and your IaaS provider allows you to
-configure the IPv6 addresses `2001:db8::c000` to `2001:db8::c00f`:
-
+如果您的Docker主机是IPv6子网的唯一部分，但没有分配IPv6子网，则可以使用NDP代理将容器通过IPv6连接到互联网。 例如，具有IPv6地址`2001:db8::c001`的主机是子网`2001:db8::/64`的一部分，您的IaaS提供程序允许您配置IPv6地址为`2001:db8::c000`至`2001:db8::c00f`：
 ```
 $ ip -6 addr show
 
@@ -120,46 +80,29 @@ $ ip -6 addr show
        valid_lft forever preferred_lft forever
 ```
 
-Let's split up the configurable address range into two subnets
-`2001:db8::c000/125` and `2001:db8::c008/125`. The first one can be used by the
-host itself, the latter by Docker:
+让我们将可配置地址范围分成两个子网`2001:db8::c000/125`和`2001:db8::c008/125`。第一个可以由主机本身使用，后者由Docker使用：
 
 ```
 dockerd --ipv6 --fixed-cidr-v6 2001:db8::c008/125
 ```
 
-You notice the Docker subnet is within the subnet managed by your router that is
-connected to `eth0`. This means all devices (containers) with the addresses from
-the Docker subnet are expected to be found within the router subnet. Therefore
-the router thinks it can talk to these containers directly.
+您注意到Docker子网位于由连接到`eth0`的路由器管理的子网内。这意味着所有具有来自Docker子网的地址的设备（容器）都可以在路由器子网内找到。因此路由器认为它可以直接与这些容器交谈。
 
 ![](images/ipv6_ndp_proxying.svg)
 
-As soon as the router wants to send an IPv6 packet to the first container it
-will transmit a neighbor solicitation request, asking, who has `2001:db8::c009`?
-But it will get no answer because no one on this subnet has this address. The
-container with this address is hidden behind the Docker host. The Docker host
-has to listen to neighbor solicitation requests for the container address and
-send a response that itself is the device that is responsible for the address.
-This is done by a Kernel feature called `NDP Proxy`. You can enable it by
-executing
+一旦路由器想要发送一个IPv6数据包到第一个容器，它会发送一个相邻请求，询问，谁有`2001:db8::c009`？ 但它将得不到回答，因为没有人在这个子网有这个地址。 具有此地址的容器隐藏在Docker主机后面。Docker主机必须监听容器地址的相邻请求，并发送本身是负责地址的设备的响应。 这通过称为`NDP代理`的内核功能来完成。 您可以通过执行下面命令来启用它
 
 ```
 $ sysctl net.ipv6.conf.eth0.proxy_ndp=1
 ```
 
-Now you can add the container's IPv6 address to the NDP proxy table:
+现在，您可以将容器的IPv6地址添加到NDP代理表：
 
 ```
 $ ip -6 neigh add proxy 2001:db8::c009 dev eth0
 ```
 
-This command tells the Kernel to answer to incoming neighbor solicitation
-requests regarding the IPv6 address `2001:db8::c009` on the device `eth0`. As a
-consequence of this all traffic to this IPv6 address will go into the Docker
-host and it will forward it according to its routing table via the `docker0`
-device to the container network:
-
+此命令告诉内核回应关于设备eth0上的IPv6地址 `2001:db8::c009` 的传入邻居请求。 因此，到这个IPv6地址的所有流量将进入Docker主机，并且它将根据其路由表通过 `docker0` 设备将其转发到容器网络：
 ```
 $ ip -6 route show
 
@@ -167,91 +110,46 @@ $ ip -6 route show
 2001:db8::/64 dev eth0  proto kernel  metric 256
 ```
 
-You have to execute the `ip -6 neigh add proxy ...` command for every IPv6
-address in your Docker subnet. Unfortunately there is no functionality for
-adding a whole subnet by executing one command. An alternative approach would be
-to use an NDP proxy daemon such as
-[ndppd](https://github.com/DanielAdolfsson/ndppd).
+您必须对您的Docker子网中的每个IPv6地址执行 `ip -6 neigh add proxy ...` 命令。不幸的是，没有通过执行一个命令来添加整个子网的功能。 另一种方法是使用NDP代理守护进程，如[ndppd](https://github.com/DanielAdolfsson/ndppd)。
 
-## Docker IPv6 cluster
+## Docker IPv6 集群
 
-### Switched network environment
-Using routable IPv6 addresses allows you to realize communication between
-containers on different hosts. Let's have a look at a simple Docker IPv6 cluster
-example:
+### 交换机网络环境
+使用可路由的IPv6地址允许您实现不同主机上的容器之间的通信。 让我们来看一个简单的Docker IPv6集群示例：
 
 ![](images/ipv6_switched_network_example.svg)
 
-The Docker hosts are in the `2001:db8:0::/64` subnet. Host1 is configured to
-provide addresses from the `2001:db8:1::/64` subnet to its containers. It has
-three routes configured:
+Docker主机位于 `2001:db8:0::/64` 子网中。 Host1配置为提供 `2001:db8:1::/64` 子网到其容器的地址。 它有三个路由配置：
 
-- Route all traffic to `2001:db8:0::/64` via `eth0`
-- Route all traffic to `2001:db8:1::/64` via `docker0`
-- Route all traffic to `2001:db8:2::/64` via Host2 with IP `2001:db8::2`
+- 将所有流量通过`eth0`路由到`2001:db8:0::/64`
+- 将所有流量通过`docker0`路由到`2001:db8:1::/64`
+- 将所有流量通过IP为 `2001:db8::2`的Host2路由到 `2001:db8:2::/64`
 
-Host1 also acts as a router on OSI layer 3. When one of the network clients
-tries to contact a target that is specified in Host1's routing table Host1 will
-forward the traffic accordingly. It acts as a router for all networks it knows:
-`2001:db8::/64`, `2001:db8:1::/64` and `2001:db8:2::/64`.
+Host1还充当OSI第3层上的路由器。当其中一个网络客户端尝试联系在Host1的路由表中指定的目标时，Host1将相应地转发流量。 它作为它知道的所有网络的路由器：`2001:db8::/64`， `2001:db8:1::/64` and `2001:db8:2::/64`。
 
-On Host2 we have nearly the same configuration. Host2's containers will get IPv6
-addresses from `2001:db8:2::/64`. Host2 has three routes configured:
+在Host2上我们有几乎相同的配置。 Host2的容器将从 `2001:db8:2::/64` 获取IPv6地址。 Host2有三个路由配置：
 
-- Route all traffic to `2001:db8:0::/64` via `eth0`
-- Route all traffic to `2001:db8:2::/64` via `docker0`
-- Route all traffic to `2001:db8:1::/64` via Host1 with IP `2001:db8:0::1`
+- 将所有流量通过`eth0`路由到`2001:db8:0::/64`
+- 将所有流量通过`docker0`路由到`2001:db8:2::/64`
+- 将所有流量通过IP为 `2001:db8:0::1`的Host2路由到 `2001:db8:1::/64`
 
-The difference to Host1 is that the network `2001:db8:2::/64` is directly
-attached to the host via its `docker0` interface whereas it reaches
-`2001:db8:1::/64` via Host1's IPv6 address `2001:db8::1`.
+与Host1的区别在于网络 `2001:db8:2::/64` 通过其`docker0`接口直接连接到主机，而通过Host1的IPv6地址 `2001:db8::1` 到达 `2001:db8:1::/64` 。
 
-This way every container is able to contact every other container. The
-containers `Container1-*` share the same subnet and contact each other directly.
-The traffic between `Container1-*` and `Container2-*` will be routed via Host1
-and Host2 because those containers do not share the same subnet.
+这样每个容器都能够与每个其他容器接触。容器`Container1-*`共享同一子网并直接相互联系。`Container1-*` 和 `Container2-*` 之间的流量将通过Host1和Host2进行路由，因为这些容器不共享同一个子网。
 
-In a switched environment every host has to know all routes to every subnet.
-You always have to update the hosts' routing tables once you add or remove a
-host to the cluster.
+在交换环境中，每个主机必须知道到每个子网的所有路由。 在向集群添加或删除主机后，您必须更新主机的路由表。
 
-Every configuration in the diagram that is shown below the dashed line is
-handled by Docker: The `docker0` bridge IP address configuration, the route to
-the Docker subnet on the host, the container IP addresses and the routes on the
-containers. The configuration above the line is up to the user and can be
-adapted to the individual environment.
+图中虚线下方的每个配置由Docker处理：`docker0` 网桥IP地址配置，到主机上的Docker子网的路由，容器IP地址和容器上的路由。虚线上方的配置取决于用户，并且可以适应个别环境。
 
-### Routed network environment
-In a routed network environment you replace the layer 2 switch with a layer 3
-router. Now the hosts just have to know their default gateway (the router) and
-the route to their own containers (managed by Docker). The router holds all
-routing information about the Docker subnets. When you add or remove a host to
-this environment you just have to update the routing table in the router - not
-on every host.
+### 路由器网络环境
+在路由网络环境中，您将第2层交换机替换为第3层路由器。 现在主机只需要知道他们的默认网关（路由器）和到自己的容器（由Docker管理）的路由。 路由器保存有关Docker子网的所有路由信息。 当您向此环境添加或删除主机时，您只需更新路由器中的路由表——而不是每个主机上的路由表。
 
 ![](images/ipv6_routed_network_example.svg)
 
-In this scenario containers of the same host can communicate directly with each
-other. The traffic between containers on different hosts will be routed via
-their hosts and the router. For example packet from `Container1-1` to
-`Container2-1` will be routed through `Host1`, `Router` and `Host2` until it
-arrives at `Container2-1`.
+在这种情况下，同一主机的容器可以直接相互通信。不同主机上的容器之间的流量将通过其主机和路由器进行路由。例如，从`Container1-1`到`Container2-1`的分组将通过`Host1`，`Router`和`Host2`路由，直到它到达`Container2-1`。
 
-To keep the IPv6 addresses short in this example a `/48` network is assigned to
-every host. The hosts use a `/64` subnet of this for its own services and one
-for Docker. When adding a third host you would add a route for the subnet
-`2001:db8:3::/48` in the router and configure Docker on Host3 with
-`--fixed-cidr-v6=2001:db8:3:1::/64`.
+为了保持IPv6地址简短，在这个示例中，将`a/48`网络分配给每个主机。主机使用`/64`子网给自己的服务，一个给Docker。当添加第三台主机时，您将在路由器中为子网 `2001:db8:3::/48` 添加一个路由，并使用 `--fixed-cidr-v6=2001:db8:3:1::/64` 配置Host3上的Docker 。
 
-Remember the subnet for Docker containers should at least have a size of `/80`.
-This way an IPv6 address can end with the container's MAC address and you
-prevent NDP neighbor cache invalidation issues in the Docker layer. So if you
-have a `/64` for your whole environment use `/78` subnets for the hosts and
-`/80` for the containers. This way you can use 4096 hosts with 16 `/80` subnets
-each.
+记住Docker容器的子网至少应该有 `/80` 的大小。这样，IPv6地址可以以容器的MAC地址结尾，并防止Docker层中的NDP邻居缓存无效问题。所以如果您有一个 `/64` ，为您的整个环境使用 `/78` 子网的主机和 `/80` 的容器。这样，您可以使用4096个主机，每个主机具有16个 `/80` 个子网。
 
-Every configuration in the diagram that is visualized below the dashed line is
-handled by Docker: The `docker0` bridge IP address configuration, the route to
-the Docker subnet on the host, the container IP addresses and the routes on the
-containers. The configuration above the line is up to the user and can be
-adapted to the individual environment.
+图中虚线下方的每个配置由Docker处理：`docker0` bridge IP地址配置，到主机上的Docker子网的路由，容器IP地址和容器上的路由。虚线上方的配置取决于用户，并且可以适应个别环境。

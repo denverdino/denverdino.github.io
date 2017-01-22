@@ -6,12 +6,14 @@ redirect_from:
 title: Logging drivers
 ---
 
-* [Configuring logging drivers](overview.md)
-* [Configuring log tags](log_tags.md)
-* [Fluentd logging driver](fluentd.md)
-* [Journald logging driver](journald.md)
-* [Amazon CloudWatch Logs logging driver](awslogs.md)
-* [Splunk logging driver](splunk.md)
-* [ETW logging driver](etwlogs.md)
-* [Google Cloud Logging driver](gcplogs.md)
-* [NATS Logging driver](nats.md)
+* [配置日志驱动程序](overview.md)
+* [配置日志标签](log_tags.md)
+* [Fluentd日志驱动](fluentd.md)
+* [Journald日志驱动](journald.md)
+* [Amazon CloudWatch Logs日志驱动](awslogs.md)
+* [Splunk日志驱动](splunk.md)
+* [ETW日志驱动](etwlogs.md)
+* [Google Cloud Logging驱动](gcplogs.md)
+* [NATS Logging驱动](nats.md)
+
+

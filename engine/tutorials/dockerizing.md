@@ -1,156 +1,136 @@
 ---
-description: A simple 'Hello world' exercise that introduced you to Docker.
-keywords: docker guide, docker, docker platform, how to, dockerize, dockerizing apps, dockerizing applications, container, containers
-redirect_from:
+description: 一个简单的'Hello world练习，介绍了Docker。
+keywords: docker指南，docker，docker平台，如何，dockerize，dockerizing应用程序，dockerizing应用程序，容器，容器
+redirect_from: 
 - /engine/userguide/containers/dockerizing/
 - /engine/userguide/dockerizing/
-title: Hello world in a container
+title: 容器中运行Hello World
 ---
 
-*So what's this Docker thing all about?*
+*那么这个Docker到底是什么呢？*
 
-Docker allows you to run applications, worlds you create, inside containers.
-Running an application inside a container takes a single command: `docker run`.
+Docker允许您在容器内部运行应用程序，创建您自己的容器世界。
+在容器中运行应用程序需要一个命令:`docker run`。
 
->**Note**: Depending on your Docker system configuration, you may be required to
->preface each `docker` command on this page with `sudo`. To avoid this behavior,
->your system administrator can create a Unix group called `docker` and add users
->to it.
+> **Note**:根据您的Docker系统配置，您可能需要为这个页面上的所有`docker`命令加一个`sudo`前缀。为了避免这个加`sudo`的操作，系统管理员可以创建一个名为`docker`的Unix用户组，并将当前用户添加进去。
 
-## Run a Hello world
+## 运行Hello World
 
-Let's run a hello world container.
+让我们运行一个hello world容器。
 
-    $ docker run ubuntu /bin/echo 'Hello world'
+	$ docker run ubuntu /bin/echo 'Hello world'
 
-    Hello world
+	Hello world
 
-You just launched your first container!
+您刚刚启动了您的第一个容器！
 
-In this example:
+在这个例子中:
 
-* `docker run` runs a container.
+* `docker run`运行了一个容器。
 
-* `ubuntu` is the image you run, for example the Ubuntu operating system image.
-  When you specify an image, Docker looks first for the image on your
-  Docker host. If the image does not exist locally, then the image is pulled from the public
-  image registry [Docker Hub](https://hub.docker.com).
+* `ubuntu`是您运行的镜像。当您指定一个镜像时，Docker首先查看Docker主机上的镜像存储。如果镜像不存在于本地，则从公共镜像仓库[Docker Hub](https://hub.docker.com)中拉取（pull）。
 
-* `/bin/echo` is the command to run inside the new container.
+* `/bin/echo`是在新容器中运行的命令。
 
-The container launches. Docker creates a new Ubuntu
-environment and executes the `/bin/echo` command inside it and then prints out:
+现在容器启动了。 Docker创建了一个新的Ubuntu系统环境，并在其中执行`/bin/echo`命令，然后打印出来:
 
-    Hello world
+	Hello world
 
-So what happened to the container after that? Well, Docker containers
-only run as long as the command you specify is active. Therefore, in the above example,
-the container stops once the command is executed.
+那么，容器启动之后发生了什么？好了，Docker容器只有在您指定的命令是活跃的情况下才会一直运行。因此，在上述示例中，一旦命令被执行完成，容器就停止并退出了。
 
-## Run an interactive container
+## 运行交互式容器
 
-Let's specify a new command to run in the container.
+让我们在容器中运行一个新命令。
 
-    $ docker run -t -i ubuntu /bin/bash
+	$ docker run -t -i ubuntu / bin / bash
 
-    root@af8bae53bdd3:/#
+	root@af8bae53bdd3:/#
 
-In this example:
+在这个例子中:
 
-* `docker run` runs a container.
-* `ubuntu` is the image you would like to run.
-* `-t` flag assigns a pseudo-tty or terminal inside the new container.
-* `-i` flag allows you to make an interactive connection by
-grabbing the standard input (`STDIN`) of the container.
-* `/bin/bash` launches a Bash shell inside our container.
+* `docker run`运行一个容器。
+* `ubuntu`是您想运行的镜像。
+* `-t`标志在新容器内分配一个伪tty设备或终端。
+* `-i`标志允许您通过抓取容器的标准输入（`STDIN`）来进行交互式连接。
+* `/bin/bash`在我们的容器中启动了一个Bash shell。
 
-The container launches. We can see there is a
-command prompt inside it:
+容器启动。我们可以看到里面有一个命令提示符:
 
-    root@af8bae53bdd3:/#
+	root@af8bae53bdd3:/#
 
-Let's try running some commands inside the container:
+让我们尝试在容器中运行一些命令:
 
-    root@af8bae53bdd3:/# pwd
+	root@af8bae53bdd3:/#pwd
 
-    /
+	/
 
-    root@af8bae53bdd3:/# ls
+	root@af8bae53bdd3:/#ls
 
-    bin boot dev etc home lib lib64 media mnt opt proc root run sbin srv sys tmp usr var
+	bin boot dev etc home lib lib64 media mnt opt proc root run sbin srv sys tmp usr var
 
-In this example:
+在这个例子中:
 
-* `pwd` displays the current directory, the `/` root directory.
-* `ls` displays the directory listing of the root directory of a typical Linux file system.
+* `pwd`显示当前目录，`/`根目录。
+* `ls`显示典型Linux文件系统的根目录的目录列表。
 
-Now, you can play around inside this container. When completed, run the `exit` command or enter Ctrl-D
-to exit the interactive shell.
+现在，您可以在这个容器里面自由发挥。完成后，运行`exit`命令或输入Ctrl-D退出交互式shell。
 
-    root@af8bae53bdd3:/# exit
+	root@af8bae53bdd3:/#exit
 
->**Note:** As with our previous container, once the Bash shell process has
-finished, the container stops.
+> **注意:**与我们以前的容器一样，Bash shell进程完成后，容器停止。
 
-## Start a daemonized Hello world
+## 启动Hello world的守护进程
 
-Let's create a container that runs as a daemon.
+让我们创建一个作为守护进程运行的容器。
 
-    $ docker run -d ubuntu /bin/sh -c "while true; do echo hello world; sleep 1; done"
+	$ docker run -d ubuntu /bin/sh -c“while true; do echo hello world; sleep 1; done”
 
-    1e5535038e285177d5214659a068137486f96ee5c2e85a4ac52dc83f2ebe4147
+	1e5535038e285177d5214659a068137486f96ee5c2e85a4ac52dc83f2ebe4147
 
-In this example:
+在这个例子中:
 
-* `docker run` runs the container.
-* `-d` flag runs the container in the background (to daemonize it).
-* `ubuntu` is the image you would like to run.
+* `docker run`运行容器。
+* `-d`标志在后台运行容器（守护进程化）。
+* `ubuntu`是您想运行的镜像。
 
-Finally, we specify a command to run:
+最后，我们指定要运行的命令:
 
-    /bin/sh -c "while true; do echo hello world; sleep 1; done"
+	/bin/sh -c "while true; do echo hello world; sleep 1; done"
 
 
-In the output, we do not see `hello world` but a long string:
+在输出中，我们看不到“hello world”而是一个长字符串:
 
-    1e5535038e285177d5214659a068137486f96ee5c2e85a4ac52dc83f2ebe4147
+	1e5535038e285177d5214659a068137486f96ee5c2e85a4ac52dc83f2ebe4147
 
-This long string is called a *container ID*. It uniquely
-identifies a container so we can work with it.
+这个长字符串称为*容器ID*。它唯一地标识一个容器，所以我们可以使用它。
 
-> **Note:**
-> The container ID is a bit long and unwieldy. Later, we will cover the short
-> ID and ways to name our containers to make
-> working with them easier.
+> **注意:**
+> 容器ID有点长，笨重。后来，我们将介绍短ID和更容易使用的方式来命名我们的容器。
 
-We can use this container ID to see what's happening with our `hello world` daemon.
+我们可以使用这个容器ID来看看我们的`hello world`守护进程正在发生什么。
 
-First, let's make sure our container is running. Run the `docker ps` command.
-The `docker ps` command queries the Docker daemon for information about all the containers it knows
-about.
+首先，让我们确保我们的容器正在运行。运行`docker ps`命令。
+`docker ps`命令向Docker daemon守护进程查询所有容器的列表信息。
 
-    $ docker ps
+	$ docker ps
 
-    CONTAINER ID  IMAGE         COMMAND               CREATED        STATUS       PORTS NAMES
-    1e5535038e28  ubuntu  /bin/sh -c 'while tr  2 minutes ago  Up 1 minute        insane_babbage
+	CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
+	1e5535038e28 ubuntu /bin/sh -c'while tr 2分钟前上传1分钟insane_babbage
 
-In this example, we can see our daemonized container. The `docker ps` returns some useful
-information:
+在这个例子中，我们可以看到我们的守护进程容器。 `docker ps`返回一些有用的信息:
 
-* `1e5535038e28` is the shorter variant of the container ID.
-* `ubuntu` is the used image.
-* the command, status, and assigned name `insane_babbage`.
+* `1e5535038e28`是容器ID的较短变体。
+* `ubuntu`是使用的映像。
+* 命令，状态和分配的名称`insane_babbage`。
 
 
-> **Note:**
-> Docker automatically generates names for any containers started.
-> We'll see how to specify your own names a bit later.
+> **注意:**
+> Docker自动为任何已启动的容器生成名称。
+> 我们稍后会看到如何自己指定容器的名字。
 
-Now, we know the container is running. But is it doing what we asked it to do? To
-see this we're going to look inside the container using the `docker logs`
-command.
+现在，我们知道容器正在运行。但是它是正在做我们要求它做的工作吗？要看到这个，我们将使用`docker logs`命令查看容器内部标准输出。
 
-Let's use the container name `insane_babbage`.
+让我们使用容器名称`insane_babbage`。
 
     $ docker logs insane_babbage
 
@@ -159,41 +139,34 @@ Let's use the container name `insane_babbage`.
     hello world
     . . .
 
-In this example:
+在这个例子中:
 
-* `docker logs` looks inside the container and returns `hello world`.
+* `docker logs`查看容器内部并返回`hello world`。
 
-Awesome! The daemon is working and you have just created your first
-Dockerized application!
+很好！容器工作正常，您刚刚创建了第一个Docker化应用程序！
 
-Next, run the `docker stop` command to stop our detached container.
+接下来，运行`docker stop`命令来停止我们的刚刚创建的容器。
 
-    $ docker stop insane_babbage
+	$ docker stop insane_babbage
 
-    insane_babbage
+	insane_babbage
 
-The `docker stop` command tells Docker to politely stop the running
-container and returns the name of the container it stopped.
+`docker stop`命令告诉Docker优雅的停止正在运行的容器，并返回它正在停止的容器的名称。
 
-Let's check it worked with the `docker ps` command.
+让我们通过`docker ps`检查`docker stop`命令是否起作用了。
 
-    $ docker ps
+	$ docker ps
 
-    CONTAINER ID  IMAGE         COMMAND               CREATED        STATUS       PORTS NAMES
+	CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
 
-Excellent. Our container is stopped.
+Excellent。我们的容器停止了。
 
-# Next steps
+# 下一步
 
-So far, you launched your first containers using the `docker run` command. You
-ran an *interactive container* that ran in the foreground. You also ran a
-*detached container* that ran in the background. In the process you learned
-about several Docker commands:
+到目前为止，您使用`docker run`命令启动了您的第一个容器。您运行了一个在前台运行的*交互式容器*。您还运行了一个在后台运行*detached容器*。在此过程中，您了解了以下几个Docker命令:
 
-* `docker ps` - Lists containers.
-* `docker logs` - Shows the standard output of a container.
-* `docker stop` - Stops running containers.
+* `docker ps` - 列出容器。
+* `docker logs` - 显示容器的标准输出。
+* `docker stop` - 停止运行容器。
 
-Now, you have the basis learn more about Docker and how to do some more advanced
-tasks. Go to ["*Run a simple application*"](usingdocker.md) to actually build a
-web application with the Docker client.
+现在，您可以了解有关Docker的更多信息以及如何执行一些更高级的任务。转到["*运行一个简单的应用程序*"](usingdocker.md)来用Docker客户端构建一个真实的web应用程序。

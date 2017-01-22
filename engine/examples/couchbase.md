@@ -1,65 +1,49 @@
 ---
 description: Dockerizing a Couchbase service
 keywords: docker, example, package installation, networking, couchbase
-title: Dockerize a Couchbase service
+title: 容器内部署一个 Couchbase 服务
 ---
 
-This example shows how to start a [Couchbase](http://couchbase.com) server using
-Docker Compose, configure it using its [REST
-API](http://developer.couchbase.com/documentation/server/4.0/rest-api/rest-endpoints-all.html),
-and query it.
+本章将展现如何用Docker Compose启动一个[Couchbase](http://couchbase.com) 服务， 通过它的[REST
+API](http://developer.couchbase.com/documentation/server/4.0/rest-api/rest-endpoints-all.html)配置它,并且查询。
 
-Couchbase is an open source, document-oriented NoSQL database for modern web,
-mobile, and IoT applications. It is designed for ease of development and
-Internet-scale performance.
+Couchbase 是一个开源的, 面向文档型NoSQL数据库，用于现代web，手机和物联网应用。它设计致力于易部署，大规模服务性能。
 
-## Start Couchbase server
+## 启动 Couchbase 服务
 
-Couchbase Docker images are published at [Docker
-Hub](https://hub.docker.com/_/couchbase/).
+Couchbase 的Docker 镜像已在 [Docker
+Hub](https://hub.docker.com/_/couchbase/)发布.
 
-Start Couchbase server:
+启动 Couchbase 服务:
 
 ```bash
 $ docker run -d --name db -p 8091-8093:8091-8093 -p 11210:11210 couchbase
 ```
 
-The purpose of each port exposed is explained at [Couchbase Developer Portal -
-Network
-Configuration](http://developer.couchbase.com/documentation/server/4.1/install/install-ports.html).
+每个暴露端口的设计意义 [Couchbase 开发者入口 -
+网络配置](http://developer.couchbase.com/documentation/server/4.1/install/install-ports.html).
 
-Logs can be seen using the `docker logs` command:
+日志可以用 `docker logs` 命令看到:
 
 ```bash
 $ docker logs db
 
-Starting Couchbase Server -- Web UI available at http://<ip>:8091
+启动 Couchbase 服务 -- 想要用它的Web的UI界面可以访问 http://<ip>:8091
 ```
 
-> **Note**: The examples on this page assume that the Docker Host
-> is reachable on `192.168.99.100`. Substitute `192.168.99.100` with
-> the actual IP address of your Docker Host.  If you're running
-> Docker using Docker machine, you can obtain the IP address
-> of the Docker host using `docker-machine ip <MACHINE-NAME>`.
+> **Note**: 本文的例子假设Docker Host是`192.168.99.100`，您可以用您Docker Host的真实IP地址替换`192.168.99.100`。如果您在Docker Machine上运行，您可以运行`docker-machine ip <MACHINE-NAME>`获得到您Docker Host的IP地址。
 
-The logs show that Couchbase console can be accessed at
-`http://192.168.99.100:8091`. The default username is `Administrator` and the
-password is `password`.
+日志显示， Couchbase 控制台可以通过`http://192.168.99.100:8091` 访问，默认的用户名是 `Administrator` ，密码是`password`。
 
-## Configure Couchbase Docker container
+## 配置 Couchbase Docker 容器
 
-By default, Couchbase server needs to be configured using the console before it
-can be used. This can be simplified by configuring it using the REST API.
+默认情况下，Couchbase 服务在使用前需要通过控制台配置。 配置过程可以通过REST API简化
 
-### Configure memory for Data and Index service
+### 配置存数据的内存以及索引服务
 
-Data, Query and Index are three different services that can be configured on a
-Couchbase instance. Each service has different operating needs. For example,
-Query is CPU intensive operation and so requires a faster processor. Index is
-disk heavy and so requires a faster solid state drive. Data needs to be
-read/written fast and so requires more memory.
+Couchbase可以配置Data，查询，和索引三个不同的服务，每个服务有不同的操作需求，例如查询是一个CPU强需求操作，所以需要一个更快的处理器，索引主要在磁盘进行操作，所以需要一个更快的固态硬盘。Data需要快速的读/写，所以需要更多内存。
 
-Memory needs to be configured for Data and Index service only.
+内存只有在Data和Query服务中需要被配置。
 
 ```bash
 $ curl -v -X POST http://192.168.99.100:8091/pools/default -d memoryQuota=300 -d indexMemoryQuota=300
@@ -88,17 +72,14 @@ $ curl -v -X POST http://192.168.99.100:8091/pools/default -d memoryQuota=300 -d
 * Connection #0 to host 192.168.99.100 left intact
 ```
 
-The command shows an HTTP POST request to the REST endpoint `/pools/default`.
-The host is the IP address of the Docker machine. The port is the exposed port
-of Couchbase server. The memory and index quota for the server are passed in the
-request.
+这个命令显示了一个向`/pools/default`发送的HTTP
+ POST请求。
+host是Docker Machine的IP地址，port是Couchbase服务暴露的端口。请求中也传入了服务所需的内存和索引配额。
 
-### Configure Data, Query, and Index services
+### 配置Data, Query, and Index 服务
 
-All three services, or only one of them, can be configured on each instance.
-This allows different Couchbase instances to use affinities and setup services
-accordingly. For example, if Docker host is running a machine with solid-state
-drive then only Data service can be started.
+每个实例上可以配置任意服务，无论是三个，还是只有一个。 
+这使得每个服务可以定制使用和启动。比如，如果一个Docker宿主机运行在一个有固态硬盘的机器上，Data服务将被启动。
 
 ```bash
 $ curl -v http://192.168.99.100:8091/node/controller/setupServices -d 'services=kv%2Cn1ql%2Cindex'
@@ -126,15 +107,11 @@ $ curl -v http://192.168.99.100:8091/node/controller/setupServices -d 'services=
 * Connection #0 to host 192.168.99.100 left intact
 ```
 
-The command shows an HTTP POST request to the REST endpoint
-`/node/controller/setupServices`. The command shows that all three services are
-configured for the Couchbase server. The Data service is identified by `kv`,
-Query service is identified by `n1ql` and Index service identified by `index`.
+这个命令是一个发送给`/node/controller/setupServices`的HTTP POST请求。 这个命令中，所有三个服务都被配置到Couchbase服务中，Data服务标识为`kv`，查询服务标识为`n1ql`，索引服务标识为`index`。
 
-### Setup credentials for the Couchbase server
+### 启动Couchbase服务的证书
 
-Sets the username and password credentials that will subsequently be used for
-managing the Couchbase server.
+设置用户名和密码验证，帐号密码立即生效，用于管理Couchbase服务。 
 
 ```
 curl -v -X POST http://192.168.99.100:8091/settings/web -d port=8091 -d username=Administrator -d password=password
@@ -162,13 +139,11 @@ curl -v -X POST http://192.168.99.100:8091/settings/web -d port=8091 -d username
 {"newBaseUri":"http://192.168.99.100:8091/"}
 ```
 
-The command shows an HTTP POST request to the REST endpoint `/settings/web`. The
-user name and password credentials are passed in the request.
+这个命令是一个发送给 `/settings/web` 的HTTP POST请求，请求中包含用户名和密码。
 
-### Install sample data
+### 加入样本数据
 
-The Couchbase server can be easily load some sample data in the Couchbase
-instance.
+Couchbase服务可以被简单地在Couchbase实例中加入一些样本数据。
 
 ```
 curl -v -u Administrator:password -X POST http://192.168.99.100:8091/sampleBuckets/install -d '["travel-sample"]'
@@ -198,21 +173,16 @@ curl -v -u Administrator:password -X POST http://192.168.99.100:8091/sampleBucke
 []
 ```
 
-The command shows an HTTP POST request to the REST endpoint
-`/sampleBuckets/install`. The name of the sample bucket is passed in the
-request.
+这个命令是一个发送给 `/sampleBuckets/install` 的HTTP POST请求，请求中包含样本bucket的名字。
 
-Congratulations, you are now running a Couchbase container, fully configured
-using the REST API.
+恭喜你，你现在已经运行了一个Couchbase容器，它完全用REST API完成配置。
 
 ## Query Couchbase using CBQ
 
 [CBQ](http://developer.couchbase.com/documentation/server/4.1/cli/cbq-tool.html),
-short for Couchbase Query, is a CLI tool that allows to create, read, update,
-and delete JSON documents on a Couchbase server. This tool is installed as part
-of the Couchbase Docker image.
+是Couchbase Query的缩写, 是一个命令行工具，支持用JSON格式进行对Couchbase服务的create，read，update和delete操作。 这个工具在Couchbase的Docker镜像中已被默认安装。
 
-Run CBQ tool:
+运行 CBQ 工具:
 
 ```
 docker run -it --link db:db couchbase cbq --engine http://db:8093
@@ -220,18 +190,12 @@ Couchbase query shell connected to http://db:8093/ . Type Ctrl-D to exit.
 cbq>
 ```
 
-`--engine` parameter to CBQ allows to specify the Couchbase server host and port
-running on the Docker host. For host, typically the host name or IP address of
-the host where Couchbase server is running is provided. In this case, the
-container name used when starting the container, `db`, can be used. `8093` port
-listens for all incoming queries.
+CBQ的 `--engine` 参数允许指定运行在Docker宿主机上的Couchbase服务的host和port。 对host参数，通常是Couchbase服务所运行的主机的主机名，或者IP地址。 在本例中，启动服务时的容器名，`db`，可被用于host。 `8093`端口监听所有进入的查询。
 
-Couchbase allows to query JSON documents using
-[N1QL](http://developer.couchbase.com/documentation/server/4.1/n1ql/n1ql-language-reference/index.html).
-N1QL is a comprehensive, declarative query language that brings SQL-like query
-capabilities to JSON documents.
+Couchbase支持用[N1QL](http://developer.couchbase.com/documentation/server/4.1/n1ql/n1ql-language-reference/index.html)查询JSON文档。
+N1QL 是一个综合性，声明式的查询语言，给JSON文档，提供了类SQL的查询能力。
 
-Query the database by running a N1QL query:
+通过执行一个N1QL查询数据库：
 
 ```
 cbq> select * from `travel-sample` limit 1;
@@ -266,12 +230,11 @@ cbq> select * from `travel-sample` limit 1;
 ## Couchbase Web Console
 
 [Couchbase Web
-Console](http://developer.couchbase.com/documentation/server/4.1/admin/ui-intro.html)
-is a console that allows to manage a Couchbase instance. It can be seen at:
+控制台](http://developer.couchbase.com/documentation/server/4.1/admin/ui-intro.html)
+是一个用于管理Couchbase实例的Web控制台。它可以用这个地址访问：
 
 `http://192.168.99.100:8091/`
 
-Make sure to replace the IP address with the IP address of your Docker Machine
-or `localhost` if Docker is running locally.
+将 IP 换为你的Docker Machine的IP地址，假如你是在本地运行Docker，则替换为 `localhost`。
 
-![Couchbase Web Console](couchbase/web-console.png)
+![Couchbase Web 控制台](couchbase/web-console.png)

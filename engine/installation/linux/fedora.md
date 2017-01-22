@@ -6,48 +6,44 @@ redirect_from:
 title: Install Docker on Fedora
 ---
 
-Docker is supported on Fedora version 23, and 24. These instructions install
-Docker using release packages and installation mechanisms managed by Docker, to
-be sure that you get the latest version of Docker. If you wish to install using
-Fedora-managed packages, consult your Fedora release documentation.
+Docker支持运行在Fedora 23以及24上.
+该安装说明适用发行版以及Docker的安装机制，请确定你获取了最新的Docker版本。如果你想使用
+Fedora工具包安装，请查阅你的Fedora发行文档。
 
-## Prerequisites
+## 先决条件
 
-Docker requires a 64-bit OS and version 3.10 or higher of the Linux kernel.
+Docker 需要运行在Linux内核版本为3.10或更高的64位操作系统上。
 
-To check your current kernel version, open a terminal and use `uname -r` to
-display your kernel version:
+检查当前系统的内核版本，打开命令行终端并且执行 `uname -r`命令来显示你的系统的内核版本:
 
 ```bash
 $ uname -r
 3.19.5-100.fc21.x86_64
 ```
 
-If your kernel is at an older version, you must update it.
+如果你的内核较老，首先需要升级内核.
 
-Finally, it is recommended that you fully update your system. Keep in mind
-that your system should be fully patched to fix any potential kernel bugs.
-Any reported kernel bugs may have already been fixed on the latest kernel
-packages.
+最后，强烈建更新你的系统。确保你的系统已经完全打了修复任何潜在内核bug的补丁。
+最新的内核包已经包含了被提交的内核bug。
 
-## Install Docker Engine
+## 安装Docker Engine
 
-There are two ways to install Docker Engine.  You can [install using the `dnf`
-package manager](#install-with-dnf). Or you can use `curl` [with the  `get.docker.com`
-site](#install-with-the-script). This second method runs an installation script
-which also installs via the `dnf` package manager.
+目前有两种方式来安装Docker Engine.  一种你可以通过 [`dnf`包管理工具](#install-with-dnf). 
+或者你也可以通过使用 `curl` [访问  `get.docker.com`网站](#install-with-the-script). 
+这第二种方法运行一个安装脚本也通过`dnf`的包管理器安装。
 
-### Install with DNF
 
-1. Log into your machine as a user with `sudo` or `root` privileges.
+### 使用DNF安装
 
-2. Make sure your existing packages are up-to-date.
+1.  以 `sudo` 或者 `root` 身份登陆系统.
+
+2. 确保你已安装的软件包是最新的.
 
     ```bash
     $ sudo dnf update
     ```
 
-3. Add the `yum` repo.
+3. 添加 `yum` 源.
 
     ```bash
     $ sudo tee /etc/yum.repos.d/docker.repo <<-'EOF'
@@ -60,25 +56,25 @@ which also installs via the `dnf` package manager.
     EOF
     ```
 
-4. Install the Docker package.
+4. 安装 Docker 软件包.
 
     ```bash
     $ sudo dnf install docker-engine
     ```
 
-5. Enable the service.
+5. 设置系统服务.
 
     ```bash
     $ sudo systemctl enable docker.service
     ```
 
-6. Start the Docker daemon.
+6. 启动Docker.
 
     ```bash
     $ sudo systemctl start docker
     ```
 
-7. Verify `docker` is installed correctly by running a test image in a container.
+7. 运行一个测试镜像在容器中，来验证 `docker` 是否成功安装.
 
         $ sudo docker run --rm hello-world
 
@@ -108,107 +104,105 @@ which also installs via the `dnf` package manager.
         For more examples and ideas, visit:
          https://docs.docker.com/engine/userguide/
 
-If you need to add an HTTP Proxy, set a different directory or partition for the
-Docker runtime files, or make other customizations, read our Systemd article to
-learn how to [customize your Systemd Docker daemon options](../../admin/systemd.md).
+如果你想要添加一个 HTTP 代理，为 Docker 运行文件设置不同的目录或分区，
+又或者定制一些其它的功能，请阅读我们的系统文章，了解[如何定制Docker进程](../../admin/systemd.md).
 
-### Install with the script
+### 通过脚本安装
 
-You use the same installation procedure for all versions of Fedora.
+对于所有Fedora版本安装过程都是相同的.
 
-1. Log into your machine as a user with `sudo` or `root` privileges.
+1. 以 `sudo` 或者 `root` 身份登陆系统.
 
-2. Make sure your existing packages are up-to-date.
+2. 确保你已安装的软件包是最新的.
 
     ```bash
     $ sudo dnf update
     ```
 
-3. Run the Docker installation script.
+3. 运行Docker 安装脚本.
 
     ```bash
     $ curl -fsSL https://get.docker.com/ | sh
     ```
 
-    This script adds the `docker.repo` repository and installs Docker.
+    该脚本添加 `docker.repo` 源，并且安装Docker.
 
-4. Enable the service.
+4. 设置系统服务.
 
     ```bash
     $ sudo systemctl enable docker.service
     ```
 
-5. Start the Docker daemon.
+5. 启动Docker.
 
     ```bash
     $ sudo systemctl start docker
     ```
 
-6. Verify `docker` is installed correctly by running a test image in a container.
+6. 运行一个测试镜像在容器中，来验证 `docker` 是否成功安装.
 
     ```bash
     $ sudo docker run hello-world
     ```
 
-If you need to add an HTTP Proxy, set a different directory or partition for the
-Docker runtime files, or make other customizations, read our Systemd article to
-learn how to [customize your Systemd Docker daemon options](../../admin/systemd.md).
+如果你想要添加一个 HTTP 代理，为 Docker 运行文件设置不同的目录或分区，又或者定制一些其它的功能，请阅读我们的系统文章，
+了解[如何定制Docker进程](../../admin/systemd.md).
 
-## Create a docker group
+## 创建docker组
 
-The `docker` daemon binds to a Unix socket instead of a TCP port. By default
-that Unix socket is owned by the user `root` and other users can access it with
-`sudo`. For this reason, `docker` daemon always runs as the `root` user.
+`docker`守护进程绑定一个Unix socket而不是TCP的端口。默认情况下，Unix socket是属于用户`root`的，其他
+用户可以通过`sudo`来访问。因此，`docker` 守护进程需要以`root`身份运行。
 
-To avoid having to use `sudo` when you use the `docker` command, create a Unix
-group called `docker` and add users to it. When the `docker` daemon starts, it
-makes the ownership of the Unix socket read/writable by the `docker` group.
+为了避免在你使用`docker`命令的时候需要使用`sudo`，创建一个`docker`的Unix用户组并且添加用户到组里。
+当`docker`守护进程启动时，确保`docker`组对Unix socket有正确的读/写权限。
 
->**Warning**: The `docker` group is equivalent to the `root` user; For details
->on how this impacts security in your system, see [*Docker Daemon Attack
->Surface*](../../security/security.md#docker-daemon-attack-surface) for details.
+>**警告**: `docker` 用户组等同于 `root` 用户; 有关更多关于对你系统安全方面的影响，
+> 请参考[*Docker Daemon Attack
+>Surface*](../../security/security.md#docker-daemon-attack-surface) .
 
-To create the `docker` group and add your user:
+创建 `docker` 用户组并且添加用户:
 
-1. Log into your machine as a user with `sudo` or `root` privileges.
+1. 以 `sudo` 或者 `root` 身份登陆系统.
 
-2. Create the `docker` group.
+2. 创建 `docker` 用户组.
 
     ```bash
     $ sudo groupadd docker
     ```
 
-3. Add your user to `docker` group.
+3. 添加用户到 `docker` 用户组.
 
     ```bash
     $ sudo usermod -aG docker your_username`
     ```
 
-4. Log out and log back in.
+4. 重新登陆.
 
-    This ensures your user is running with the correct permissions.
+    这样确保用户运行在正确的权限下.
 
-5. Verify that your user is in the docker group by running `docker` without `sudo`.
+5. 通过直接运行 `docker` 而不是 `sudo`来验证用户在正常的组里.
 
     ```bash
     $ docker run hello-world
     ```
 
-## Start the docker daemon at boot
+## 设置开机启动Docker
 
-Configure the Docker daemon to start automatically when the host starts:
+配置Docker守护进程开机启动:
 
 ```bash
 $ sudo systemctl enable docker
 ```
 
-## Running Docker with a manually-defined network
+## 通过手动定义网络运行Docker
 
-If you manually configure your network using `systemd-network` with `systemd` version 219 or higher, containers you start with Docker may be unable to access your network.
-Beginning with version 220, the forwarding setting for a given network (`net.ipv4.conf.<interface>.forwarding`) defaults to *off*. This setting prevents IP forwarding. It also conflicts with Docker which enables the `net.ipv4.conf.all.forwarding` setting within a container.
+如果你手动配置网络通过`systemd-network` 220 或者更高的版本，你使用Docker启动的容器将不能访问你的网络。
+从220版本开始，对于特定网络的转发规则(`net.ipv4.conf.<interface>.forwarding`) 默认值为*off*.
+该设置阻止IP转发。该规则与Docker在容器中开启`net.ipv4.conf.all.forwarding`规则是冲突的。
 
-To work around this, edit the `<interface>.network` file in
-`/usr/lib/systemd/network/` on your Docker host  (ex: `/usr/lib/systemd/network/80-container-host0.network`) add the following block:
+为了使得以上可以工作, 需要在你的Docker宿主机下， 编辑`/usr/lib/systemd/network/` 目录下的 `<interface>.network`文件。
+(例如: `/usr/lib/systemd/network/80-container-host0.network`) 
+添加如下内容:
 
 ```
 [Network]
@@ -219,13 +213,13 @@ IPForward=true
 ...
 ```
 
-This configuration allows IP forwarding from the container as expected.
+这个配置允许从容器中进行IP转发.
 
-## Uninstall
+## 卸载
 
-You can uninstall the Docker software with `dnf`.
+你可以通过`dnf`方式卸载Docker.
 
-1. List the installed Docker packages.
+1. 列出已安装的Docker软件包.
 
     ```bash
     $ dnf list installed | grep docker
@@ -233,19 +227,18 @@ You can uninstall the Docker software with `dnf`.
     docker-engine.x86_64     1.7.1-0.1.fc21 @/docker-engine-1.7.1-0.1.fc21.el7.x86_64
     ```
 
-2. Remove the package.
+2. 移除软件包.
 
     ```bash
     $ sudo dnf -y remove docker-engine.x86_64
     ```
 
-	This command does not remove images, containers, volumes, or user-created
-	configuration files on your host.
+	该命令并不会移除镜像，容器，数据卷以及用户创建的配置文件等.
 
-3. To delete all images, containers, and volumes, run the following command:
+3. 运行一下命令来删除全部的镜像，容器，以及数据卷:
 
     ```bash
     $ rm -rf /var/lib/docker
     ```
 
-4. Locate and delete any user-created configuration files.
+4. 定位并删除用户创建的配置文件.

@@ -3,76 +3,37 @@ description: Docker Engine swarm mode overview
 keywords: docker, container, cluster, swarm
 title: Swarm mode overview
 ---
+要在swarm模式下使用Docker 引擎，请从[Docker版本GitHub存储库](https://github.com/docker/docker/releases)下载安装Docker 引擎`v1.12.0`或更高版本。或者，安装最新的Docker for Mac或Docker for Windows Beta版。
 
-To use Docker Engine in swarm mode, install the Docker Engine `v1.12.0` or
-later from the [Docker releases GitHub
-repository](https://github.com/docker/docker/releases). Alternatively, install
-the latest Docker for Mac or Docker for Windows Beta.
+Docker 引擎1.12集成了swarm模式，用于本地管理一组名为a * swarm *的Docker引擎。使用Docker CLI创建群集，将应用服务部署到群集，以及管理节点。
 
-Docker Engine 1.12 includes swarm mode for natively managing a cluster of
-Docker Engines called a *swarm*. Use the Docker CLI to create a swarm, deploy
-application services to a swarm, and manage swarm behavior.
+如果你使用的是`v1.12.0`之前的Docker版本，请参阅[Docker Swarm](/swarm)。
 
+## 功能亮点
+* **与Docker引擎集成的集群管理：**使用Docker引擎 CLI创建一组Docker引擎，您可以在其中部署应用程序服务。不需要其他编排工具来创建或管理集群。
 
-If you’re using a Docker version prior to `v1.12.0`, see [Docker
-Swarm](/swarm).
+* **分布式设计：**在部署时，Docker 集群不处理节点之间的差异，而是在运行时处理。您可以使用Docker引擎部署两种类型的节点，管理节点和工作节点。这意味着您可以从单个磁盘镜像构建整个群集。
 
-## Feature highlights
+* **可声明的服务模型：** Docker 引擎使用声明方法来让您定义应用程序堆栈中的各种服务状态。例如，您可以描述由消息队列服务、数据库后端、Web前端服务组成的应用程序。
 
-* **Cluster management integrated with Docker Engine:** Use the Docker Engine
-CLI to create a swarm of Docker Engines where you can deploy application
-services. You don't need additional orchestration software to create or manage
-a swarm.
+* **可伸缩：**对于每个服务，您可以声明要运行的任务数。当您向上或向下伸缩时，swarm管理节点通过添加或删除任务来自动适应，以保持所需的状态。
 
-* **Decentralized design:** Instead of handling differentiation between node
-roles at deployment time, the Docker Engine handles any specialization at
-runtime. You can deploy both kinds of nodes, managers and workers, using the
-Docker Engine. This means you can build an entire swarm from a single disk
-image.
+* **期望的状态协调：**群体管理节点不断监视集群状态，并调整所期望状态与实际状态之间的任何差异。例如，设置一个服务运行10个容器，如果托管其中两个容器的主机崩溃，则管理节点将创建两个新容器以替换崩溃的容器。swarm管理节点将新容器分配给正在运行的可用工作节点。
 
-* **Declarative service model:** Docker Engine uses a declarative approach to
-let you define the desired state of the various services in your application
-stack. For example, you might describe an application comprised of a web front
-end service with message queueing services and a database backend.
+* **多主机网络互联：**您可以为您的服务指定overlay网络。当swarm管理节点初始化或更新应用程序时，它会自动为overlay网络上的容器分配地址。
 
-* **Scaling:** For each service, you can declare the number of tasks you want to
-run. When you scale up or down, the swarm manager automatically adapts by
-adding or removing tasks to maintain the desired state.
+* **服务发现：** Swarm管理节点为swarm中的每个服务分配唯一的DNS域名，并对运行容器进行负载均衡。您可以通过嵌入在swarm中的DNS服务器查询在群中运行的每个容器。
 
-* **Desired state reconciliation:** The swarm manager node constantly monitors
-the cluster state and reconciles any differences between the actual state your
-expressed desired state. For example, if you set up a service to run 10
-replicas of a container, and a worker machine hosting two of those replicas
-crashes, the manager will create two new replicas to replace the replicas that
-crashed. The swarm manager assigns the new replicas to workers that are
-running and available.
+* **负载均衡：**您可以将服务的端口暴露给外部负载均衡器。在内部，swarm允许您指定如何在节点之间分发服务容器。
 
-* **Multi-host networking:** You can specify an overlay network for your
-services. The swarm manager automatically assigns addresses to the containers
-on the overlay network when it initializes or updates the application.
+* **安全：**集群中的每个节点强制执行TLS双向身份验证和加密，以确保其与所有其他节点之间的通信安全。您可以选择使用自签名根证书或自定义根CA的证书。
 
-* **Service discovery:** Swarm manager nodes assign each service in the swarm a
-unique DNS name and load balances running containers. You can query every
-container running in the swarm through a DNS server embedded in the swarm.
+* **滚动更新：**在更新期间，您可以逐步向节点应用服务更新。swarm管理节点允许您对服务部署到不同节点之间的时间延迟进行配置。如果出现任何问题，您可以将任务回滚到服务的先前版本。
 
-* **Load balancing:** You can expose the ports for services to an
-external load balancer. Internally, the swarm lets you specify how to distribute
-service containers between nodes.
-
-* **Secure by default:** Each node in the swarm enforces TLS mutual
-authentication and encryption to secure communications between itself and all
-other nodes. You have the option to use self-signed root certificates or
-certificates from a custom root CA.
-
-* **Rolling updates:** At rollout time you can apply service updates to nodes
-incrementally. The swarm manager lets you control the delay between service
-deployment to different sets of nodes. If anything goes wrong, you can
-roll-back a task to a previous version of the service.
-
-## What's next?
-* Learn swarm mode [key concepts](key-concepts.md).
-* Get started with the [swarm mode tutorial](swarm-tutorial/index.md).
-* Explore swarm mode CLI commands:
+## 下一步
+* 学习Swarm模式 [关键概念](key-concepts.md).
+* 开始学[Swarm模式教程](swarm-tutorial/index.md).
+* 检索Swarm模式CLI命令:
     * [swarm init](../reference/commandline/swarm_init.md)
     * [swarm join](../reference/commandline/swarm_join.md)
     * [service create](../reference/commandline/service_create.md)

@@ -6,37 +6,32 @@ redirect_from:
 title: Install Docker on Oracle Linux
 ---
 
-Docker is supported on Oracle Linux 6 and 7. You do not require an Oracle Linux
-Support subscription to install Docker on Oracle Linux.
+Docker 支持 Oracle Linux 6 and 7. 你不需要为在Oracle Linux上安装Docker去订阅Oracle Linux支持
 
-## Prerequisites
+## 安装前准备
 
-Due to current Docker limitations, Docker is only able to run only on the x86_64
-architecture. Docker requires the use of the Unbreakable Enterprise Kernel
-Release 4 (4.1.12) or higher on Oracle Linux. This kernel supports the Docker
-btrfs storage engine on both Oracle Linux 6 and 7.
+因为目前Docker的限制, 它只能在x86_64架构下运行。
+Docker 需要使用 Unbreakable Enterprise Kernel Release 4 (4.1.12) 或更高版本内核的Oracle Linux. 
+Oracle Linux 6 和 7 系统中该内核支持 Docker btrfs 存储引擎.
 
-## Install
+## 安装
 
 
-> **Note**: The procedure below installs binaries built by Docker. These binaries
-> are not covered by Oracle Linux support. To ensure Oracle Linux support, please
-> follow the installation instructions provided in the
-> [Oracle Linux documentation](https://docs.oracle.com/en/operating-systems/?tab=2).
+> **注意**: 下面安装过程中使用的二进制文件由Docker构建. 这些文件并没有被Oracle Linux支持完全覆盖到。
+> 为保证Oracle Linux支持, 请遵照[Oracle Linux 文档](https://docs.oracle.com/en/operating-systems/?tab=2)提供的安装说明
 >
-> The installation instructions for Oracle Linux 6 and 7 can be found in [Chapter 2 of
-> the Docker User&apos;s Guide](https://docs.oracle.com/cd/E52668_01/E75728/html/docker_install_upgrade.html)
+> Oracle Linux 6 和 7 的安装说明在[Chapter 2 of the Docker User&apos;s Guide](https://docs.oracle.com/cd/E52668_01/E75728/html/docker_install_upgrade.html)
 
 
-1. Log into your machine as a user with `sudo` or `root` privileges.
+1. 使用 `sudo` 或 `root` 权限用户登录主机
 
-2. Make sure your existing yum packages are up-to-date.
+2. 确保已有 yum 包是最新的
 
         $ sudo yum update
 
-3. Add the yum repo yourself.
+3. 添加 yum repo
 
-    For version 6:
+    对于Oracle Linux 6:
 
         $ sudo tee /etc/yum.repos.d/docker.repo <<-EOF
         [dockerrepo]
@@ -47,7 +42,7 @@ btrfs storage engine on both Oracle Linux 6 and 7.
         gpgkey=https://yum.dockerproject.org/gpg
         EOF
 
-    For version 7:
+    对于Oracle Linux 7:
 
         $ cat >/etc/yum.repos.d/docker.repo <<-EOF
         [dockerrepo]
@@ -58,147 +53,131 @@ btrfs storage engine on both Oracle Linux 6 and 7.
         gpgkey=https://yum.dockerproject.org/gpg
         EOF
 
-4. Install the Docker package.
+4. 安装Docker 包
 
         $ sudo yum install docker-engine
 
-5. Start the Docker daemon.
+5. 启动 Docker 进程.
 
-     On Oracle Linux 6:
+     Oracle Linux 6中:
 
         $ sudo service docker start
 
-     On Oracle Linux 7:
+     Oracle Linux 7中:
 
         $ sudo systemctl start docker.service
 
-6. Verify `docker` is installed correctly by running a test image in a container.
+6. 验证 `docker` 安装正确，在容器中运行下面的测试镜像
 
         $ sudo docker run hello-world
 
-## Optional configurations
+## 可选配置
 
-This section contains optional procedures for configuring your Oracle Linux to work
-better with Docker.
+这部分包括一些可选的Oracle Linux配置，这些会使Docker在系统中运行更顺畅.
 
-* [Create a docker group](#create-a-docker-group)
-* [Configure Docker to start on boot](#configure-docker-to-start-on-boot)
-* [Use the btrfs storage engine](#use-the-btrfs-storage-engine)
+* [创建 docker 用户组](oracle.md#create-a-docker-group)
+* [配置Docker开机启动](oracle.md#configure-docker-to-start-on-boot)
+* [使用btrfs存储引擎](oracle.md#use-the-btrfs-storage-engine)
 
-### Create a Docker group		
+### 创建Docker用户组
 
-The `docker` daemon binds to a Unix socket instead of a TCP port. By default
-that Unix socket is owned by the user `root` and other users can access it with
-`sudo`. For this reason, `docker` daemon always runs as the `root` user.
+`docker` 进程绑定一个Unix socket来替代TCP端口. 
+默认情况下Unix socket归`root`用户所有，其他用户需要使用`sudo`来获得权限
+因此, `docker` 进程总是已`root` 用户身份运行.
 
-To avoid having to use `sudo` when you use the `docker` command, create a Unix
-group called `docker` and add users to it. When the `docker` daemon starts, it
-makes the ownership of the Unix socket read/writable by the `docker` group.
 
->**Warning**: The `docker` group is equivalent to the `root` user; For details
->on how this impacts security in your system, see [*Docker Daemon Attack
->Surface*](../../security/security.md#docker-daemon-attack-surface) for details.
+为了避免使用`docker`命令时总是输入`sudo`，可以创建一个叫 `docker`的Unix用户组，将用户添加到组内。
+当`docker` 进程启动时, `docker`用户组拥有Unix socket的读写权限
 
-To create the `docker` group and add your user:
+>**警告**: `docker` 用户组相当于 `root` 用户; 想要了解这对于系统安全影响的更多内容，参见
+>[*Docker Daemon Attack Surface*](../../security/security.md#docker-daemon-attack-surface).
 
-1. Log into Oracle Linux as a user with `sudo` privileges.
+创建 `docker` 用户组并添加用户:
 
-2. Create the `docker` group.
+1. 用`sudo`权限登录Oracle Linux主机.
+
+2. 创建 `docker` 用户组.
 
         $ sudo groupadd docker
 
-3. Add your user to `docker` group.
+3. 添加用户到 `docker` 组.
 
         $ sudo usermod -aG docker username
 
-4. Log out and log back in.
+4. 退出并重新登录.
 
-    This ensures your user is running with the correct permissions.
+        这样保证用户获得正确权限
 
-5. Verify your work by running `docker` without `sudo`.
+5. 验证是否生效，不使用`sudo`运行 `docker`.
 
         $ docker run hello-world
 
-	If this fails with a message similar to this:
+	如果出现失败提示，类似如下信息:
 
 		Cannot connect to the Docker daemon. Is 'docker daemon' running on this host?
 
-	Check that the `DOCKER_HOST` environment variable is not set for your shell.
-	If it is, unset it.
+	检查 `DOCKER_HOST` 环境变量是否在shell中进行过设置，如果设置过，清除它
+	
 
-### Configure Docker to start on boot
+### 配置Docker开机启动
 
-You can configure the  Docker daemon to start automatically at boot.
+你可以配置  Docker 进程开机自动启动.
 
-On Oracle Linux 6:
+Oracle Linux 6中:
 
 ```
 $ sudo chkconfig docker on
 ```
 
-On Oracle Linux 7:
+Oracle Linux 7中:
 
 ```
 $ sudo systemctl enable docker.service
 ```
 
-If you need to add an HTTP Proxy, set a different directory or partition for the
-Docker runtime files, or make other customizations, read our systemd article to
-learn how to [customize your systemd Docker daemon options](../../admin/systemd.md).
+如果你想要添加一个 HTTP 代理，需要为 Docker 运行文件设置不同的目录或分区。
+如果需要定制一些其它的功能，请阅读我们的systemd文章，了解如何[定制Docker进程](../../admin/systemd.md)
 
-### Use the btrfs storage engine
+### 使用btrfs存储引擎
 
-Docker on Oracle Linux 6 and 7 supports the use of the btrfs storage engine.
-Before enabling btrfs support, ensure that `/var/lib/docker` is stored on a
-btrfs-based filesystem. Review [Chapter
-5](http://docs.oracle.com/cd/E37670_01/E37355/html/ol_btrfs.html) of the [Oracle
-Linux Administrator's Solution
-Guide](http://docs.oracle.com/cd/E37670_01/E37355/html/index.html) for details
-on how to create and mount btrfs filesystems.
+Oracle Linux 6 和 7 支持Docker使用btrfs 存储引擎.
+在开启btrfs前, 请确认 `/var/lib/docker` 存储在btrfs格式的文件系统中. 
+如何创建和挂载btrfs文件请参考 [Oracle Linux Administrator's Solution Guide](http://docs.oracle.com/cd/E37670_01/E37355/html/index.html)中[Chapter 5](http://docs.oracle.com/cd/E37670_01/E37355/html/ol_btrfs.html)
 
-To enable btrfs support on Oracle Linux:
 
-1. Ensure that `/var/lib/docker` is on a btrfs filesystem.
+在Oracle Linux中开启btrfs:
 
-2. Edit `/etc/sysconfig/docker` and add `-s btrfs` to the `OTHER_ARGS` field.
+1. 确保 `/var/lib/docker` 存在btrfs文件系统中.
 
-3. Restart the Docker daemon:
+2. 编辑 `/etc/sysconfig/docker` ， 在`OTHER_ARGS`项中添加 `-s btrfs`.
 
-## Uninstallation
+3. 重启Docker 进程:
 
-To uninstall the Docker package:
+## 卸载
+
+卸载 Docker 包:
 
     $ sudo yum -y remove docker-engine
 
-The above command will not remove images, containers, volumes, or user created
-configuration files on your host. If you wish to delete all images, containers,
-and volumes run the following command:
+上述命令不会删除主机上的镜像，容器，数据卷及用户配置文件。如果想删除镜像，容器，数据卷可以使用下面命令：
 
     $ rm -rf /var/lib/docker
 
-You must delete the user created configuration files manually.
+用户配置文件需要手动查找删除。
 
-## Known issues
+## 已知问题
 
-### Docker unmounts btrfs filesystem on shutdown
-If you're running Docker using the btrfs storage engine and you stop the Docker
-service, it will unmount the btrfs filesystem during the shutdown process. You
-should ensure the filesystem is mounted properly prior to restarting the Docker
-service.
+### Docker 停止时卸载 btrfs 文件
+如果你使用btrfs存储引擎运行Docker，当停止Docker服务时，btrfs文件会被卸载
+在重启Docker服务前，要保证文件已挂载
 
-On Oracle Linux 7, you can use a `systemd.mount` definition and modify the
-Docker `systemd.service` to depend on the btrfs mount defined in systemd.
+在Oracle Linux 7中, 可以使用 `systemd.mount` ，修改Docker `systemd.service`，让其依赖于btrfs mount defined in systemd.
 
-### SElinux support on Oracle Linux 7
-SElinux must be set to `Permissive` or `Disabled` in `/etc/sysconfig/selinux` to
-use the btrfs storage engine on Oracle Linux 7.
+### Oracle Linux 7中SElinux设置
+Oracle Linux 7 中 `/etc/sysconfig/selinux`目录下 SElinux 必须设置 `Permissive` 或 `Disabled` 才能使用btrfs存储引擎.
 
-## Further issues?
+## 更多问题?
 
-If you have a current Basic or Premier Support Subscription for Oracle Linux,
-you can report any issues you have with the installation of Docker via a Service
-Request at [My Oracle Support](https://support.oracle.com).
+如果你购买了Oracle Linux Basic或Premier服务支持，在安装Docker时遇到问题可以通过[My Oracle Support](https://support.oracle.com)提问并获取帮助
 
-If you do not have an Oracle Linux Support Subscription, you can use the [Oracle
-Linux
-Forum](https://community.oracle.com/community/server_%26_storage_systems/linux/oracle_linux) for community-based support.
+如果你没有购买Oracle Linux 服务支持, 可以在[Oracle Linux Forum](https://community.oracle.com/community/server_%26_storage_systems/linux/oracle_linux)中得到社区支持.

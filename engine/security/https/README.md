@@ -2,28 +2,28 @@
 published: false
 ---
 
-This is an initial attempt to make it easier to test the examples in the https.md
-doc.
+这是一个让测试[https.md](https.md)里例子更加容易的尝试。
 
-At this point, it has to be a manual thing, and I've been running it in boot2docker.
+现在还得手工做，不过我已经在boot2docker里跑起来了。
 
-My process is as following:
+过程如下：
 
     $ boot2docker ssh
     root@boot2docker:/# git clone https://github.com/docker/docker
     root@boot2docker:/# cd docker/docs/articles/https
     root@boot2docker:/# make cert
 
-lots of things to see and manually answer, as openssl wants to be interactive
 
-**NOTE:** make sure you enter the hostname (`boot2docker` in my case) when prompted for `Computer Name`)
+有很多输出和要手工输入的问题，openssl需要交互式运行。
+
+**注意:** 注意当提示`Computer Name`时你输入的是hostname(我的例子里是`boot2docker`)
 
     root@boot2docker:/# sudo make run
 
-Start another terminal:
+启动另外一个终端:
 
     $ boot2docker ssh
     root@boot2docker:/# cd docker/docs/articles/https
     root@boot2docker:/# make client
 
-The last will connect first with `--tls` and then with `--tlsverify`, both should succeed.
+最后，先用`--tls`连接，再用`--tlsverify`连接，应该都成功。

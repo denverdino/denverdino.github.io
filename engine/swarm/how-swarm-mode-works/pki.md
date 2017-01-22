@@ -11,38 +11,15 @@ keywords:
 title: How PKI works in swarm mode
 ---
 
-The swarm mode public key infrastructure (PKI) system built into Docker Engine
-makes it simple to securely deploy a container orchestration system. The nodes
-in a swarm use mutual Transport Layer Security (TLS) to authenticate, authorize,
-and encrypt the communications between themselves and other nodes in the swarm.
+Docker引擎中内置的公钥基础架构（PKI）系统可以简化安全部署容器编排系统的过程。群中的节点使用传输层安全（TLS）来认证、授权和加密它们与群中的其他节点之间的通信。
 
-When you create a swarm by running `docker swarm init`, the Docker Engine
-designates itself as a manager node. By default, the manager node generates
-itself a new root Certificate Authority (CA) along with a key pair to secure
-communications with other nodes that join the swarm. If you prefer, you can pass
-the `--external-ca` flag to specify a root CA external to the swarm. Refer to
-the [docker swarm init](../../reference/commandline/swarm_init.md) CLI
-reference.
+当你运行`docker swarm init`创建一个swarm时，Docker引擎将自己指定为一个管理节点。默认情况下，管理节点为自己生成一个新的根证书（CA）以及用于保证其他节点相互通信的密钥对。如果你喜欢，你可以通过`--external-ca`标志来指定一个导入的根证书。参考[Docker Swarm初始化](../../ reference / commandline / swarm_init.md) CLI。
 
-The manager node also generates two tokens to use when you join additional nodes
-to the swarm: one worker token and one manager token. Each token includes the
-digest of the root CA's certificate and a randomly generated secret. When a node
-joins the swarm, it uses the digest to validate the root CA certificate from the
-remote manager. It uses the secret to ensure the node is an approved node.
+当您将其他节点加入swarm时，管理节点还会生成两个令牌：一个工作节点令牌和一个管理节点令牌。每个令牌包括根证书的摘要和随机生成的秘钥。当节点加入群集时，它使用摘要来验证远端机器的的根证书。它使用秘钥来确保节点是合法的节点。
 
-Each time a new node joins the swarm, the manager issues a certificate to the
-node that contains a randomly generated node id to identify the node under the
-certificate common name (CN) and the role under the organizational unit (OU).
-The node id serves as the cryptographically secure node identity for the
-lifetime of the node in the current swarm.
+每次新节点加入群集时，管理节点向包含随机节点ID的节点颁发证书，以标识证书公用名（CN）下的节点和组织单位（OU）下的角色。节点ID用作集群中节点生存期的安全身份。
 
-The diagram below illustrates how worker manager nodes and worker nodes encrypt
-communications using a minimum of TLS 1.2.
-
-![tls diagram](../images/tls.png)
-
-
-The example below shows the information from a certificate from a worker node:
+下图说明了工作管理节点和工作节点如何使用TLS 1.2进行加密通信。
 
 ```bash
 Certificate:
@@ -59,13 +36,10 @@ Certificate:
 ...snip...
 ```
 
-By default, each node in the swarm renews its certificate every three months.
-You can run `docker swarm update --cert-expiry <TIME PERIOD>` to configure the
-frequency for nodes to renew their certificates. The minimum rotation value is 1
-hour. Refer to the [docker swarm update](../../reference/commandline/swarm_update.md)
-CLI reference.
+默认情况下，swarm中的每个节点每三个月更新一次证书。您可以运行`docker swarm update --cert-expiry <TIME PERIOD>`来配置节点更新证书的频率。最小值为1小时。参考[docker swarm更新](../../ reference / commandline / swarm_update.md) CLI参考。
 
-## Learn More
 
-* Read about how [nodes](nodes.md) work.
-* Learn how swarm mode [services](services.md) work.
+## 更多
+
+* 参考 [节点](nodes.md) 如何工作.
+* 参考 Swarm模式下[服务](services.md) 如何工作。

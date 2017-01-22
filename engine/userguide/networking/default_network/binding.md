@@ -4,16 +4,11 @@ keywords: Examples, Usage, network, docker, documentation, user guide, multihost
 title: Bind container ports to the host
 ---
 
-The information in this section explains binding container ports within the Docker default bridge. This is a `bridge` network named `bridge` created automatically when you install Docker.
+本节中的信息解释Docker默认网桥中的绑定容器端口。这是一个名为`bridge`的桥接网络，在安装Docker时自动创建。
 
-> **Note**: The [Docker networks feature](../index.md) allows you to
-create user-defined networks in addition to the default bridge network.
+> **注意**：除了默认网桥网络之外，[Docker网络功能](../index.md)还允许您创建用户自定义的网络。
 
-By default Docker containers can make connections to the outside world, but the
-outside world cannot connect to containers. Each outgoing connection will
-appear to originate from one of the host machine's own IP addresses thanks to an
-`iptables` masquerading rule on the host machine that the Docker server creates
-when it starts:
+默认情况下Docker容器可以连接到外界，但是外部世界不能连接到容器。 得益于Docker服务启动时创建的`iptables`伪装规则，每个输出连接似乎源自主机的自己的IP地址之一。
 
 ```
 $ sudo iptables -t nat -L -n
@@ -24,27 +19,16 @@ target     prot opt source               destination
 MASQUERADE  all  --  172.17.0.0/16       0.0.0.0/0
 ...
 ```
-The Docker server creates a masquerade rule that let containers connect to IP
-addresses in the outside world.
+Docker服务创建一个允许容器连接到外部世界的IP地址的伪装规则。
 
-If you want containers to accept incoming connections, you will need to provide
-special options when invoking `docker run`. There are two approaches.
+如果您希望容器接受进入的连接，您需要在调用`docker run`时，提供特殊选项。 有两种方法。
 
-First, you can supply `-P` or `--publish-all=true|false` to `docker run` which
-is a blanket operation that identifies every port with an `EXPOSE` line in the
-image's `Dockerfile` or `--expose <port>` commandline flag and maps it to a host
-port somewhere within an _ephemeral port range_. The `docker port` command then
-needs to be used to inspect created mapping. The _ephemeral port range_ is
-configured by `/proc/sys/net/ipv4/ip_local_port_range` kernel parameter,
-typically ranging from 32768 to 61000.
+第一种，您可以在执行`docker run`时提供`-P`或`--publish-all=true|false`选项，这是一个铺开式的操作。它会把镜像的`Dockerfile`中用`EXPOSE`行标识每个端口
+或命令行中用`--expose <port>`标志的端口映射到主机 _ephemeral port range_ 内的某处。 然后，`docker port`命令可以用于检查创建的映射。 _ephemeral port range_ 是配置在`/proc/sys/net/ipv4/ip_local_port_range`内核参数中的，通常范围从32768到61000。
 
-Mapping can be specified explicitly using `-p SPEC` or `--publish=SPEC` option.
-It allows you to particularize which port on docker server - which can be any
-port at all, not just one within the _ephemeral port range_ -- you want mapped
-to which port in the container.
+可以使用`-p SPEC`或`--publish = SPEC`选项明确指定映射。它允许您具体说明docker服务器上的哪个端口，可以是任何您想映射到容器中的端口，不只是在 _ephemeral port range_ 端口范围。
 
-Either way, you should be able to peek at what Docker has accomplished in your
-network stack by examining your NAT tables.
+无论哪种方式，通过检查您的NAT表，您应该能够看到Docker在您的网络栈中完成了什么。
 
 ```
 # What your NAT rules might look like when Docker
@@ -65,34 +49,15 @@ target     prot opt source               destination
 DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:80 to:172.17.0.2:80
 ```
 
-You can see that Docker has exposed these container ports on `0.0.0.0`, the
-wildcard IP address that will match any possible incoming port on the host
-machine. If you want to be more restrictive and only allow container services to
-be contacted through a specific external interface on the host machine, you have
-two choices. When you invoke `docker run` you can use either `-p
-IP:host_port:container_port` or `-p IP::port` to specify the external interface
-for one particular binding.
+您可以看到Docker在`0.0.0.0`上暴露了这些容器端口。通配符将匹配主机上任何可能进入该端口的IP地址。 如果您想要更严格，只允许容器服务通过主机上的特定外部接口联系，您就有两个选择。 当您调用`docker run`时，您可以使用`-p IP:host_port:container_port`或`-p IP::port`来指定一个特定的外部接口，用于特殊的绑定。
 
-Or if you always want Docker port forwards to bind to one specific IP address,
-you can edit your system-wide Docker server settings and add the option
-`--ip=IP_ADDRESS`. Remember to restart your Docker server after editing this
-setting.
+或者如果您总是希望Docker端口转发绑定到一个特定的IP地址，您可以编辑系统范围的Docker服务设置并添加选项`--ip=IP_ADDRESS`。 记住在编辑此文件后重新启动Docker服务。
 
-> **Note**: With hairpin NAT enabled (`--userland-proxy=false`), containers port
-exposure is achieved purely through iptables rules, and no attempt to bind the
-exposed port is ever made. This means that nothing prevents shadowing a
-previously listening service outside of Docker through exposing the same port
-for a container. In such conflicting situation, Docker created iptables rules
-will take precedence and route to the container.
+> **注意**:在启用了发卡NAT（`--userland-proxy=false`）的情况下，容器端口暴露完全通过iptables规则实现，并且不会尝试绑定暴露的端口。 这意味着没有什么可以通过为容器暴露相同的端口来防止在Docker之外的以前侦听的服务。 在这种冲突的情况下，Docker创建的iptables规则将优先路由到容器。
 
-The `--userland-proxy` parameter, true by default, provides a userland
-implementation for inter-container and outside-to-container communication. When
-disabled, Docker uses both an additional `MASQUERADE` iptable rule and the
-`net.ipv4.route_localnet` kernel parameter which allow the host machine to
-connect to a local container exposed port through the commonly used loopback
-address: this alternative is preferred for performance reasons.
+`--userland-proxy`参数，默认情况下为true，为容器间和外部到容器的通信提供了用户级实现。 禁用时，Docker使用附加的`MASQUERADE` iptable规则和`net.ipv4.route_localnet`内核参数，允许主机通过常用的回送地址连接到本地容器暴露端口。由于性能原因，此备选方案是首选。
 
-## Related information
+## 相关信息
 
 - [Understand Docker container networks](../index.md)
 - [Work with network commands](../work-with-networks.md)

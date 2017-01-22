@@ -4,9 +4,8 @@ keywords: format, formatting, output, templates, log
 title: Format command and log output
 ---
 
-Docker uses [Go templates](https://golang.org/pkg/text/template/) to allow users manipulate the output format
-of certain commands and log drivers. Each command a driver provides a detailed
-list of elements they support in their templates:
+容器使用 [Go 模板](https://golang.org/pkg/text/template/) 帮助用户定制某些命令和日志驱动的输出格式。每个命令都提供了一个详细
+的在模板中支持的元素列表:
 
 - [Docker Images formatting](../reference/commandline/images.md#formatting)
 - [Docker Inspect formatting](../reference/commandline/inspect.md#examples)
@@ -17,15 +16,14 @@ list of elements they support in their templates:
 - [Docker Volume Inspect formatting](../reference/commandline/volume_inspect.md)
 - [Docker Version formatting](../reference/commandline/version.md#examples)
 
-## Template functions
+## 模板功能
 
-Docker provides a set of basic functions to manipulate template elements.
-This is the complete list of the available functions with examples:
+容器提供一组基本方法操作模板元素。以下是一组可用方法的例子：
+
 
 ### `join`
 
-`join` concatenates a list of strings to create a single string.
-It puts a separator between each element in the list.
+`join'连接字符串列表成单个字符串。它在列表中的每个元素之间放置一个分隔符。
 
 	{% raw %}
 	$ docker ps --format '{{join .Names " or "}}'
@@ -33,7 +31,7 @@ It puts a separator between each element in the list.
 
 ### `json`
 
-`json` encodes an element as a json string.
+`json` 讲一个元素转换成json格式.
 
 	{% raw %}
 	$ docker inspect --format '{{json .Mounts}}' container
@@ -41,7 +39,7 @@ It puts a separator between each element in the list.
 
 ### `lower`
 
-`lower` transforms a string into its lowercase representation.
+`lower` 将字符串转换成小写。
 
 	{% raw %}
 	$ docker inspect --format "{{lower .Name}}" container
@@ -49,7 +47,7 @@ It puts a separator between each element in the list.
 
 ### `split`
 
-`split` slices a string into a list of strings separated by a separator.
+`split` 将字符串切成由分隔符分隔的字符串列表。
 
 	{% raw %}
 	$ docker inspect --format '{{split (join .Names "/") "/"}}' container
@@ -57,7 +55,7 @@ It puts a separator between each element in the list.
 
 ### `title`
 
-`title` capitalizes the first character of a string.
+`title` 将字符串首字母大写。
 
 	{% raw %}
 	$ docker inspect --format "{{title .Name}}" container
@@ -65,7 +63,7 @@ It puts a separator between each element in the list.
 
 ### `upper`
 
-`upper` transforms a string into its uppercase representation.
+`upper` 将字符串转成大写.
 
 	{% raw %}
 	$ docker inspect --format "{{upper .Name}}" container

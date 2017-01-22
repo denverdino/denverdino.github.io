@@ -4,19 +4,11 @@ keywords: Docker, Docker documentation,  security, security non-events
 title: Docker security non-events
 ---
 
-This page lists security vulnerabilities which Docker mitigated, such that
-processes run in Docker containers were never vulnerable to the bug—even before
-it was fixed. This assumes containers are run without adding extra capabilities
-or not run as `--privileged`.
+此页列出了使用因使用Docker而避免的安全缺陷：进程运行在容器里而没有受到未修复的安全缺陷的影响。这里假设容器运行的时候没有添加额外的capabilities，并且没有使用`--privileged`
 
-The list below is not even remotely complete. Rather, it is a sample of the few
-bugs we've actually noticed to have attracted security review and publicly
-disclosed vulnerabilities. In all likelihood, the bugs that haven't been
-reported far outnumber those that have. Luckily, since Docker's approach to
-secure by default through apparmor, seccomp, and dropping capabilities, it
-likely mitigates unknown bugs just as well as it does known ones.
+下面的列表远不是全部，只是少数我们所关注的公开披露的缺陷。很大程度上，还有更多没被报道的缺陷。幸运的是，自动Docker默认采用了apparmor、seccomp以及drop capabilities等安全手段，未知的缺陷也和已知的缺陷一样不会造成太大问题。
 
-Bugs mitigated:
+规避的漏洞:
 
 * [CVE-2013-1956](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2013-1956),
 [1957](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2013-1957),
@@ -31,62 +23,34 @@ Bugs mitigated:
 [CVE-2015-2925](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-2925),
 [8543](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-8543),
 [CVE-2016-3134](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-3134),
-[3135](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-3135), etc.:
-The introduction of unprivileged user namespaces lead to a huge increase in the
-attack surface available to unprivileged users by giving such users legitimate
-access to previously root-only system calls like `mount()`. All of these CVEs
-are examples of security vulnerabilities due to introduction of user namespaces.
-Docker can use user namespaces to set up containers, but then disallows the
-process inside the container from creating its own nested namespaces through the
-default seccomp profile, rendering these vulnerabilities unexploitable.
+[3135](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-3135) 等:
+
+允许用户访问原先只有root才能访问的系统调用，比如`mount()`，以此所引入的非特权用户命名空间导致了非特权用户的攻击面激增。所有这些CVEs都是引入用户命名空间导致的安全缺陷的例子。Docker可以使用用户命名空间设置容器，但是使用了默认seccomp profile禁止容器内的进程创建嵌套的命名空间，避免了如下的缺陷被利用：
+
 * [CVE-2014-0181](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-0181),
 [CVE-2015-3339](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-3339):
-These are bugs that require the presence of a setuid binary. Docker disables
-setuid binaries inside containers via the `NO_NEW_PRIVS` process flag and
-other mechanisms.
+这些漏洞要求存在setuid的二进制文件。Docker使用`NO_NEW_PRIVS `进程标志和其他机制禁用了容器内setuid二进制文件。
 * [CVE-2014-4699](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-4699):
-A bug in `ptrace()` could allow privilege escalation. Docker disables `ptrace()`
-inside the container using apparmor, seccomp and by dropping `CAP_PTRACE`.
-Three times the layers of protection there!
+`ptrace()`里的一个提权漏洞，Docker使用apparmor，seccomp和Drop `CAP_PTRACE`禁用了容器内的`ptrace()`。三倍保护！
 * [CVE-2014-9529](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-9529):
-A series of crafted `keyctl()` calls could cause kernel DoS / memory corruption.
-Docker disables `keyctl()` inside containers using seccomp.
+通过一系列精心设计的`keyctl()`调用导致内核DoS/内存崩溃。Docker使用seccomp在容器内禁用了`keyctl()`
 * [CVE-2015-3214](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-3214),
-[4036](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-4036): These are
-bugs in common virtualization drivers which could allow a guest OS user to
-execute code on the host OS. Exploiting them requires access to virtualization
-devices in the guest. Docker hides direct access to these devices when run
-without `--privileged`. Interestingly, these seem to be cases where containers
-are "more secure" than a VM, going against common wisdom that VMs are
-"more secure" than containers.
+[4036](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-4036): 这些通用虚拟化驱动程序里的漏洞允许guest OS用户在宿主机系统里执行代码。要利用这些漏洞，需要在guest OS里拥有访问虚拟化设备的权限。对于不带`--privileged`容器，Docker隐藏了对这些设备的直接访问。有意思的是，这个例子说明容器被虚拟机更安全，而不是通常认为的虚拟机比容器更安全。
 * [CVE-2016-0728](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-0728):
-Use-after-free caused by crafted `keyctl()` calls could lead to privilege
-escalation. Docker disables `keyctl()` inside containers using the default
-seccomp profile.
+通过精心设计的`keyctl()`调用引起的Use-after-free提权。Docker使用seccomp profile禁用了容器内的`keyctl()`
 * [CVE-2016-2383](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-2383):
-A bug in eBPF -- the special in-kernel DSL used to express things like seccomp
-filters -- allowed arbitrary reads of kernel memory. The `bpf()` system call
-is blocked inside Docker containers using (ironically) seccomp.
+eBPF（内核里的DSL，用于表达类似seccomp过滤器）中的一个漏洞允许读取任意内核内存。`bpf()`在容器里被Docker用`seccomp`禁用了。
 * [CVE-2016-3134](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-3134),
 [4997](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-4997),
 [4998](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-4998):
-A bug in setsockopt with `IPT_SO_SET_REPLACE`, `ARPT_SO_SET_REPLACE`,  and
-`ARPT_SO_SET_REPLACE` causing memory corruption / local privilege escalation.
-These arguments are blocked by `CAP_NET_ADMIN`, which Docker does not allow by
-default.
+setsockopt里有一个漏洞，在使用选项`IPT_SO_SET_REPLACE`, `ARPT_SO_SET_REPLACE`, 和
+`ARPT_SO_SET_REPLACE`时会导致内存崩溃，本地提权。Docker默认通过Drop `CAP_NET_ADMIN`禁用了这几个参数。
 
 
-Bugs *not* mitigated:
+没有避免的漏洞:
 
 * [CVE-2015-3290](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-3290),
-[5157](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-5157): Bugs in
-the kernel's non-maskable interrupt handling allowed privilege escalation.
-Can be exploited in Docker containers because the `modify_ldt()` system call is
-not currently blocked using seccomp.
+[5157](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-5157): 
+内核里的不可屏蔽中断处理允许提权，在容器里也也能利用这个漏洞，因为没禁用系统调用`modify_ldt()`
 * [CVE-2016-5195](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-5195):
-A race condition was found in the way the Linux kernel's memory subsystem
-handled the copy-on-write (COW) breakage of private read-only memory mappings,
-which allowed unprivileged local users to gain write access to read-only memory.
-Also known as "dirty COW."
-*Partial mitigations:* on some operating systems this vulnerability is mitigated
-by the combination of seccomp filtering of `ptrace` and the fact that `/proc/self/mem` is read-only.
+Linux内核里内存子系统在处理copy-on-write时存在竞态条件，会破坏私有只读内存映射，导致本地非特权用户拥有写只读内存的权限。也就是“脏牛”漏洞。*部分避免:* 在一些操作系统上，通过组合使用seccomp过滤掉`ptrace`和挂载只读`/proc/self/mem`可以避免这个漏洞。

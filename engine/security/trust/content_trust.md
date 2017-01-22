@@ -4,83 +4,63 @@ keywords: content, trust, security, docker,  documentation
 title: Content trust in Docker
 ---
 
-When transferring data among networked systems, *trust* is a central concern. In
-particular, when communicating over an untrusted medium such as the internet, it
-is critical to ensure the integrity and the publisher of all the data a system
-operates on. You use Docker Engine to push and pull images (data) to a public or private registry. Content trust
-gives you the ability to verify both the integrity and the publisher of all the
-data received from a registry over any channel.
+当在互联的系统间传递数据时，"信任"是一个主要考虑点。
+尤其在如互联网等不可信媒体间通信时，确认一个系统所操作数据的完整性和发布者是非常关键的。
+你可以使用Docker Engine 来上传下载镜像（数据）到公共或私有的Docker Reigstry.
+内容信任让你有能力去校验在任何网络通道从Docker Registry收到的数据的完整性和发布者。
 
-## Understand trust in Docker
+## 理解Docker的信任
 
-Content trust allows operations with a remote Docker registry to enforce
-client-side signing and verification of image tags. Content trust provides the
-ability to use digital signatures for data sent to and received from remote
-Docker registries. These signatures allow client-side verification of the
-integrity and publisher of specific image tags.
+内容信任允许对远程Docker Registry的操作启用客户端签名和镜像tag验证。
+内容信任提供对远程Docker Registry的发送内容进行电子签名的能力。
+这些签名允许客户端对特定的镜像版本进行完整性和发布者校验。
 
-Currently, content trust is disabled by default. You must enable it by setting
-the `DOCKER_CONTENT_TRUST` environment variable. Refer to the
-[environment variables](../../reference/commandline/cli.md#environment-variables)
-and [Notary](../../reference/commandline/cli.md#notary) configuration
-for the docker client for more options.
+目前，内容信任默认是关闭的。你必须通过设置"DOCKER_CONTENT_TRUST"环境变量来开启。请参见
+[环境变量](../../reference/commandline/cli.md#environment-variables)
+和[Notary](../../reference/commandline/cli.md#notary)配置来查看更多docker客户端参数。
 
-Once content trust is enabled, image publishers can sign their images. Image consumers can
-ensure that the images they use are signed. Publishers and consumers can be
-individuals alone or in organizations. Docker's content trust supports users and
-automated processes such as builds.
+一旦内容信任开启，镜像发布者必须对自己的镜像进行签名。镜像消费者可以保证自己使用的镜像都被签名了。
+发布者和消费者可以是独立个人或者组织。Docker的内容安全支持用户和如构建等自动化进程。
 
-### Image tags and content trust
+### 镜像tag和内容信任
 
-An individual image record has the following identifier:
+一个唯一的镜像记录有如下的标示：
 
 ```
 [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG]
 ```
 
-A particular image `REPOSITORY` can have multiple tags. For example, `latest` and
- `3.1.2` are both tags on the `mongo` image. An image publisher can build an image
- and tag combination many times changing the image with each build.
+一个特定的镜像"仓库"可以有多个tag。比如，'latest'和'3.1.2'都是'mongo'镜像的tag。
+一个镜像发布者可以构建一个镜像并且给每个构建一个tag。
+内容信任和镜像的tag相关联。每个镜像仓库有一组秘钥用来让镜像发布者签名镜像tag。
+镜像发布者可以判别签名了哪些tag。
 
-Content trust is associated with the `TAG` portion of an image. Each image
-repository has a set of keys that image publishers use to sign an image tag.
-Image publishers have discretion on which tags they sign.
+一个镜像仓库可以包含一个签名了的tag和另一个没签名的tag。
+比如，[the Mongo image repository](https://hub.docker.com/r/library/mongo/tags/)
+'latest'tag没有签名，而'3.1.6'tag签名了。
+这是由镜像发布者的责任来决定哪些镜像tag要还是不要签名。
+在下面的展示中，一些镜像tag签名了，另一些没有：
 
-An image repository can contain an image with one tag that is signed and another
-tag that is not. For example, consider [the Mongo image
-repository](https://hub.docker.com/r/library/mongo/tags/). The `latest`
-tag could be unsigned while the `3.1.6` tag could be signed. It is the
-responsibility of the image publisher to decide if an image tag is signed or
-not. In this representation, some image tags are signed, others are not:
 
 ![Signed tags](images/tag_signing.png)
 
-Publishers can choose to sign a specific tag or not. As a result, the content of
-an unsigned tag and that of a signed tag with the same name may not match. For
-example, a publisher can push a tagged image `someimage:latest` and sign it.
-Later, the same publisher can push an unsigned `someimage:latest` image. This second
-push replaces the last unsigned tag `latest` but does not affect the signed `latest` version.
-The ability to choose which tags they can sign, allows publishers to iterate over
-the unsigned version of an image before officially signing it.
+发布者可以选择签名或不签名一个特定的tag。作为结果，相同tag名称的签名内容和不签名内容并不一致。
+比如，一个发布者可以上传一个镜像tag "someimage:latest" 并签名。然后同样的发布者可以上传一个未签名的镜像 "someimage:latest"。
+第二次上传替换了上一次未签名tag"latest"，但是不会影响签名的"latest"版本。
+这个选择哪个tag签名的能力，使得发布者可以在正式签名前不断迭代未签名版本的镜像。
 
-Image consumers can enable content trust to ensure that images they use were
-signed. If a consumer enables content trust, they can only pull, run, or build
-with trusted images. Enabling content trust is like wearing a pair of
-rose-colored glasses. Consumers "see" only signed images tags and the less
-desirable, unsigned image tags are "invisible" to them.
+镜像消费者可以启动内容信任去保证使用的镜像都被签名了。如果一个消费者启动了内容信任，他们只能下载、运行、构建信任镜像。
+启动内容信任就像戴了一副玫瑰色眼镜。消费者只能看到签名的镜像tag而看不见未签名的tag。
+
 
 ![Trust view](images/trust_view.png)
 
-To the consumer who has not enabled content trust, nothing about how they
-work with Docker images changes. Every image is visible regardless of whether it
-is signed or not.
+对于还没有开启内容安全的消费者，和镜像相关的工作完全没有变化。不管是否被加签，每个镜像都是可见的。
 
 
-### Content trust operations and keys
+### 内容信任操作和秘钥
 
-When content trust is enabled, `docker` CLI commands that operate on tagged images must
-either have content signatures or explicit content hashes. The commands that
-operate with content trust are:
+当内容信任开启，"docker"操作镜像tag的命令要带有内容签名或显式的内容哈希。以下是和内容信任相关的命令：
 
 * `push`
 * `build`
@@ -88,71 +68,60 @@ operate with content trust are:
 * `pull`
 * `run`
 
-For example, with content trust enabled a `docker pull someimage:latest` only
-succeeds if `someimage:latest` is signed. However, an operation with an explicit
-content hash always succeeds as long as the hash exists:
+比如，当内容信任开启时，`docker pull someimage:latest` 只有当`someimage:latest`签名了才能成功。
+另外，带有显式内容哈希并且这个哈希存在的命令也会成功。
 
 ```bash
 $ docker pull someimage@sha256:d149ab53f8718e987c3a3024bb8aa0e2caadf6c0328f1d9d850b2a2a67f2819a
 ```
+一个镜像tag的信任是由签名秘钥管理。当内容信任第一次调用时，一组秘钥集会创建。
+一组秘钥集包含以下分类的秘钥：
 
-Trust for an image tag is managed through the use of signing keys. A key set is
-created when an operation using content trust is first invoked. A key set consists
-of the following classes of keys:
 
-- an offline key that is the root of content trust for an image tag
-- repository or tagging keys that sign tags
-- server-managed keys such as the timestamp key, which provides freshness
-	security guarantees for your repository
+- 一个离线的秘钥，作为一个镜像tag的内容信任的根
+- 仓库或者用来签名的tagging秘钥 
+- 服务端管理的秘钥，比如提供最新仓库安全保障的时间戳秘钥
 
-The following image depicts the various signing keys and their relationships:
+下面的镜像描述了多种签名秘钥和他们的关系：
 
 ![Content trust components](images/trust_components.png)
 
->**WARNING**: Loss of the root key is **very difficult** to recover from.
->Correcting this loss requires intervention from [Docker
->Support](https://support.docker.com) to reset the repository state. This loss
->also requires **manual intervention** from every consumer that used a signed
->tag from this repository prior to the loss.
+>**警告**: 丢掉根秘钥是非常难恢复的。恢复丢失的损失需要[Docker
+>Support](https://support.docker.com) 的介入来重置仓库状态。
+> 这个损失也需要每个使用签名tag的消费者的手动介入来恢复。
 
-You should backup the root key somewhere safe. Given that it is only required
-to create new repositories, it is a good idea to store it offline in hardware.
-For details on securing, and backing up your keys, make sure you
-read how to [manage keys for content trust](trust_key_mng.md).
+你需要在某处安全备份根秘钥。考虑到只有当创建新仓库时才需要根秘钥，离线存储在硬盘是一个好主意。
+对于保障和备份你的秘钥，确保你阅读了如何[管理内容信任秘钥](trust_key_mng.md)。
 
-## Survey of typical content trust operations
 
-This section surveys the typical trusted operations users perform with Docker
-images. Specifically, we will be going through the following steps to help us exercise
-these various trusted operations:
+## 典型内容信任操作的调查
 
-* Build and push an unsigned image
-* Pull an unsigned image
-* Build and push a signed image
-* Pull the signed image pushed above
-* Pull unsigned image pushed above
+这个部分调查了用户对Docker镜像进行的典型内容信任操作。
+特别的，我们将通过以下步骤来帮助大家练习这些信任操作：
 
-### Enable and disable content trust per-shell or per-invocation
+* 构建和推送一个未签名镜像 
+* 拉取一个未签名镜像 
+* 构建和推送一个签名镜像 
+* 拉取上面这个签名镜像
+* 拉取上面的未签名镜像
 
-In a shell, you can enable content trust by setting the `DOCKER_CONTENT_TRUST`
-environment variable. Enabling per-shell is useful because you can have one
-shell configured for trusted operations and another terminal shell for untrusted
-operations. You can also add this declaration to your shell profile to have it
-turned on always by default.
+### 启动或关闭内容信息，每shell或每次调用
 
-To enable content trust in a `bash` shell enter the following command:
+在一个shell,你可以通过设置环境变量`DOCKER_CONTENT_TRUST`来开启内容信任。
+在shell级别开启非常有用，因为你可以让一个shell进行信任操作，另一个终端shell进行非信任操作。
+你也可以添加声明到你的shell profile，使得始终默认开启。
+
+开启内容信任在`bash` shell需要输入下面命令：
 
 ```bash
 export DOCKER_CONTENT_TRUST=1
 ```
 
-Once set, each of the "tag" operations requires a key for a trusted tag.
+一旦设定，每个"tag"操作需要给一个信任tag一个秘钥。
 
-In an environment where `DOCKER_CONTENT_TRUST` is set, you can use the
-`--disable-content-trust` flag to run individual operations on tagged images
-without content trust on an as-needed basis.
+在`DOCKER_CONTENT_TRUST`设置的环境，你可以使用`--disable-content-trust`标记去按需执行非内容安全的操作。
 
-Consider the following Dockerfile that uses an untrusted base image:
+考虑下面使用非信任的基础镜像的Dockerfile:
 
 ```
 $  cat Dockerfile
@@ -160,7 +129,7 @@ FROM docker/trusttest:latest
 RUN echo
 ```
 
-In order to build a container successfully using this Dockerfile, one can do:
+为了使用这个Dockerfile成功构建容器，可以如下操作：
 
 ```
 $  docker build --disable-content-trust -t <username>/nottrusttest:latest .
@@ -169,7 +138,7 @@ Sending build context to Docker daemon 42.84 MB
 Successfully built f21b872447dc
 ```
 
-The same is true for all the other commands, such as `pull` and `push`:
+其他操作也是一样，比如`pull` 和 `push`
 
 ```
 $  docker pull --disable-content-trust docker/trusttest:latest
@@ -178,20 +147,19 @@ $  docker push --disable-content-trust <username>/nottrusttest:latest
 ...
 ```
 
-To invoke a command with content trust enabled regardless of whether or how the `DOCKER_CONTENT_TRUST` variable is set:
+执行一个带内容安全的命令，不管`DOCKER_CONTENT_TRUST`变量是否开启：
 
 ```bash
 $  docker build --disable-content-trust=false -t <username>/trusttest:testing .
 ```
 
-All of the trusted operations support the `--disable-content-trust` flag.
+所有的信任操作支持`--disable-content-trust` 标记。
 
 
-### Push trusted content
+### 推送信任安全
 
-To create signed content for a specific image tag, simply enable content trust
-and push a tagged image. If this is the first time you have pushed an image
-using content trust on your system, the session looks like this:
+给一个指定镜像tag创建签名内容，简单开启内容安全并推送镜像。如果这是你第一次在你的系统上推送一个带内容安全的镜像，
+会话看起来如下：
 
 ```bash
 $ docker push <username>/trusttest:testing
@@ -212,20 +180,18 @@ Enter passphrase for new repository key with id docker.io/<username>/trusttest (
 Repeat passphrase for new repository key with id docker.io/<username>/trusttest (3a932f1):
 Finished initializing "docker.io/<username>/trusttest"
 ```
-When you push your first tagged image with content trust enabled, the  `docker`
-client recognizes this is your first push and:
 
- - alerts you that it will create a new root key
- - requests a passphrase for the root key
- - generates a root key in the `~/.docker/trust` directory
- - requests a passphrase for the repository key
- - generates a repository key for in the `~/.docker/trust` directory
+当你第一次用内容安全给镜像打tag，`docker`客户端会识别为你的第一次推送并且：
 
-The passphrase you chose for both the root key and your repository key-pair
-should be randomly generated and stored in a *password manager*.
+ - 提示你它会创建一个新的根秘钥
+ - 为这个根秘钥请求一个口令
+ - 在 `~/.docker/trust` 目录生成一个根秘钥
+ - 为仓库秘钥请求一个口令
+ - 在 `~/.docker/trust` 目录生成一个仓库秘钥
 
-> **NOTE**: If you omit the `testing` tag, content trust is skipped. This is true
-even if content trust is enabled and even if this is your first push.
+你为根秘钥和仓库秘钥选择的口令应该随机生成，并保存在一个密码管理器。
+
+> **提示**: 如果你丢掉了`testing` tag, 内容信任会漏过。及时内容安全已经开启并且是你第一次推送。
 
 ```bash
 $ docker push <username>/trusttest
@@ -236,11 +202,9 @@ latest: digest: sha256:a9a9c4402604b703bed1c847f6d85faac97686e48c579bd9c3b0fa669
 No tag specified, skipping trust metadata push
 ```
 
-It is skipped because as the message states, you did not supply an image `TAG`
-value. In Docker content trust, signatures are associated with tags.
+正如消息提示，这个会略过，因为你没有指定镜像的`TAG`值。在Docker内容信任，签名始终和tag关联在一起。
 
-Once you have a root key on your system, subsequent images repositories
-you create can use that same root key:
+一旦你在系统上有个一个根秘钥，后续的镜像仓库可以使用相同的根秘钥：
 
 ```bash
 $ docker push docker.io/<username>/otherimage:latest
@@ -255,15 +219,14 @@ Repeat passphrase for new repository key with id docker.io/<username>/otherimage
 Finished initializing "docker.io/<username>/otherimage"
 ```
 
-The new image has its own repository key and timestamp key. The `latest` tag is signed with both of
-these.
+新镜像有自己的仓库秘钥和时间戳秘钥。`latest` tag被这两个同时签名。
 
 
-### Pull image content
+### 拉取镜像安全
 
-A common way to consume an image is to `pull` it. With content trust enabled, the Docker
-client only allows `docker pull` to retrieve signed images. Let's try to pull the image
-you signed and pushed earlier:
+一个通常的消费镜像方式是`pull`。当内容安全开启，Docker客户端只允许`docker pull`获取签名的镜像。
+让我们试试拉取你之前签名并推送的镜像：
+
 
 ```
 $  docker pull <username>/trusttest:testing
@@ -273,8 +236,7 @@ Pull (1 of 1): <username>/trusttest:testing@sha256:d149ab53f871
 Tagging <username>/trusttest@sha256:d149ab53f871 as docker/trusttest:testing
 ```
 
-In the following example, the command does not specify a tag, so the system uses
-the `latest` tag by default again and the `docker/trusttest:latest` tag is not signed.
+在上面的示例中，命令并没有指定一个tag，那么系统会使用`latest`作为默认。`docker/trusttest:latest`还是没有被签名。
 
 ```bash
 $ docker pull docker/trusttest
@@ -282,11 +244,11 @@ Using default tag: latest
 no trust data available
 ```
 
-Because the tag `docker/trusttest:latest` is not trusted, the `pull` fails.
+因为`docker/trusttest:latest`没有被信任，所以`pull` 失败了。
 
-## Related information
+## 相关信息
 
-* [Manage keys for content trust](trust_key_mng.md)
-* [Automation with content trust](trust_automation.md)
-* [Delegations for content trust](trust_delegation.md)
-* [Play in a content trust sandbox](trust_sandbox.md)
+* [管理内容信任秘钥](trust_key_mng.md)
+* [内容信任自动化](trust_automation.md)
+* [内容信任-代理](trust_delegation.md)
+* [在内容信任沙箱中运行](trust_sandbox.md)

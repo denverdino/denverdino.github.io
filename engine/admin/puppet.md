@@ -6,76 +6,64 @@ redirect_from:
 title: Use Puppet
 ---
 
-> *Note:* Please note this is a community contributed installation path. The
-> only `official` installation is using the
-> [*Ubuntu*](../installation/linux/ubuntulinux.md) installation
-> path. This version may sometimes be out of date.
+> *注意:* 请注意这是由社区提供安装方式。
+> 唯一官方安装方式见
+> [*Ubuntu*](../installation/linux/ubuntulinux.md)
+> 。这个版本有些时候可能是过时的。
 
-## Requirements
+## 要求
 
-To use this guide you'll need a working installation of Puppet from
-[Puppet Labs](https://puppetlabs.com) .
+在使用本文档前，你需要确保已经从 [Puppet Labs](https://puppetlabs.com) 安装了一个可以使用的Puppet。
 
-The module also currently uses the official PPA so only works with
-Ubuntu.
+由于这个模块目前使用官方 PPA 方式，因此只能在Ubuntu系统上运行。
 
-## Installation
-
-The module is available on the [Puppet
-Forge](https://forge.puppetlabs.com/garethr/docker/) and can be
-installed using the built-in module tool.
+## 安装
+这个模块可以在这里找到 [Puppet
+Forge](https://forge.puppetlabs.com/garethr/docker/) ，使用下面的命令安装本模块。
 
     $ puppet module install garethr/docker
 
-It can also be found on
-[GitHub](https://github.com/garethr/garethr-docker) if you would rather
-download the source.
+如果你想下载源码，可以在这里找到
+[GitHub](https://github.com/garethr/garethr-docker) 。
 
-## Usage
+## 使用
 
-The module provides a puppet class for installing Docker and two defined
-types for managing images and containers.
+这个模块提供一个puppet class 安装 Docker， 且有两个 defined types 去管理镜像和容器。
 
-### Installation
+### 安装
 
     include 'docker'
 
-### Images
+### 镜像
 
-The next step is probably to install a Docker image. For this, we have a
-defined type which can be used like so:
+下一步就是安装Docker 镜像。我们有一个 defined type 可以按如下方式使用:
 
     docker::image { 'ubuntu': }
 
-This is equivalent to running:
+这个等价于运行:
 
     $ docker pull ubuntu
 
-Note that it will only be downloaded if an image of that name does not
-already exist. This is downloading a large binary so on first run can
-take a while. For that reason this define turns off the default 5 minute
-timeout for the exec type. Note that you can also remove images you no
-longer need with:
+注意一点，它只会在镜像名不存在的时候才会去下载。这会去下载一个很大的文件，因此在第一次运行的时候会耗费一些时间。由于这个原因， 这个 define 关闭了 exec type 的默认5分钟超时。当然，你可以使用下面的命令删除那些不需要的镜像:
 
     docker::image { 'ubuntu':
       ensure => 'absent',
     }
 
-### Containers
+### 容器
 
-Now you have an image where you can run commands within a container
-managed by Docker.
+现在，你拥有了一个镜像，你可以去运行命令在Docker 管理的容器内。
 
     docker::run { 'helloworld':
       image   => 'ubuntu',
       command => '/bin/sh -c "while true; do echo hello world; sleep 1; done"',
     }
 
-This is equivalent to running the following command, but under upstart:
+这个等价于运行下面的命令， 但是是在upstart后: 
 
     $ docker run -d ubuntu /bin/sh -c "while true; do echo hello world; sleep 1; done"
 
-Run also contains a number of optional parameters:
+剩余的容器运行时可选项如下:
 
     docker::run { 'helloworld':
       image        => 'ubuntu',
@@ -90,6 +78,6 @@ Run also contains a number of optional parameters:
       dns          => ['8.8.8.8', '8.8.4.4'],
     }
 
-> *Note:*
-> The `ports`, `env`, `dns` and `volumes` attributes can be set with either a single
-> string or as above with an array of values.
+> *注意:*
+> `ports`, `env`, `dns` 和 `volumes` 属性可以设置为单独的一个字符串 
+> 或者一个字符串数组。
