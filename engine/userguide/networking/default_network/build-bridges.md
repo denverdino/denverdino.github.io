@@ -4,18 +4,11 @@ keywords: docker, bridge, docker0, network
 title: Build your own bridge
 ---
 
-This section explains how to build your own bridge to replace the Docker default
-bridge. This is a `bridge` network named `bridge` created automatically when you
-install Docker.
+本节介绍如何构建自己的网桥来替换Docker默认网桥。这是在安装Docker时自动创建的以`bridge`命名的网桥。
 
-> **Note**: The [Docker networks feature](../index.md) allows you to
-create user-defined networks in addition to the default bridge network.
+> **注意**：[Docker网络功能](../index.md)允许您创建除默认网桥网络之外的用户自定义网络。
 
-You can set up your own bridge before starting Docker and use `-b BRIDGE` or
-`--bridge=BRIDGE` to tell Docker to use your bridge instead. If you already
-have Docker up and running with its default `docker0` still configured,
-you can directly create your bridge and restart Docker with it or want to begin by
-stopping the service and removing the interface:
+可以在启动Docker之前设置您自己的网桥，并使用`-b BRIDGE`或`--bridge=BRIDGE`告诉Docker使用您自定义的网桥。如果已经有Docker以默认配置`docker0`启动并运行，您可以直接创建您的网桥并重新启动Docker，或者通过停止服务和删除接口开始：
 
 ```
 # Stopping Docker and removing docker0
@@ -29,10 +22,7 @@ $ sudo brctl delbr docker0
 $ sudo iptables -t nat -F POSTROUTING
 ```
 
-Then, before starting the Docker service, create your own bridge and give it
-whatever configuration you want. Here we will create a simple enough bridge
-that we really could just have used the options in the previous section to
-customize `docker0`, but it will be enough to illustrate the technique.
+然后，在启动Docker服务之前，创建自己的网桥，并给它任何您想要的配置。 这里我们，可以使用上一节中的选项来自定义`docker0`，从而创建一个足够简单的网桥，它足以说明该技术。
 
 ```
 # Create our own bridge
@@ -68,13 +58,6 @@ target     prot opt source               destination
 MASQUERADE  all  --  192.168.5.0/24      0.0.0.0/0
 ```
 
-The result should be that the Docker server starts successfully and is now
-prepared to bind containers to the new bridge. After pausing to verify the
-bridge's configuration, try creating a container -- you will see that its IP
-address is in your new IP address range, which Docker will have auto-detected.
+结果应该是Docker服务成功启动，准备将容器绑定到新的网桥。在暂停以验证网桥的配置后，尝试创建一个容器——您将看到它的IP地址在您的新IP地址范围内，Docker将自动检测该IP地址范围。
 
-You can use the `brctl show` command to see Docker add and remove interfaces
-from the bridge as you start and stop containers, and can run `ip addr` and `ip
-route` inside a container to see that it has been given an address in the
-bridge's IP address range and has been told to use the Docker host's IP address
-on the bridge as its default gateway to the rest of the Internet.
+您可以使用`brctl show`命令查看Docker在启动和停止容器时添加和删除接口，并且可以在容器中运行`ip addr`和`ip route`以查看它是否已在网桥的IP地址范围中给出了地址，并已被告知使用Docker主机在网桥上的IP地址作为其余Internet的默认网关。

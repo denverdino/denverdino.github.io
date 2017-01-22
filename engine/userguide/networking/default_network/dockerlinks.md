@@ -6,190 +6,119 @@ redirect_from:
 title: Legacy container links
 ---
 
-The information in this section explains legacy container links within the Docker default `bridge` network which is created automatically when you install Docker.
+本节中的信息说明了在安装Docker时自动创建的Docker默认网桥网络中的旧容器链接。
 
-Before the [Docker networks feature](../index.md), you could use the
-Docker link feature to allow containers to discover each other and securely
-transfer information about one container to another container. With the
-introduction of the Docker networks feature, you can still create links but they
-behave differently between default `bridge` network and
-[user defined networks](../work-with-networks.md#linking-containers-in-user-defined-networks)
+在[Docker网络功能](../目录.md)之前，您可以使用Docker链接功能来允许容器发现彼此，并将一个容器的信息安全地传输到另一个容器。 通过引入Docker网络功能，您仍然可以创建链接，但是它们在默认网桥网络和[用户定义的网络](../work-with-networks.md#linking-containers-in-user-defined-networks)之间的行为不同
 
-This section briefly discusses connecting via a network port and then goes into
-detail on container linking in default `bridge` network.
+本节先简要讨论通过网络端口连接，然后详细理解在默认`bridge`网络中的容器链接情况。
 
->**Warning**: The `--link` flag is a deprecated legacy feature of Docker. It may eventually
-be removed. Unless you absolutely need to continue using it, we recommend that you use
-user-defined networks to facilitate communication between two containers instead of using
-`--link`. One feature that user-defined networks do not support that you can do
-with `--link` is sharing environmental variables between containers. However,
-you can use other mechanisms such as volumes to share environment variables
-between containers in a more controlled way.
+> **警告**：`--link`标志是Docker遗弃的旧特性。它可能最终会被删除。除非您绝对需要继续使用它，我们建议您使用用户定义的网络，以方便两个容器之间的通信而不是使用`--link`。使用`--link`可以在容器之间共享环境变量，而使用用户自定义的网络不支持这个功能。然而，您可以使用其他机制（如卷）共享环境变量。
 
-## Connect using network port mapping
+##使用网络端口映射连接
 
-In [Run a simple application](../../../tutorials/usingdocker.md), you created a
-container that ran a Python Flask application:
+在[运行一个简单的应用程序](../../../tutorials/usingdocker.md)，您创建了一个
+容器运行Python Flask应用程序：
 
     $ docker run -d -P training/webapp python app.py
 
-> **Note:**
-> Containers have an internal network and an IP address
-> (as we saw when we used the `docker inspect` command to show the container's
-> IP address in [Run a simple application](../../../tutorials/usingdocker.md) section).
-> Docker can have a variety of network configurations. You can see more
-> information on Docker networking [here](../index.md).
+> **注意：** 容器具有内部网络和IP地址（正如我们在[运行一个简单的应用程序](../../../ tutorials / usingdocker.md)中使用`docker inspect`命令查看容器IP地址时候看到的一样。Docker可以有多种网络配置。 您可以看到更多关于Docker网络的信息[这里](../ index.md)。
 
-When that container was created, the `-P` flag was used to automatically map
-any network port inside it to a random high port within an *ephemeral port
-range* on your Docker host. Next, when `docker ps` was run, you saw that port
-5000 in the container was bound to port 49155 on the host.
+创建该容器时，使用`-P`标志自动将其中的任何网络端口映射到Docker主机上的*临时端口范围*内的随机高端口。 接下来，当docker ps运行时，您看到容器中的端口5000绑定到主机上的端口49155。
 
     $ docker ps nostalgic_morse
 
     CONTAINER ID  IMAGE                   COMMAND       CREATED        STATUS        PORTS                    NAMES
     bc533791f3f5  training/webapp:latest  python app.py 5 seconds ago  Up 2 seconds  0.0.0.0:49155->5000/tcp  nostalgic_morse
 
-You also saw how you can bind a container's ports to a specific port using
-the `-p` flag. Here port 80 of the host is mapped to port 5000 of the
-container:
+您也看到如何使用`-p`标志将容器端口绑定到特定端口。这里主机的端口`80`映射到容器的端口`5000`：
 
     $ docker run -d -p 80:5000 training/webapp python app.py
 
-And you saw why this isn't such a great idea because it constrains you to
-only one container on that specific port.
-
-Instead, you may specify a range of host ports to bind a container port to
-that is different than the default *ephemeral port range*:
+您知道为什么这不是一个好主意，因为它限制您只有一个特定端口上的容器。
+相反，您可以指定绑定容器端口的主机端口范围不同于默认*临时端口范围*：
 
     $ docker run -d -p 8000-9000:5000 training/webapp python app.py
 
-This would bind port 5000 in the container to a randomly available port
-between 8000 and 9000 on the host.
+这将绑定容器5000到主机上8000和9000之间的随机可用端口。
 
-There are also a few other ways you can configure the `-p` flag. By
-default the `-p` flag will bind the specified port to all interfaces on
-the host machine. But you can also specify a binding to a specific
-interface, for example only to the `localhost`.
+还有一些其他方法可以配置`-p`标志。默认情况下，`-p`标志将指定的端口绑定到主机上的所有接口。 但是您也可以指定对特定接口的绑定，例如仅指向`localhost`。
 
     $ docker run -d -p 127.0.0.1:80:5000 training/webapp python app.py
 
-This would bind port 5000 inside the container to port 80 on the
-`localhost` or `127.0.0.1` interface on the host machine.
+这将绑定容器内的端口5000到`localhost`的端口80或主机上的`127.0.0.1`接口。
 
-Or, to bind port 5000 of the container to a dynamic port but only on the
-`localhost`, you could use:
+或者，要将容器的端口5000绑定到动态端口，但只能在`localhost`上，您可以使用：
 
     $ docker run -d -p 127.0.0.1::5000 training/webapp python app.py
 
-You can also bind UDP ports by adding a trailing `/udp`. For example:
+您还可以通过添加尾部`/udp`来绑定UDP端口。 例如：
 
     $ docker run -d -p 127.0.0.1:80:5000/udp training/webapp python app.py
 
-You also learned about the useful `docker port` shortcut which showed us the
-current port bindings. This is also useful for showing you specific port
-configurations. For example, if you've bound the container port to the
-`localhost` on the host machine, then the `docker port` output will reflect that.
+您还了解了有用的`docker port`快捷方式，其中显示了当前的端口绑定。 这也有助于显示特定的端口配置。 例如，如果您已将容器端口绑定到主机上的本地主机，则`docker port`输出将反映该情况。
 
     $ docker port nostalgic_morse 5000
 
     127.0.0.1:49155
 
-> **Note:**
-> The `-p` flag can be used multiple times to configure multiple ports.
+> **注意**
+>`-p`标志可以多次使用以配置多个端口。
 
-## Connect with the linking system
+## 使用链接系统连接
+> **注意**: 本节涵盖默认`bridge`网络中的旧链接功能。有关用户定义网络中的链接的更多信息。请参考[用户定义网络中的链接容器](../ work-with-networks.md＃linking-containers-in-user-defined-networks)
 
-> **Note**:
-> This section covers the legacy link feature in the default `bridge` network.
-> Please refer to [linking containers in user-defined networks](../work-with-networks.md#linking-containers-in-user-defined-networks)
-> for more information on links in user-defined networks.
+网络端口映射不是Docker容器可以彼此连接的唯一方式。 Docker还有一个链接系统，允许您将多个容器链接在一起，并将连接信息从一个发送到另一个。 当容器被链接时，关于源容器的信息可以被发送到接收容器。 这允许接收者看到描述源容器的数据。
 
-Network port mappings are not the only way Docker containers can connect to one
-another. Docker also has a linking system that allows you to link multiple
-containers together and send connection information from one to another. When
-containers are linked, information about a source container can be sent to a
-recipient container. This allows the recipient to see selected data describing
-aspects of the source container.
+## 命名的重要性
+为了建立链接，Docker依赖于您的容器的名字。 您已经看到，您创建的每个容器都有自动创建的名称; 在本指南中，您已经熟悉我们的老朋友`nostalgic_morse`在本指南。 您也可以自己命名容器。 这个命名提供了两个有用的功能：
 
-### The importance of naming
+1. 以便于记住它们的方式命名具有特定功能的容器很有用，例如把包含Web应用程序的容器命名为`web`。
 
-To establish links, Docker relies on the names of your containers.
-You've already seen that each container you create has an automatically
-created name; indeed you've become familiar with our old friend
-`nostalgic_morse` during this guide. You can also name containers
-yourself. This naming provides two useful functions:
+2. 它为Docker提供了一个引用点，允许它引用其他容器，例如，您可以指定将容器`Web`链接到容器`db`。
 
-1. It can be useful to name containers that do specific functions in a way
-   that makes it easier for you to remember them, for example naming a
-   container containing a web application `web`.
-
-2. It provides Docker with a reference point that allows it to refer to other
-   containers, for example, you can specify to link the container `web` to container `db`.
-
-You can name your container by using the `--name` flag, for example:
+您可以使用`--name`标志命名容器，例如：
 
     $ docker run -d -P --name web training/webapp python app.py
 
-This launches a new container and uses the `--name` flag to
-name the container `web`. You can see the container's name using the
-`docker ps` command.
+这将启动一个新容器，并使用`--name`标志来命名容器`web`。 您可以使用`docker ps`命令查看容器的名称。
 
     $ docker ps -l
 
     CONTAINER ID  IMAGE                  COMMAND        CREATED       STATUS       PORTS                    NAMES
     aed84ee21bde  training/webapp:latest python app.py  12 hours ago  Up 2 seconds 0.0.0.0:49154->5000/tcp  web
 
-You can also use `docker inspect` to return the container's name.
+您也可以使用`docker inspect`返回容器的名称
 
+> ** 注意 **
+容器名称必须是唯一的。 这意味着您只能调用一个容器`web`。 如果要重新使用容器名称，必须先删除旧容器（使用`docker rm`），然后才能创建具有相同名称的新容器。 作为替代，可以在使用`docker run`命令的时候使用`--rm`标志。 这将在容器停止后立即删除它。
 
-> **Note:**
-> Container names have to be unique. That means you can only call
-> one container `web`. If you want to re-use a container name you must delete
-> the old container (with `docker rm`) before you can create a new
-> container with the same name. As an alternative you can use the `--rm`
-> flag with the `docker run` command. This will delete the container
-> immediately after it is stopped.
-
-## Communication across links
-
-Links allow containers to discover each other and securely transfer information
-about one container to another container. When you set up a link, you create a
-conduit between a source container and a recipient container. The recipient can
-then access select data about the source. To create a link, you use the `--link`
-flag. First, create a new container, this time one containing a database.
+## 通过链接通信
+链接允许容器发现彼此，并将一个容器的信息安全地传送到另一个容器。 设置链接时，将在源容器和接收容器之间创建一个管道。然后，接收者可以访问有关源的选择数据。 要创建链接，请使用`--link`标志。 首先，创建一个新的容器，这一次包含一个数据库。
 
     $ docker run -d --name db training/postgres
 
-This creates a new container called `db` from the `training/postgres`
-image, which contains a PostgreSQL database.
+这将以`training/postgres`镜像创建一个名为`db`的新容器，其中包含一个PostgreSQL数据库。
+现在，您需要删除先前创建的Web容器，以便您可以使用链接的容器替换它：
 
-Now, you need to delete the `web` container you created previously so you can replace it
-with a linked one:
+    $ docker run -d --name db training/postgres
 
-    $ docker rm -f web
-
-Now, create a new `web` container and link it with your `db` container.
+现在，创建一个新的`web`容器并将其与您的`db`容器相链接。
 
     $ docker run -d -P --name web --link db:db training/webapp python app.py
 
-This will link the new `web` container with the `db` container you created
-earlier. The `--link` flag takes the form:
+这将链接新的`web`容器与您之前创建的`db`容器。该`--link`标志的形式为：
 
     --link <name or id>:alias
 
-Where `name` is the name of the container we're linking to and `alias` is an
-alias for the link name. You'll see how that alias gets used shortly.
-The `--link` flag also takes the form:
+其中name是我们链接到的容器的名称，alias是链接名称的别名。 您会看到如何使用别名很快使用。 --link标志也采取以下形式：
 
 	--link <name or id>
 
-In which case the alias will match the name. You could have written the previous
-example as:
+在这种情况下，别名将匹配名称。 您可以把前面的例子写成：
 
     $ docker run -d -P --name web --link db training/webapp python app.py
 
-Next, inspect your linked containers with `docker inspect`:
+接下来，用`docker inspect`检查链接的容器：  
 
     {% raw %}
     $ docker inspect -f "{{ .HostConfig.Links }}" web
@@ -197,87 +126,46 @@ Next, inspect your linked containers with `docker inspect`:
     [/db:/web/db]
     {% endraw %}
 
-You can see that the `web` container is now linked to the `db` container
-`web/db`. Which allows it to access information about the `db` container.
+您可以看到链接`web/db`，表示`web`容器现在链接到`db`容器。 它允许`web`容器访问有关`db`容器的信息。
 
-So what does linking the containers actually do? You've learned that a link allows a
-source container to provide information about itself to a recipient container. In
-our example, the recipient, `web`, can access information about the source `db`. To do
-this, Docker creates a secure tunnel between the containers that doesn't need to
-expose any ports externally on the container; you'll note when we started the
-`db` container we did not use either the `-P` or `-p` flags. That's a big benefit of
-linking: we don't need to expose the source container, here the PostgreSQL database, to
-the network.
+那么容器链接实际上做了什么？ 您已经了解到，链接允许源容器向接收容器提供有关自身的信息。 在我们的示例中，接收者`web`可以访问有关`db`的信息。 为此，Docker在容器之间创建一个不需要在容器外部暴露任何端口的安全隧道; 您会注意到当我们启动db容器时，我们没有使用`-P`或`-p`标志。 这是链接的一个很大的好处：我们不需要将源容器（这里是PostgreSQL数据库）暴露给网络。
 
-Docker exposes connectivity information for the source container to the
-recipient container in two ways:
+Docker以两种方式将源容器的连接信息暴露给接收容器：
+* 环境变量
+* 更新`/etc/hosts`文件
 
-* Environment variables,
-* Updating the `/etc/hosts` file.
+## 环境变量
+当您链接容器时，Docker会创建几个环境变量。Docker基于`--link`参数在目标容器中自动创建环境变量。 它还把源容器中所有环境变量暴露给目标容器。 这些变量包括：
+* 源容器的Dockerfile中`ENV`命令所指定的
+* 源容器启动时，`docker run`命令的`-e`，`--env`和`--env-file`选项所指定的
 
-### Environment variables
+这些环境变量允许从目标容器内, 程序化的发现源容器的相关信息。
 
-Docker creates several environment variables when you link containers. Docker
-automatically creates environment variables in the target container based on
-the `--link` parameters.  It will also expose all environment variables
-originating from Docker from the source container. These include variables from:
+> **警告**：理解一个容器中的所有环境变量都可以通过Docker被它所链接到的容器获取到是非常重要的。如果敏感数据存储在其中，这可能具有严重的安全隐患。
 
-* the `ENV` commands in the source container's Dockerfile
-* the `-e`, `--env` and `--env-file` options on the `docker run`
-command when the source container is started
+Docker为`--link`参数中列出的每个目标容器设置一个`<alias> _NAME`环境变量。例如，如果一个称为`web`的新容器通过`--link db：webdb`链接到名为`db`的数据库容器，则Docker在`web`容器中创建一个`WEBDB_NAME = /web/webdb`变量。
 
-These environment variables enable programmatic discovery from within the
-target container of information related to the source container.
-
-> **Warning**:
-> It is important to understand that *all* environment variables originating
-> from Docker within a container are made available to *any* container
-> that links to it. This could have serious security implications if sensitive
-> data is stored in them.
-
-Docker sets an `<alias>_NAME` environment variable for each target container
-listed in the `--link` parameter. For example, if a new container called
-`web` is linked to a database container called `db` via `--link db:webdb`,
-then Docker creates a `WEBDB_NAME=/web/webdb` variable in the `web` container.
-
-Docker also defines a set of environment variables for each port exposed by the
-source container.  Each variable has a unique prefix in the form:
+Docker还为源容器公开的每个端口定义了一组环境变量。 每个变量具有以下形式的唯一前缀：
 
 `<name>_PORT_<port>_<protocol>`
 
-The components in this prefix are:
+此前缀中的组成部分是：
+* 在`--link`参数中指定的别名`<name>`（例如`webdb`）
+* `<port>`暴露的数字
+* `<protocol>`是TCP或UDP
 
-* the alias `<name>` specified in the `--link` parameter (for example, `webdb`)
-* the `<port>` number exposed
-* a `<protocol>` which is either TCP or UDP
+Docker使用此前缀格式定义三个不同的环境变量：
+* `prefix_ADDR`变量包含来自URL的IP地址，例如`WEBDB_PORT_5432_TCP_ADDR = 172.17.0.82`。
+* `prefix_PORT`变量只包含来自URL的端口号，例如`WEBDB_PORT_5432_TCP_PORT = 5432`。
+* `prefix_PROTO`变量只包含来自URL的协议，例如`WEBDB_PORT_5432_TCP_PROTO = tcp`。
 
-Docker uses this prefix format to define three distinct environment variables:
+如果容器暴露多个端口，则为每个端口定义一个环境变量集。这意味着，如果一个容器暴露4个端口，Docker创建12个环境变量，每个端口3个。
 
-* The `prefix_ADDR` variable contains the IP Address from the URL, for
-example `WEBDB_PORT_5432_TCP_ADDR=172.17.0.82`.
-* The `prefix_PORT` variable contains just the port number from the URL for
-example `WEBDB_PORT_5432_TCP_PORT=5432`.
-* The `prefix_PROTO` variable contains just the protocol from the URL for
-example `WEBDB_PORT_5432_TCP_PROTO=tcp`.
+另外，Docker创建了一个名为`<alias> _PORT`的环境变量。此变量包含源容器的第一个公开端口的URL。 “第一”端口被定义为具有最低编号的暴露端口。例如，考虑`WEBDB_PORT=tcp//172.17.0.825432`变量。如果该端口用于tcp和udp，则指定tcp。
 
-If the container exposes multiple ports, an environment variable set is
-defined for each one. This means, for example, if a container exposes 4 ports
-that Docker creates 12 environment variables, 3 for each port.
+最后，Docker还将来自源容器的每个Docker生成的环境变量作为目标中的环境变量。对于每个变量，Docker在目标容器中创建一个`<alias> _ENV_ <name>`变量。变量的值设置为Docker启动源容器时使用的值。
 
-Additionally, Docker creates an environment variable called `<alias>_PORT`.
-This variable contains the URL of the source container's first exposed port.
-The  'first' port is defined as the exposed port with the lowest number.
-For example, consider the `WEBDB_PORT=tcp://172.17.0.82:5432` variable.  If
-that port is used for both tcp and udp, then the tcp one is specified.
-
-Finally, Docker also exposes each Docker originated environment variable
-from the source container as an environment variable in the target. For each
-variable Docker creates an `<alias>_ENV_<name>` variable in the target
-container. The variable's value is set to the value Docker used when it
-started the source container.
-
-Returning back to our database example, you can run the `env`
-command to list the specified container's environment variables.
+返回到我们的数据库示例，您可以运行`env`命令来列出指定容器的环境变量。
 
 ```
     $ docker run --rm --name web2 --link db:db training/webapp env
@@ -292,31 +180,16 @@ command to list the specified container's environment variables.
     . . .
 ```
 
-You can see that Docker has created a series of environment variables with
-useful information about the source `db` container. Each variable is prefixed
-with
-`DB_`, which is populated from the `alias` you specified above. If the `alias`
-were `db1`, the variables would be prefixed with `DB1_`. You can use these
-environment variables to configure your applications to connect to the database
-on the `db` container. The connection will be secure and private; only the
-linked `web` container will be able to talk to the `db` container.
+您可以看到Docker已经创建了一系列环境变量以及有关源数据库容器的有用信息。 每个变量前缀有`DB_`，它是从上面指定的别名填充的。 如果别名是`db1`，那么变量将以`DB1_`作为前缀。 您可以使用这些环境变量来配置应用程序以连接到db容器上的数据库。 连接将是安全的和私人的; 只有链接的`web`容器才能够与`db`容器通信。
 
-### Important notes on Docker environment variables
+### Docker环境变量的重要注意事项
+与[`/etc/hosts`文件](#updating-the-etchosts-file)中的主机条目不同，如果重新启动源容器，是不会自动更新存储在环境变量中的IP地址的。我们建议使用`/etc/hosts`中的主机条目来解析链接容器的IP地址。
 
-Unlike host entries in the [`/etc/hosts` file](#updating-the-etchosts-file),
-IP addresses stored in the environment variables are not automatically updated
-if the source container is restarted. We recommend using the host entries in
-`/etc/hosts` to resolve the IP address of linked containers.
+这些环境变量只对容器中的第一个进程设置。 一些守护进程（如`sshd`）会在生成shell进行连接时擦除它们。
 
-These environment variables are only set for the first process in the
-container. Some daemons, such as `sshd`, will scrub them when spawning shells
-for connection.
+### 更新`/etc/hosts`file
 
-### Updating the `/etc/hosts` file
-
-In addition to the environment variables, Docker adds a host entry for the
-source container to the `/etc/hosts` file. Here's an entry for the `web`
-container:
+除了环境变量，Docker还会将源容器的主机条目添加到`/etc/hosts`文件中。这里是一个web容器的条目：
 
     $ docker run -t -i --rm --link db:webdb training/webapp /bin/bash
 
@@ -326,13 +199,7 @@ container:
     . . .
     172.17.0.5  webdb 6e5cdeb2d300 db
 
-You can see two relevant host entries. The first is an entry for the `web`
-container that uses the Container ID as a host name. The second entry uses the
-link alias to reference the IP address of the `db` container. In addition to
-the alias you provide, the linked container's name--if unique from the alias
-provided to the `--link` parameter--and the linked container's hostname will
-also be added in `/etc/hosts` for the linked container's IP address. You can ping
-that host now via any of these entries:
+您可以看到两个相关的主机条目。 第一个是`web`容器的条目，使用容器ID作为主机名。第二个条目使用链接别名以引用`db`容器的IP地址。 此外您提供的别名，链接的容器的名称(如果与提供给`--link`参数别名不同)，链接容器的主机名，也可以在`/etc/hosts`中为链接的容器的IP地址添加。 您现在可以通过以下任何方式`ping`那台主机:
 
     root@aed84ee21bde:/opt/webapp# apt-get install -yqq inetutils-ping
 
@@ -343,22 +210,13 @@ that host now via any of these entries:
     56 bytes from 172.17.0.5: icmp_seq=1 ttl=64 time=0.250 ms
     56 bytes from 172.17.0.5: icmp_seq=2 ttl=64 time=0.256 ms
 
-> **Note:**
-> In the example, you'll note you had to install `ping` because it was not included
-> in the container initially.
+> **注意**：在示例中，您将注意到，您必须安装ping，因为它最初未包含在容器中。
 
-Here, you used the `ping` command to ping the `db` container using its host entry,
-which resolves to `172.17.0.5`. You can use this host entry to configure an application
-to make use of your `db` container.
+在这里，您使用`ping`命令使用其主机条目对`db`容器执行ping操作，该条目解析为`172.17.0.5`。您可以使用此主机条目配置应用程序以使用您的`db`容器。  
 
-> **Note:**
-> You can link multiple recipient containers to a single source. For
-> example, you could have multiple (differently named) web containers attached to your
->`db` container.
+> **注意**：您可以将多个接收容器链接到单个源。例如，您可以将多个（不同命名的）Web容器附加到您的db容器。
 
-If you restart the source container, the linked containers `/etc/hosts` files
-will be automatically updated with the source container's new IP address,
-allowing linked communication to continue.
+如果重新启动源容器，链接的容器`/etc/hosts`文件将自动更新为源容器的新IP地址，从而允许链接的通信继续。
 
     $ docker restart db
 
@@ -372,4 +230,4 @@ allowing linked communication to continue.
     . . .
     172.17.0.9  db
 
-# Related information
+# 相关信息

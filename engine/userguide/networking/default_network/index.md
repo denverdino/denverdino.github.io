@@ -4,15 +4,12 @@ keywords: network, networking, bridge, docker,  documentation
 title: Default bridge network
 ---
 
-With the introduction of the Docker networks feature, you can create your own
-user-defined networks. The Docker default bridge is created when you install
-Docker Engine. It is a `bridge` network and is also named `bridge`. The topics
-in this section are related to interacting with that default bridge network.
+根据Docker网络功能，您可以创建自己的用户自定义网络。 当您安装Docker Engine时，将创建Docker默认网桥。 它是一个桥接网络，并命名为`briage`。 本节中的主题与与默认网桥网络交互相关。
 
-- [Understand container communication](container-communication.md)
-- [Legacy container links](dockerlinks.md)
-- [Binding container ports to the host](binding.md)
-- [Build your own bridge](build-bridges.md)
-- [Configure container DNS](configure-dns.md)
-- [Customize the docker0 bridge](custom-docker0.md)
-- [IPv6 with Docker](ipv6.md)
+- [理解容器通信](container-communication.md)
+- [旧容器链接](dockerlinks.md)
+- [将容器端口绑定到主机](binding.md)
+- [建立自己的网桥](build-bridges.md)
+- [配置容器DNS](configure-dns.md)
+- [自定义docker0网桥](custom-docker0.md)
+- [IPv6与Docker](ipv6.md)

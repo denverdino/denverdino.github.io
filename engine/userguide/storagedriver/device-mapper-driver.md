@@ -1,178 +1,118 @@
 ---
-description: Learn how to optimize your use of device mapper driver.
+description: 如何使用Device mapper存储驱动管理Docker
 keywords: container, storage, driver, device mapper
-title: Docker and the Device Mapper storage driver
+title: Docker 与 Device Mapper 存储驱动
 ---
 
-Device Mapper is a kernel-based framework that underpins many advanced
-volume management technologies on Linux. Docker's `devicemapper` storage driver
-leverages the thin provisioning and snapshotting capabilities of this framework
-for image and container management. This article refers to the Device Mapper
-storage driver as `devicemapper`, and the kernel framework as `Device Mapper`.
+Device Mapper是一个基于内核的存储框架，包含Linux上很多卷管理的技术。Docker的`devicemapper`存储驱动使用了这个框架中的thin provisioning和snapshotting的能力做镜像和容器的管理。这篇文章中`devicemapper`指Device Mapper存储驱动，而`Device Mapper`指内核存储框架。
 
->**Note**: The [Commercially Supported Docker Engine (CS-Engine) running on RHEL
-and CentOS Linux](https://www.docker.com/compatibility-maintenance) requires
-that you use the `devicemapper` storage driver.
+>**Note**: [RHEL and CentOS Linux上的商业支持版的Docker Engine (CS-Engine)](https://www.docker.com/compatibility-maintenance) 需要你使用`devicemapper` 存储驱动.
 
-## An alternative to AUFS
+## AUFS的替代者
 
-Docker originally ran on Ubuntu and Debian Linux and used AUFS for its storage
-backend. As Docker became popular, many of the companies that wanted to use it
-were using Red Hat Enterprise Linux (RHEL). Unfortunately, because the upstream
-mainline Linux kernel did not include AUFS, RHEL did not use AUFS either.
+Docker之前只能在Ubuntu或者Debian Linux上使用AUFS作为它的存储的后端。Docker变得流行起来后，很多公司希望在Red Hat Enterprise Linux (RHEL)上使用Docker。不行的是因为Linux kernel并没有合并AUFS，RHEL不能使用AUFS。
 
-To correct this Red Hat developers investigated getting AUFS into the mainline
-kernel. Ultimately, though, they decided a better idea was to develop a new
-storage backend. Moreover, they would base this new storage backend on existing
-`Device Mapper` technology.
+为了改变这个情况，Red Hat的开发者研究如何将AUFS合并到kernel的主管。最终，他们决定通过另外一种方式，即开发一种新的存储后端。并且他们基于现有的`Device Mapper`技术去开发新的存储后端。
 
-Red Hat collaborated with Docker Inc. to contribute this new driver. As a result
-of this collaboration, Docker's Engine was re-engineered to make the storage
-backend pluggable. So it was that the `devicemapper` became the second storage
-driver Docker supported.
+Red Hat通Docker公司合作，贡献了这个新的驱动。并且作为合作的结果，Docker Engine也重新设计支持可插拔的不同存储后端。所以`devicemapper`变成了Docker支持的第二个存储驱动。
 
-Device Mapper has been included in the mainline Linux kernel since version
-2.6.9. It is a core part of RHEL family of Linux distributions. This means that
-the `devicemapper` storage driver is based on stable code that has a lot of
-real-world production deployments and strong community support.
+Device Mapper从2.6.9的Linux内核就被包含了进来。它是RHEL的Linux发型版家族的重要的组成部分。这意味着`devicemapper`存储驱动是基于稳定的代码构建的，并且有真实的生产环境产品在使用，以及强大的社区支持。
 
 
-## Image layering and sharing
+## 镜像的分层和共享
 
-The `devicemapper` driver stores every image and container on its own virtual
-device. These devices are thin-provisioned copy-on-write snapshot devices.
-Device Mapper technology works at the block level rather than the file level.
-This means that `devicemapper` storage driver's thin provisioning and
-copy-on-write operations work with blocks rather than entire files.
+`devicemapper`驱动在它的虚拟设备中存储每个镜像和容器。这些设备是 thin-provisioned copy-on-write的快照设备。Device Mapper技术工作在块设备级别而不是文件级别。这意味着`devicemapper`存储驱动的thin provisioning操作和copy-on-write操作工作在磁盘块级别，而不是整个文件。
 
->**Note**: Snapshots are also referred to as *thin devices* or *virtual
->devices*. They all mean the same thing in the context of the `devicemapper`
->storage driver.
+>**Note**: Snapshots 也被成为 *thin devices* 或者 *virtual devices*. 
+> 在`devicemapper`存储驱动中他们表示同样的意思。
 
-With `devicemapper` the high level process for creating images is as follows:
+`devicemapper`创建镜像的处理流程如下：
 
-1. The `devicemapper` storage driver creates a thin pool.
+1. `devicemapper` 创建一个 thin pool.
 
-	The pool is created from block devices or loop mounted sparse files (more
-	on this later).
+	这个 pool是从块设备创建的或者通过稀疏文件的loop挂载创建的（下面会详细介绍）
 
-2. Next it creates a *base device*.
+2. 然后创建一个 *基础设备*.
 
-	A base device is a thin device with a filesystem. You can see which
-	filesystem is in use by running the `docker info` command and checking the
-	`Backing filesystem` value.
+	一个基础设备是一个thin设备加上文件系统，你可以通过`docker info`命令中的`Backing filesystem`值看到这个具体的文件系统。
 
-3. Each new image (and image layer) is a snapshot of this base device.
+3. 每个新的镜像和镜像的层作为这个基础设备的一个快照。
 
-	These are thin provisioned copy-on-write snapshots. This means that they
-	are initially empty and only consume space from the pool when data is written
-	to them.
+	他们都是thin provisioned出来的copy-on-write的快照，这一意味着他们初始的时候是空的，只有在数据写入到其中的时候才会真正的占用空间。
 
-With `devicemapper`, container layers are snapshots of the image they are
-created from. Just as with images, container snapshots are thin provisioned
-copy-on-write snapshots. The container snapshot stores all updates to the
-container. The `devicemapper` allocates space to them on-demand from the pool
-as and when data is written to the container.
+通过`devicemapper`，容器层就是创建它的镜像的snapshot。和镜像一样，容器的snapshot也是provisioned copy-on-write的snapshot。容器的snapshot中保存了所有容器中的改变。`devicemapper`只会在数据写入到容器的时候才会从pool中实际的分配空间。
 
-The high level diagram below shows a thin pool with a base device and two
-images.
+下面这个总览图展示了基础的设备以及两个镜像。
 
 ![](images/base_device.jpg)
 
-If you look closely at the diagram you'll see that it's snapshots all the way
-down. Each image layer is a snapshot of the layer below it. The lowest layer of
- each image is a snapshot of the base device that exists in the pool. This
-base device is a `Device Mapper` artifact and not a Docker image layer.
+如果你仔细观察，你会发现他的快照是一路向下的，每个镜像的层是它下层的层的一个快照。而最下面的层是pool中的基础设备的快照。这个基础设备是`Device Mapper`的组件，不是Docker镜像的层。
 
-A container is a snapshot of the image it is created from. The diagram below
-shows two containers - one based on the Ubuntu image and the other based on the
- Busybox image.
+一个容器是创建它的镜像的快照。下面这张图展示了两个基于Ubuntu镜像和Busybox镜像的容器。
 
 ![](images/two_dm_container.jpg)
 
 
-## Reads with the devicemapper
+## 使用devicemapper读取
 
-Let's look at how reads and writes occur using the `devicemapper` storage
-driver. The diagram below shows the high level process for reading a single
-block (`0x44f`) in an example container.
+让我们一起看下在使用`devicemapper`存储驱动读取和写入时会发生什么。下面这张图展示了在一个示例容器中读取一个块(`0x44f`)。
 
 ![](images/dm_container.jpg)
 
-1. An application makes a read request for block `0x44f` in the container.
+1. 应用程序在容器中对`0x44f`发起读取的请求。
 
-	Because the container is a thin snapshot of an image it does not have the
-	data. Instead, it has a pointer (PTR) to where the data is stored in the image
-	snapshot lower down in the image stack.
+	因为容器是镜像的一个快照，所以它并没有数据，不过它有一个指针(PTR)指向真正数据存储的镜像层对应的snapshot。
 
-2. The storage driver follows the pointer to block `0xf33` in the snapshot
-relating to image layer `a005...`.
+2. 存储驱动跟踪指针到`a005...`的镜像中的`0xf33`块。
 
-3. The `devicemapper` copies the contents of block `0xf33` from the image
-snapshot to memory in the container.
+3. `devicemapper`存储驱动拷贝`0xf33`的镜像snapshot中的块内容到容器的内存中。
 
-4. The storage driver returns the data to the requesting application.
+4. 存储驱动返回数据给需要的应用程序。
 
-## Write examples
+## 写入数据的例子
 
-With the `devicemapper` driver, writing new data to a container is accomplished
- by an *allocate-on-demand* operation. Updating existing data uses a
-copy-on-write operation. Because Device Mapper is a block-based technology
-these operations occur at the block level.
+使用`devicemapper`驱动，往容器中写入数据时，依赖于它的 *allocate-on-demand*操作。使用copy-on-write操作。因为Device Mapper是基于块的技术，所以这些操作发生在块的层次。
 
-For example, when making a small change to a large file in a container, the
-`devicemapper` storage driver does not copy the entire file. It only copies the
- blocks to be modified. Each block is 64KB.
+例如，当对一个大文件做很小的改动时，`devicemapper`存储驱动并不会拷贝整个文件。它仅仅拷贝修改的块，每个块的大小是64KB。
 
-### Writing new data
+### 写入新数据
 
-To write 56KB of new data to a container:
+如果写入56KB的新数据到一个容器中：
 
-1. An application makes a request to write 56KB of new data to the container.
+1. 应用程序在容器中发起了一个写入56KB的写入新数据的请求。
 
-2. The allocate-on-demand operation allocates a single new 64KB block to the
-container's snapshot.
+2. allocte-on-demand操作会分配一块新的64KB的块给容器的snapshot。
 
-	If the write operation is larger than 64KB, multiple new blocks are
-	allocated to the container's snapshot.
+	如果写入的数据大于64KB，会分配给容器的snapshot多个块。
 
-3. The data is written to the newly allocated block.
+3. 数据写入到新分配的块中。
 
-### Overwriting existing data
+### 复写已存在的数据
 
-To modify existing data for the first time:
+第一次修改已存在的数据时。
 
-1. An application makes a request to modify some data in the container.
+1. 应用程序发起修改某些数据的请求。
 
-2. A copy-on-write operation locates the blocks that need updating.
+2. copy-on-write操作找到需要更新的块。
 
-3. The operation allocates new empty blocks to the container snapshot and
-copies the data into those blocks.
+3. 这个操作会分配新的空的块给容器的snapshot，并拷贝数据到这些块中。
 
-4. The modified data is written into the newly allocated blocks.
+4. 修改的数据将写入到新分配的块中。
 
-The application in the container is unaware of any of these
-allocate-on-demand and copy-on-write operations. However, they may add latency
-to the application's read and write operations.
+容器中的应用程序无需感知这些allocate-on-demand和copy-on-write操作。不过他们可能会增加应用程序读写操作的时间。
 
-## Configure Docker with devicemapper
+## 配置Docker使用`device mapper`
 
-The `devicemapper` is the default Docker storage driver on some Linux
-distributions. This includes RHEL and most of its forks. Currently, the
-following distributions support the driver:
+`devicemapper`是Docker在某些Linux发行版上的默认存储驱动，这些发行版包括RHEL以及它的大部分下游发行版。目前这个存储驱动支持的发行版包括：
 
 * RHEL/CentOS/Fedora
 * Ubuntu 12.04
 * Ubuntu 14.04
 * Debian
 
-Docker hosts running the `devicemapper` storage driver default to a
-configuration mode known as `loop-lvm`. This mode uses sparse files to build
-the thin pool used by image and container snapshots. The mode is designed to
-work out-of-the-box with no additional configuration. However, production
-deployments should not run under `loop-lvm` mode.
+Docker宿主机默认通过周知的`loop-lvm`配置参数。这个模式使用稀疏文件构建的thin pool作为存储镜像和容器的snapshot。这个模式设计为不需要额外配置的开箱即用的使用体验。不过生产环境不应该使用`loop-lvm`模式部署。
 
-You can detect the mode by viewing the `docker info` command:
+你可以通过`docker info`命令检查这个模式：
 
 ```bash
 $ sudo docker info
@@ -190,92 +130,74 @@ Storage Driver: devicemapper
  [...]
  ```
 
-The output above shows a Docker host running with the `devicemapper` storage
-driver operating in `loop-lvm` mode. This is indicated by the fact that the
-`Data loop file` and a `Metadata loop file` are on files under
-`/var/lib/docker/devicemapper/devicemapper`. These are loopback mounted sparse
-files.
+上面的输出显示`devicemapper`存储驱动配置为`loop-lvm`的模式。并且展示了`Data loop file`和`Metadata loop file`都是在`/var/lib/docker/devicemapper/devicemapper`目录下面。他们是本地挂载的稀疏文件。
 
-### Configure direct-lvm mode for production
+### 在生产环境配置 direct-lvm 模式
 
-The preferred configuration for production deployments is `direct-lvm`. This
-mode uses block devices to create the thin pool. The following procedure shows
-you how to configure a Docker host to use the `devicemapper` storage driver in
-a `direct-lvm` configuration.
+在生产环境推荐使用`direct-lvm`模式配置。这个模式直接使用块设备创建thin pool。下面的流程展示如何使用`direct-lvm`配置Docker宿主机使用`devicemapper`驱动。
 
-> **Caution:** If you have already run the Docker daemon on your Docker host
-> and have images you want to keep, `push` them to Docker Hub or your private
-> Docker Trusted Registry before attempting this procedure.
+> **警告:** 如果你之前已经在你的宿主机上使用了Docker并且有需要保存的镜像，请先将他们Push到
+> Docker Hub或者你私有的Docker Trusty Registry。
 
-The procedure below will create a logical volume configured as a thin pool to
-use as backing for the storage pool. It assumes that you have a spare block
-device at `/dev/xvdf` with enough free space to complete the task. The device
-identifier and volume sizes may be different in your environment and you
-should substitute your own values throughout the procedure. The procedure also
-assumes that the Docker daemon is in the `stopped` state.
+下面的流程将创建一个逻辑卷，并将它配置为一个thin poll作为存储池的后端存储。它需要你事先拥有一个足够空间的块设备在`/dev/xvdf`上。这个设备的标识和卷的大小根据你的环境会有所不同，你需要在这个过程中做适配和调整。这个流程也需要Docker daemon是停止状态。
 
-1. Log in to the Docker host you want to configure and stop the Docker daemon.
+1. 登录到你需要配置的Docker宿主机，并停止Docker daemon。
 
-2. Install the LVM2 package.
-	The LVM2 package includes the userspace toolset that provides logical volume
-	management facilities on linux.
+2. 安装LVM2的软件包
+	LVM2的软件包包括管理逻辑卷的用户态的工具集
 
-3. Create a physical volume replacing `/dev/xvdf` with your block device.
+3. 通过你的块设备创建一个物理卷，并放置在`/dev/xvdf`。
 
 	```bash
 	$ pvcreate /dev/xvdf
 	```
 
-4. Create a 'docker' volume group.
+4. 创建一个叫'docker'名的group
 
 	```bash
 	$ vgcreate docker /dev/xvdf
 	```
 
-5. Create a thin pool named `thinpool`.
+5. 创建一个名为`thinpool`的pool
 
-	In this example, the data logical is 95% of the 'docker' volume group size.
-	Leaving this free space allows for auto expanding of either the data or
-	metadata if space runs low as a temporary stopgap.
+	在这个例子中，逻辑数据是'docker'卷组数据的95%，留出这些空闲空间是为了在剩余数据或者元数据空间不足到stopgap时自动扩容。
 
 	```bash
 	$ lvcreate --wipesignatures y -n thinpool docker -l 95%VG
 	$ lvcreate --wipesignatures y -n thinpoolmeta docker -l 1%VG
 	```
 
-6. Convert the pool to a thin pool.
+6. 将poll转换成一个thin poll
 
 	```bash
 	$ lvconvert -y --zero n -c 512K --thinpool docker/thinpool --poolmetadata docker/thinpoolmeta
 	```
 
-7. Configure autoextension of thin pools via an `lvm` profile.
+7. 通过`lvm`配置文件配置thin pool的自动扩展
 
 	```bash
 	$ vi /etc/lvm/profile/docker-thinpool.profile
 	```
 
-8. Specify 'thin_pool_autoextend_threshold' value.
+8. 配置 'thin_pool_autoextend_threshold' 值.
 
-	The value should be the percentage of space used before `lvm` attempts
-	to autoextend the available space (100 = disabled).
+	这个值是上一步中配置`lvm`中自动扩展的空间，是空间的百分比（100 = 关闭）
 
 	```
 	thin_pool_autoextend_threshold = 80
 	```
 
-9. Modify the `thin_pool_autoextend_percent` for when thin pool autoextension occurs.
-
-	The value's setting is the perentage of space to increase the thin pool (100 =
-	disabled)
+9. 当thin pool自动扩展发生时修改 `thin_pool_autoextend_percent` 的值。
+	
+	这个值修改了增加thin pool的百分比(100 = 关闭)。
 
 	```
 	thin_pool_autoextend_percent = 20
 	```
 
-10. Check your work, your `docker-thinpool.profile` file should appear similar to the following:
+10. 检查你的工作，你的`docker-thinpool.profile`文件应该与下面类似：
 
-	An example `/etc/lvm/profile/docker-thinpool.profile` file:
+	`/etc/lvm/profile/docker-thinpool.profile`示例文件:
 
 	```
 	activation {
@@ -284,41 +206,36 @@ assumes that the Docker daemon is in the `stopped` state.
 	}
 	```
 
-11. Apply your new lvm profile
+11. 使你的新的lvm的配置生效
 
 	```bash
 	$ lvchange --metadataprofile docker-thinpool docker/thinpool
 	```
 
-12. Verify the `lv` is monitored.
+12. 验证 `lv` 是被监控的.
 
 	```bash
 	$ lvs -o+seg_monitor
 	```
 
-13. If the Docker daemon was previously started, move your existing graph driver
-    directory out of the way.
+13. 如果之前Docker dameon启动过，先移除现有的存储驱动的目录。
 
-    Moving the graph driver removes any images, containers, and volumes in your
-    Docker installation. These commands move the contents of the
-    `/var/lib/docker` directory to a new directory named `/var/lib/docker.bk`.
-    If any of the following steps fail and you need to restore, you can remove
-    `/var/lib/docker` and replace it with `/var/lib/docker.bk`.
-
+    迁移存储驱动意味着移动你的Docker的所有的镜像，容器和volume。这些命令将移动之前的`/var/lib/docker`目录到一个新的`/var/lib/docker.bk`目录。如果下面的步骤失败了，你需要加载之前的内容时，你可以将`/var/lib/docker`替换成`/var/lob/docker.bk`目录的内容。
+    
     ```bash
     $ mkdir /var/lib/docker.bk
     $ mv /var/lib/docker/* /var/lib/docker.bk
     ```
 
-14. Configure the Docker daemon with specific devicemapper options.
+14. 通过指定`devicemapper`特定的参数配置`devicemapper`驱动
 
-    Now that your storage is configured, configure the Docker daemon to use it. There are two ways to do this. You can set options on the command line if you start the daemon there:
+    现在你的存储已经配置好了，再配置Docker daemon使用这个存储。下面有两种方式可以做到，你可以设置启动daemon的命令行的参数：
 
     ```bash
     --storage-driver=devicemapper --storage-opt=dm.thinpooldev=/dev/mapper/docker-thinpool --storage-opt=dm.use_deferred_removal=true --storage-opt=dm.use_deferred_deletion=true
     ```
 
-	You can also set them for startup in the `daemon.json` configuration, for example:
+	你也可以在`daemon.json`中设置启动的配置，例如：
 
     ```json
     {
@@ -331,51 +248,42 @@ assumes that the Docker daemon is in the `stopped` state.
     }
     ```
 
-    >**Note**: Always set both `dm.use_deferred_removal=true` and `dm.use_deferred_deletion=true` to prevent unintentionally leaking mount points.
+    >**Note**: 同时设置 `dm.use_deferred_removal=true` and `dm.use_deferred_deletion=true` 已避免挂载点泄露。
 
-15. If using systemd and modifying the daemon configuration via unit or drop-in file, reload systemd to scan for changes.
+15. 如果通过systemd的unit或drop-in文件修改daemon的配置，需要reload systemd以便扫描到这些修改。
 
 	```bash
 	$ systemctl daemon-reload
 	```
 
-16. Start the Docker daemon.
+16. 启动Docker daemon.
 
 	```bash
 	$ systemctl start docker
 	```
 
-After you start the Docker daemon, ensure you monitor your thin pool and volume
-group free space. While the volume group will auto-extend, it can still fill
-up. To monitor logical volumes, use `lvs` without options or `lvs -a` to see tha
-data and metadata sizes. To monitor volume group free space, use the `vgs` command.
+当你启动了Docker daemon后，要保证监控你的thin poll和卷组的空闲空间。当卷组扩容之后，它可能会用尽空间。使用`lvs`或者`lvs -a`可以看到数据和元数据的空间。如果要兼容卷组的空闲空间，可以使用`vgs`命令。
 
-Logs can show the auto-extension of the thin pool when it hits the threshold, to
-view the logs use:
+当thin poll触及到它的阈值时，可以通过日志看到它的自动扩容，可以通过下面的命令查看到日志：
 
 ```bash
 $ journalctl -fu dm-event.service
 ```
 
-After you have verified that the configuration is correct, you can remove the
-`/var/lib/docker.bk` directory which contains the previous configuration.
+当你验证完配置是正确的了，你就可以删除`/var/lib/docker.bk`包含之前配置的目录了。
 
 ```bash
 $ rm -rf /var/lib/docker.bk
 ```
 
-If you run into repeated problems with thin pool, you can use the
-`dm.min_free_space` option to tune the Engine behavior. This value ensures that
-operations fail with a warning when the free space is at or near the minimum.
-For information, see <a
+如果你在使用thin pool的时候反复遇到问题，你可以使用`dm.min_free_space`参数调优Engine的行为。这个参数保证在空闲空间小时写入数据失败，并返回报警。更多信息可以参考<a
 href="/../../reference/commandline/dockerd/#storage-driver-options"
-target="_blank">the storage driver options in the Engine daemon reference</a>.
+target="_blank">Docker Engine参考之存储驱动配置</a>。
 
 
-### Examine devicemapper structures on the host
+### 在宿主机上检测devicemapper的结构
 
-You can use the `lsblk` command to see the device files created above and the
-`pool` that the `devicemapper` storage driver creates on top of them.
+你可以使用`lsblk`命令看到`devicemapper`存储驱动在`poll`上面创建的设备文件。
 
 ```bash
 $ sudo lsblk
@@ -389,40 +297,27 @@ xvdf			   202:80	0	10G  0 disk
   └─docker-202:1-1032-pool 253:2	0	10G  0 dm
 ```
 
-The diagram below shows the image from prior examples updated with the detail
-from the `lsblk` command above.
+这个图中展示了上面的`lsblk`命令的设备的结构。
 
 ![](images/lsblk-diagram.jpg)
 
-In the diagram, the pool is named `Docker-202:1-1032-pool` and spans the `data`
-and `metadata` devices created earlier. The `devicemapper` constructs the pool
-name as follows:
+在图中，包含之前创建的`数据`和`元数据`的名为`Docker-202:1-1032-poll`的池子。`devicemapper`的驱动会设置pool的名字如下：
 
 ```
 Docker-MAJ:MIN-INO-pool
 ```
 
-`MAJ`, `MIN` and `INO` refer to the major and minor device numbers and inode.
+`MAJ`, `MIN` and `INO` 指最大和最小的设备号以及inode。
 
-Because Device Mapper operates at the block level it is more difficult to see
-diffs between image layers and containers. Docker 1.10 and later no longer
-matches image layer IDs with directory names in `/var/lib/docker`. However,
-there are two key directories. The `/var/lib/docker/devicemapper/mnt` directory
- contains the mount points for image and container layers. The
-`/var/lib/docker/devicemapper/metadata`directory contains one file for every
-image layer and container snapshot. The files contain metadata about each
-snapshot in JSON format.
+因为Device Mapper在块级别工作，所以它查看镜像的层及容器的层的区别比较复杂。Docker 1.10和之后的版本在`/var/lib/docker`不在使用镜像层的ID作为目录名。不过，这里仍有两个关键的目录，`/var/lib/docker/devicemapper/mnt`目录包含了容器和镜像的挂载点。`/var/lib/docker/devicemapper/metadata`目录包含了每个镜像的层或容器的snapshot。这个文件通过JSON格式包含层的元信息。
 
-## Increase capacity on a running device
+## 提升一个运行中的设备的大小
 
-You can increase the capacity of the pool on a running thin-pool device. This is
-useful if the data's logical volume is full and the volume group is at full
-capacity.
+你可以实时的增加一个运行中的thin-pool设备的大小。这个功能在逻辑卷或者卷组满了的时候很有用。
 
-### For a loop-lvm configuration
+### loop-lvm 配置
 
-In this scenario, the thin pool is configured to use `loop-lvm` mode. To show
-the specifics of the existing configuration use `docker info`:
+在这个场景中，thin pool配置成使用`loop-lvm`的模式。下面展示了已经配置好的输出的`docker info`信息：
 
 ```bash
 $ sudo docker info
@@ -458,9 +353,10 @@ Logging Driver: json-file
 [...]
 ```
 
-The `Data Space` values show that the pool is 100GB total. This example extends the pool to 200GB.
+`Data Space`数值展示了这个pool总共有100GB大小。这个例子扩展这个pool到200GB。
 
-1. List the sizes of the devices.
+1. 罗列设备的大小。  
+
 
 	```bash
 	$ sudo ls -lh /var/lib/docker/devicemapper/devicemapper/
@@ -470,13 +366,15 @@ The `Data Space` values show that the pool is 100GB total. This example extends 
 	-rw------- 1 root root 2.0G Mar 31 11:17 metadata
 	```
 
-2. Truncate `data` file to the size of the `metadata` file (approximage 200GB).
+2. 扩展`data`文件到`metadata`的大小（大约 200GB)。  
+
 
 	```bash
 	$ sudo truncate -s 214748364800 /var/lib/docker/devicemapper/devicemapper/data
 	```
 
-3. Verify the file size changed.
+3. 验证文件大小被改变了.  
+
 
 	```bash
 	$ sudo ls -lh /var/lib/docker/devicemapper/devicemapper/
@@ -486,7 +384,8 @@ The `Data Space` values show that the pool is 100GB total. This example extends 
 	-rw------- 1 root root 2.0G Apr 19 13:27 metadata
 	```
 
-4. Reload data loop device
+4. 重载数据的loop设备  
+
 
 	```bash
 	$ sudo blockdev --getsize64 /dev/loop0
@@ -500,9 +399,10 @@ The `Data Space` values show that the pool is 100GB total. This example extends 
 	214748364800
 	```
 
-5. Reload devicemapper thin pool.
+5. 重载devicemapper的thin pool.  
 
-	a. Get the pool name first.
+	a. 首先得到pool的名字.  
+
 
 	```bash
 	$ sudo dmsetup status | grep pool
@@ -511,9 +411,10 @@ The `Data Space` values show that the pool is 100GB total. This example extends 
 	422/524288 18338/1638400 - rw discard_passdown queue_if_no_space -
 	```
 
-	The name is the string before the colon.
+	名字是冒号前面的字符串。
 
-	b. Dump the device mapper table first.
+	b. 首先展示device mapper的table。  
+
 
 	```bash
 	$ sudo dmsetup table docker-8:1-123141-pool
@@ -521,14 +422,12 @@ The `Data Space` values show that the pool is 100GB total. This example extends 
 	0 209715200 thin-pool 7:1 7:0 128 32768 1 skip_block_zeroing
 	```
 
-	c. Calculate the real total sectors of the thin pool now.
+	c. 计算现在的thin的全部的扇区数。  
+ 
+	修改表信息中的第二个数值到映射到512个字节的扇区个数。例如新的loop的大小是200GB，那么久修改第二个数字到419430400。
 
-	Change the second number of the table info (i.e. the disk end sector) to
-	reflect the new number of 512 byte sectors in the disk. For example, as the
-	new loop size is 200GB, change the second number to 419430400.
+	d. 使用新的扇区配置重载thin pool。  
 
-
-	d. Reload the thin pool with the new sector number
 
 	```bash
 	$ sudo dmsetup suspend docker-8:1-123141-pool \
@@ -536,26 +435,22 @@ The `Data Space` values show that the pool is 100GB total. This example extends 
 	    && sudo dmsetup resume docker-8:1-123141-pool
 	```
 
-#### The device_tool
+#### device_tool
 
-The Docker's projects `contrib` directory contains not part of the core
-distribution. These tools that are often useful but can also be out-of-date. <a
-href="https://goo.gl/wNfDTi">In this directory, is the `device_tool.go`</a>
-which you can also resize the loop-lvm thin pool.
+Docker项目的`contrib`目录的核心发布不包含这个。这些工具很有用但是可能会过时。<a
+href="https://goo.gl/wNfDTi">在这个目录下的`device_tool.go`</a>可以帮助你修改loop-lvm的thin pool大小。
 
-To use the tool, compile it first. Then, do the following to resize the pool:
+如果需要使用这个工具，首先编译它，然后使用下面的命令修改pool的大小:  
 
 ```bash
 $ ./device_tool resize 200GB
 ```
 
-### For a direct-lvm mode configuration
+### direct-lvm模式配置
 
-In this example, you extend the capacity of a running device that uses the
-`direct-lvm` configuration. This example assumes you are using the `/dev/sdh1`
-disk partition.
+在这个例子中，你可以扩展运行中的使用`direct-lvm`配置的设备的大小。下面的例子使用的是`/dev/sdh1`磁盘分区。
 
-1. Extend the volume group (VG) `vg-docker`.
+1. 扩展卷组 (VG) `vg-docker`.
 
 	```bash
 	$ sudo vgextend vg-docker /dev/sdh1
@@ -563,9 +458,9 @@ disk partition.
 	Volume group "vg-docker" successfully extended
 	```
 
-	Your volume group may use a different name.
+	你的卷组可能是别的名字.
 
-2. Extend the `data` logical volume(LV) `vg-docker/data`
+2. 扩展`vg-docker/data`对应的 `data` 逻辑卷(LV) 
 
 	```bash
 	$ sudo lvextend  -l+100%FREE -n vg-docker/data
@@ -574,9 +469,9 @@ disk partition.
 	Logical volume data successfully resized
 	```
 
-3. Reload devicemapper thin pool.
+3. 重载devicemapper的thin pool。
 
-	a. Get the pool name.
+	a. 获得pool的名字。
 
 	```bash
 	$ sudo dmsetup status | grep pool
@@ -584,9 +479,9 @@ disk partition.
 	docker-253:17-1835016-pool: 0 96460800 thin-pool 51593 6270/1048576 701943/753600 - rw no_discard_passdown queue_if_no_space
 	```
 
-	The name is the string before the colon.
+	冒号之前的字符串就是pool的名字。
 
-	b. Dump the device mapper table.
+	b. 打印出device mapper的设备表。
 
 	```bash
 	$ sudo dmsetup table docker-253:17-1835016-pool
@@ -594,12 +489,9 @@ disk partition.
 	0 96460800 thin-pool 252:0 252:1 128 32768 1 skip_block_zeroing
 	```
 
-	c. Calculate the real total sectors of the thin pool now. we can use `blockdev` to get the real size of data lv.
-
-	Change the second number of the table info (i.e. the number of sectors) to
-	reflect the new number of 512 byte sectors in the disk. For example, as the
-	new data `lv` size is `264132100096` bytes, change the second number to
-	`515883008`.
+	c. 计算thin pool的正在使用的总的扇区数，我们可以通过`blockdev`得到目前的数据的卷的大小。
+	
+	修改表信息中的第二个数值到映射到512个字节的扇区个数。例如新的数据卷的大小是`264132100096`，那么修改第二个数值到`515883008`。
 
 	```bash
 	$ sudo blockdev --getsize64 /dev/vg-docker/data
@@ -607,7 +499,7 @@ disk partition.
 	264132100096
 	```
 
-	d. Then reload the thin pool with the new sector number.
+	d. 使用新的卷的数值重载thin pool使用新的大小。
 
 	```bash
 	$ sudo dmsetup suspend docker-253:17-1835016-pool \
@@ -615,71 +507,40 @@ disk partition.
 	    && sudo dmsetup resume docker-253:17-1835016-pool
 	```
 
-## Device Mapper and Docker performance
+## Device Mapper 和 Docker 性能
 
-It is important to understand the impact that allocate-on-demand and
-copy-on-write operations can have on overall container performance.
+理解 allocate-on-demand和 copy-on-write操作对容器性能的影响是很重要的。
 
-### Allocate-on-demand performance impact
+### Allocate-on-demand 性能影响
 
-The `devicemapper` storage driver allocates new blocks to a container via an
-allocate-on-demand operation. This means that each time an app writes to
-somewhere new inside a container, one or more empty blocks has to be located
-from the pool and mapped into the container.
+`devicemapper`存储驱动通过allocate-on-demand操作分配给容器新的块。这意味容器中的应用写入新的内容的时候，一个或者多个块会被从pool中分配并映射到容器中。
 
-All blocks are 64KB. A write that uses less than 64KB still results in a single
- 64KB block being allocated. Writing more than 64KB of data uses multiple 64KB
-blocks. This can impact container performance, especially in containers that
-perform lots of small writes. However, once a block is allocated to a container
- subsequent reads and writes can operate directly on that block.
+所有的块的大小都是64KB。小于64KB的写入同样会导致分配64KB的块。写入超过64KB的数据会分配多个块。这个会影响到容器的性能，特别是容器中昌盛很多小的写入时。不过一旦一个block分配给容器后，后续的读取和写入会直接访问到这个块。
 
-### Copy-on-write performance impact
+### Copy-on-write 性能影响
 
-Each time a container updates existing data for the first time, the
-`devicemapper` storage driver has to perform a copy-on-write operation. This
-copies the data from the image snapshot to the container's snapshot. This
-process can have a noticeable impact on container performance.
+容器中第一次修改容器中已存在的数据时，`devicemapper`存储驱动会做一个copy-on-write操作。它会从镜像的snapshot中拷贝数据到容器的snapshot中。这个会对容器的性能有显著的影响。
 
-All copy-on-write operations have a 64KB granularity. As a results, updating
-32KB of a 1GB file causes the driver to copy a single 64KB block into the
-container's snapshot. This has obvious performance advantages over file-level
-copy-on-write operations which would require copying the entire 1GB file into
-the container layer.
+所有的copy-on-write操作同样拥有64KB的粒度。修改一个1GB的文件的32KB会导致复制一个64KB的块到容器的snapshot中。这个操作会比需要拷贝整个1GB文件的文件级别的copy-on-write操作要有显著的性能优势。
 
-In practice, however, containers that perform lots of small block writes
-(<64KB) can perform worse with `devicemapper` than with AUFS.
+在实践中发现，容器产生大量小的块(<64KB)的写入的话，`devicemapper`性能不如AUFS。
 
-### Other device mapper performance considerations
+### 其他的 device mapper 性能的考虑
 
-There are several other things that impact the performance of the
-`devicemapper` storage driver.
+下面是别的一些影响`devicemapper`存储驱动的东西。
 
-- **The mode.** The default mode for Docker running the `devicemapper` storage
-  driver is `loop-lvm`. This mode uses sparse files and suffers from poor
-  performance. It is **not recommended for production**. The recommended mode for
-  production environments is `direct-lvm` where the storage driver writes
-  directly to raw block devices.
+- **模式** 默认的Docker运行`devicemapper`存储驱动的模式是`loop-lvm`的方式，这个模式使用稀疏文件，会导致比较差的性能。**不推荐在生产环境使用**。在生产环境推荐使用`direct-lv`的方式，也就是说存储驱动直接写入到原始块设备。
 
-- **High speed storage.** For best performance you should place the `Data file`
-  and `Metadata file` on high speed storage such as SSD. This can be direct
-  attached storage or from a SAN or NAS array.
+- **高速存储** 如果希望有更好的性能，你需要将`Data file`和`Metadata file`存储在高速存储上，比如SSD。他们可以直接挂载存储，或者通过SAN或NAS阵列的方式挂载。
 
-- **Memory usage.** `devicemapper` is not the most memory efficient Docker
-  storage driver. Launching *n* copies of the same container loads *n* copies of
-  its files into memory. This can have a memory impact on your Docker host. As a
-  result, the `devicemapper` storage driver may not be the best choice for PaaS
-  and other high density use cases.
+- **内存使用** `devicemapper`在Docker存储驱动中内存效率不占优。容器同时加载同一个文件会在内存中有多个拷贝实例。这个会对你的Docker宿主机的内存有影响。所以`devicemapper`存储驱动并不是Paas和高密度的使用场景的最佳的选择。
 
-One final point, data volumes provide the best and most predictable
-performance. This is because they bypass the storage driver and do not incur
-any of the potential overheads introduced by thin provisioning and
-copy-on-write. For this reason, you should to place heavy write workloads on
-data volumes.
+最后一点, 数据卷提供最好的以及可预测的性能。这是因为它绕过存储驱动，不会增加由精简配置和copy-on-write带来的额外的性能消耗。由于这个原因，你应该将更重负载的数据读写放到数据卷中。
 
-## Related Information
+## 相关信息
 
-* [Understand images, containers, and storage drivers](imagesandcontainers.md)
-* [Select a storage driver](selectadriver.md)
-* [AUFS storage driver in practice](aufs-driver.md)
-* [Btrfs storage driver in practice](btrfs-driver.md)
-* [daemon reference](../../reference/commandline/dockerd.md#storage-driver-options)
+* [理解镜像，容器，存储驱动](imagesandcontainers.md)
+* [选择存储驱动](selectadriver.md)
+* [AUFS 存储驱动实践](aufs-driver.md)
+* [Btrfs 存储驱动实践](btrfs-driver.md)
+* [daemon 配置参考](../../reference/commandline/dockerd.md#storage-driver-options)

@@ -4,130 +4,93 @@ keywords: 'container, storage, driver, ZFS '
 title: Docker and ZFS in practice
 ---
 
-ZFS is a next generation filesystem that supports many advanced storage
-technologies such as volume management, snapshots, checksumming, compression
-and deduplication, replication and more.
+ZFS是新一代文件系统。支持许多高级存储技术（如卷管理，快照，校验，压缩和重复数据删除，复制等）。
 
-It was created by Sun Microsystems (now Oracle Corporation) and is open sourced
- under the CDDL license. Due to licensing incompatibilities between the CDDL
-and GPL, ZFS cannot be shipped as part of the mainline Linux kernel. However,
-the ZFS On Linux (ZoL) project provides an out-of-tree kernel module and
-userspace tools which can be installed separately.
+它由Sun Microsystems（现为Oracle Corporation）创建，并且是在CDDL开源许可下的。
+由于CDDL和GPL之间的许可不兼容性，ZFS不能作为主线Linux内核的一部分提供。
+但是，ZFS在Linux（ZoL）项目提供了一个版本树之外的内核模块和用户空间工具。用户可以单独安装。
 
-The ZFS on Linux (ZoL) port is healthy and maturing. However, at this point in
-time it is not recommended to use the `zfs` Docker storage driver for
-production use unless you have substantial experience with ZFS on Linux.
+Linux上的ZFS（ZoL）接口是健康和成熟的。
+但是，在这个时间点，不建议使用`zfs`Docker存储驱动程序在生产环境中使用，除非您在Linux上拥有丰富的ZFS使用经验。
 
-> **Note:** There is also a FUSE implementation of ZFS on the Linux platform.
-> This should work with Docker but is not recommended. The native ZFS driver
-> (ZoL) is more tested, more performant, and is more widely used. The remainder
->  of this document will relate to the native ZoL port.
+> **Note:** 在Linux平台上还有一个ZFS的FUSE实现。它应该能和Docker一起工作，但不推荐。
+> 原生ZFS驱动程序（ZoL）经过了更多的测试，性能更高，使用更广泛。本文档的其余部分将涉及ZoL原生接口。
 
 
-## Image layering and sharing with ZFS
+## 镜像分层和ZFS共享
 
-The Docker `zfs` storage driver makes extensive use of three ZFS datasets:
+Docker`zfs`存储驱动程序大量使用三个ZFS数据集：
 
 - filesystems
 - snapshots
 - clones
 
-ZFS filesystems are thinly provisioned and have space allocated to them from a
-ZFS pool (zpool) via allocate on demand operations. Snapshots and clones are
-space-efficient point-in-time copies of ZFS filesystems. Snapshots are
-read-only. Clones are read-write. Clones can only be created from snapshots.
-This simple relationship is shown in the diagram below.
+ZFS文件系统进行精简配置，并通过按需分配的方式从ZFS池（zpool）为其分配空间。
+快照和克隆是为了ZFS文件系统的节省空间的时间点而创建的副本。
+其中快照是只读的，克隆是可读写的。只能从快照创建克隆。这个简单的关系如下图所示。
 
 ![](images/zfs_clones.jpg)
 
-The solid line in the diagram shows the process flow for creating a clone. Step
- 1 creates a snapshot of the filesystem, and step two creates the clone from
-the snapshot. The dashed line shows the relationship between the clone and the
-filesystem, via the snapshot. All three ZFS datasets draw space form the same
-underlying zpool.
+图中的实线显示了创建一个克隆的流程。步骤1创建文件系统的快照，步骤2从快照创建克隆。
+虚线通过快照显示克隆和文件系统之间的关系。所有三个ZFS数据集从相同的底层zpool中抽取空间。
 
-On Docker hosts using the `zfs` storage driver, the base layer of an image is a
- ZFS filesystem. Each child layer is a ZFS clone based on a ZFS snapshot of the
- layer below it. A container is a ZFS clone based on a ZFS Snapshot of the top
-layer of the image it's created from. All ZFS datasets draw their space from a
-common zpool. The diagram below shows how this is put together with a running
-container based on a two-layer image.
+在使用了`zfs`存储驱动程序的Docker宿主机上，镜像的基本层是ZFS文件系统。
+每个子层是基于其下层的ZFS快照的克隆。容器是基于从其创建的镜像的顶层的ZFS快照的克隆。
+所有ZFS数据集都从公共zpool中抽取其空间。下图显示了如何将它与基于两层镜像的正在运行的容器组合在一起。
 
 ![](images/zfs_zpool.jpg)
 
-The following process explains how images are layered and containers created.
-The process is based on the diagram above.
+以下过程说明如何分层镜像和创建容器。该过程基于上图。
 
-1. The base layer of the image exists on the Docker host as a ZFS filesystem.
+1. 镜像的基本层作为ZFS文件系统存在于Docker宿主机上。
 
-    This filesystem consumes space from the zpool used to create the Docker
-host's local storage area at `/var/lib/docker`.
+    这个文件系统消耗来自zpool的空间，用于在`/var/lib/docker`创建Docker宿主机的本地存储区域。
 
-2. Additional image layers are clones of the dataset hosting the image layer
-directly below it.
+2. 附加的镜像层是托管在其正下方的镜像层数据集的克隆。
 
-    In the diagram, "Layer 1" is added by making a ZFS snapshot of the base
-layer and then creating a clone from that snapshot. The clone is writable and
-consumes space on-demand from the zpool. The snapshot is read-only, maintaining
- the base layer as an immutable object.
+    在图中，通过创建基本层的ZFS快照，然后从该快照创建克隆，添加“第1层”。
+    克隆是可写的，并且从zpool按需消耗空间。快照是只读的，将基础层维护为不可变对象。
 
-3. When the container is launched, a read-write layer is added above the image.
+3. 当容器启动时，在镜像上方添加一个读写层。
 
-    In the diagram above, the container's read-write layer is created by making
- a snapshot of the top layer of the image (Layer 1) and creating a clone from
-that snapshot.
+    在上图中，容器的读写层是通过创建镜像顶层的快照（第1层）并从该快照创建克隆的。
 
-    As changes are made to the container, space is allocated to it from the
-zpool via allocate-on-demand operations. By default, ZFS will allocate space in
- blocks of 128K.
+    当对容器进行更改时，将通过按需分配操作从zpool为其分配空间。默认情况下，ZFS将以128K的块为单位来按需分配空间。
 
-This process of creating child layers and containers from *read-only* snapshots
- allows images to be maintained as immutable objects.
+这个从 *只读* 快照创建子镜像层和容器的过程允许镜像被保持为不可变的对象。
 
-## Container reads and writes with ZFS
+## 使用ZFS对容器读取和写入
 
-Container reads with the `zfs` storage driver are very simple. A newly launched
- container is based on a ZFS clone. This clone initially shares all of its data
- with the dataset it was created from. This means that read operations with the
- `zfs` storage driver are fast &ndash; even if the data being read was not
-copied into the container yet. This sharing of data blocks is shown in the
-diagram below.
+使用`zfs`存储驱动程序的容器读取起来非常简单。
+新创建的容器是基于ZFS的一个克隆。这个克隆最初和其复制源的数据集共享所有数据。
+这意味着使用`zfs`存储驱动程序的读操作很快，即使正在读取的数据尚未复制到容器中。数据块的共享如下图所示。
 
 ![](images/zpool_blocks.jpg)
 
-Writing new data to a container is accomplished via an allocate-on-demand
-operation. Every time a new area of the container needs writing to, a new block
- is allocated from the zpool. This means that containers consume additional
-space as new data is written to them. New space is allocated to the container
-(ZFS Clone) from the underlying zpool.
+向容器写入新数据是按需分配的。每次容器需要新的区域进行写入时，都会从zpool分配新的块。
+这意味着容器写入新数据时需要消耗额外的空间。新空间从底层zpool分配给容器（ZFS Clone）。
 
-Updating *existing data* in a container is accomplished by allocating new
-blocks to the containers clone and storing the changed data in those new
-blocks. The original blocks are unchanged, allowing the underlying image
-dataset to remain immutable. This is the same as writing to a normal ZFS
-filesystem and is an implementation of copy-on-write semantics.
+在容器中更新 *现有数据* 的实现方式是，通过将新的块分配给容器克隆，并更改数据存储中有变更的部分完成的。
+原始块不变，允许底层镜像数据集保持不变。这与写入正常的ZFS文件系统是相同的，并且是写时复制的一种实现。
 
-## Configure Docker with the ZFS storage driver
+## 配置Docker使用ZFS存储驱动程序
 
-The `zfs` storage driver is only supported on a Docker host where
-`/var/lib/docker` is mounted as a ZFS filesystem. This section shows you how to
- install and configure native ZFS on Linux (ZoL) on an Ubuntu 14.04 system.
+使用`zfs`存储驱动程序的宿主机的前置条件，`/var/lib/docker`作为ZFS文件系统被挂载。
+本节介绍如何在Ubuntu 14.04系统上在Linux（ZoL）上安装和配置原生ZFS。
 
-### Prerequisites
+### 前置依赖
 
-If you have already used the Docker daemon on your Docker host and have images
-you want to keep, `push` them Docker Hub or your private Docker Trusted
-Registry before attempting this procedure.
+如果您已经在Docker宿主机上使用了Docker Daemon，并且想要保留已有的镜像。
+那么在尝试此过程之前，请将已有推送Docker Hub或您的私有Docker Registry中。
 
-Stop the Docker daemon. Then, ensure that you have a spare block device at
-`/dev/xvdb`. The device identifier may be different in your environment and
-you should substitute your own values throughout the procedure.
+停止你的Docker Daemon。然后，确保在`/dev/xvdb`上有一个空闲的块设备。
+设备标识符在您的环境中可能有所不同，您应该在安装配置的整个过程中将设备标识符替换您自己的值。
 
-### Install Zfs on Ubuntu 16.04 LTS
+### 在 Ubuntu 16.04 LTS 上安装ZFS
 
-1. If it is running, stop the Docker `daemon`.
+1. 如果Docker Daemon已经在运行了，关闭它。
 
-2. Install the `zfs` package.
+2. 安装`zfs`的安装包
 
         $ sudo apt-get install -y zfs
 
@@ -135,7 +98,7 @@ you should substitute your own values throughout the procedure.
         Building dependency tree
         <output truncated>
 
-3. Verify that the `zfs` module is loaded correctly.
+3. 确认`zfs`模块已经正确装载
 
         $ lsmod | grep zfs
 
@@ -146,11 +109,11 @@ you should substitute your own values throughout the procedure.
         spl                   102400  3 zfs,zcommon,znvpair
         zavl                   16384  1 zfs
 
-### Install Zfs on Ubuntu 14.04 LTS
+### 在 Ubuntu 14.04 LTS 上安装ZFS
 
-1. If it is running, stop the Docker `daemon`.
+1. 如果Docker Daemon已经在运行了，关闭它。
 
-1. Install the `software-properties-common` package.
+2. 安装`software-properties-common`安装包
 
     This is required for the `add-apt-repository` command.
 
@@ -160,7 +123,7 @@ you should substitute your own values throughout the procedure.
         Building dependency tree
         <output truncated>
 
-2. Add the `zfs-native` package archive.
+3. 添加`zfs-native`软件包信息。
 
         $ sudo add-apt-repository ppa:zfs-native/stable
 
@@ -171,8 +134,7 @@ you should substitute your own values throughout the procedure.
         gpg:               imported: 1  (RSA: 1)
         OK
 
-3. Get the latest package lists for all registered repositories and package
-archives.
+4. 对所有的注册仓库，更新软件包列表
 
         $ sudo apt-get update
 
@@ -182,7 +144,7 @@ archives.
         Fetched 10.3 MB in 4s (2,370 kB/s)
         Reading package lists... Done
 
-4. Install the `ubuntu-zfs` package.
+5. 安装`ubuntu-zfs`软件包
 
         $ sudo apt-get install -y ubuntu-zfs
 
@@ -190,11 +152,11 @@ archives.
         Building dependency tree
         <output truncated>
 
-5. Load the `zfs` module.
+6. 装载`zfs`模块
 
         $ sudo modprobe zfs
 
-6. Verify that it loaded correctly.
+7. 确认`zfs`模块已经正确装载
 
         $ lsmod | grep zfs
 
@@ -205,29 +167,29 @@ archives.
         spl                    96378  3 zfs,zcommon,znvpair
         zavl                   15236  1 zfs
 
-## Configure ZFS for Docker
+## Docker配置ZFS
 
-Once ZFS is installed and loaded, you're ready to configure ZFS for Docker.
+一旦ZFS安装装载完成，你就做好了Docker配置ZFS的基本工作
 
 
-1. Create a new `zpool`.
+1. 创建一个新的`zpool`
 
         $ sudo zpool create -f zpool-docker /dev/xvdb
 
-    The command creates the `zpool` and gives it the name "zpool-docker". The name is arbitrary.
+    该命令创建`zpool`，并将其命名为"zpool-docker"。名称是随意的。
 
-2. Check that the `zpool` exists.
+2. 确认`zpool`已经存在
 
         $ sudo zfs list
 
         NAME            USED  AVAIL    REFER  MOUNTPOINT
         zpool-docker    55K   3.84G    19K    /zpool-docker
 
-3. Create and mount a new ZFS filesystem to `/var/lib/docker`.
+3. 创建一个新的挂载点到`/var/lib/docker`
 
         $ sudo zfs create -o mountpoint=/var/lib/docker zpool-docker/docker
 
-4. Check that the previous step worked.
+4. 检查前面几步是否正常
 
         $ sudo zfs list -t all
 
@@ -235,22 +197,19 @@ Once ZFS is installed and loaded, you're ready to configure ZFS for Docker.
         zpool-docker         93.5K  3.84G    19K  /zpool-docker
         zpool-docker/docker  19K    3.84G    19K  /var/lib/docker
 
-    Now that you have a ZFS filesystem mounted to `/var/lib/docker`, the daemon
- should automatically load with the `zfs` storage driver.
+    现在你有一个ZFS文件系统挂载到`/var/lib/docker`，Docker Daemon应该自动加载`zfs`存储驱动程序。
 
-5. Start the Docker daemon.
+5. 启动Docker Daemon
 
         $ sudo service docker start
 
         docker start/running, process 2315
 
-    The procedure for starting the Docker daemon may differ depending on the
-    Linux distribution you are using. It is possible to force the Docker daemon
-    to start with the `zfs` storage driver by passing the
-    `--storage-driver=zfs`flag to the `dockerd` command, or to the
-    `DOCKER_OPTS` line in the Docker config file.
+    启动Docker Daemon的过程可能会有所不同，具体取决于您使用的Linux发行版。
+    通过将`--storage-driver=zfs`参数传递给`dockerd`命令，或者添加到Docker配置文件中的`DOCKER_OPTS`行，
+    都可以强制Docker守护进程以`zfs`存储驱动程序启动。
 
-6. Verify that the daemon is using the `zfs` storage driver.
+6. 验证Docker Daemon已经使用了`zfs`存储驱动。
 
         $ sudo docker info
 
@@ -267,56 +226,39 @@ Once ZFS is installed and loaded, you're ready to configure ZFS for Docker.
         Execution Driver: native-0.2
         [...]
 
-    The output of the command above shows that the Docker daemon is using the
-    `zfs` storage driver and that the parent dataset is the
-    `zpool-docker/docker` filesystem created earlier.
+    上面的命令的输出显示Docker Daemon使用`zfs`存储驱动程序，
+    父数据集是之前创建的`zpool-docker/docker`文件系统。
 
-Your Docker host is now using ZFS to store to manage its images and containers.
+您的Docker宿主机现在正在使用ZFS存储用于管理其镜像和容器。
 
-## ZFS and Docker performance
+## 使用ZFS驱动时的Docker性能表现
 
-There are several factors that influence the performance of Docker using the
-`zfs` storage driver.
+使用`zfs`存储驱动程序时，有几个因素将影响到Docker的性能。
 
-- **Memory**. Memory has a major impact on ZFS performance. This goes back to
-the fact that ZFS was originally designed for use on big Sun Solaris servers
-with large amounts of memory. Keep this in mind when sizing your Docker hosts.
+- **内存**。内存对ZFS性能有重大影响。
+回想一个事实，ZFS最初设计用于大型Sun Solaris服务器，其拥有大量的内存。在调整Docker宿主机大小时，请记住这一点。
 
-- **ZFS Features**. Using ZFS features, such as deduplication, can
-significantly increase the amount of memory ZFS uses. For memory consumption
-and performance reasons it is recommended to turn off ZFS deduplication.
-However, deduplication at other layers in the stack (such as SAN or NAS arrays)
- can still be used as these do not impact ZFS memory usage and performance. If
-using SAN, NAS or other hardware RAID technologies you should continue to
-follow existing best practices for using them with ZFS.
+- **ZFS特性**。使用ZFS功能（如重复数据删除）会显着增加ZFS的内存使用。
+出于内存消耗和性能方面的原因，建议您关闭ZFS重复数据删除的功能。
+但是，仍然可以在堆栈中其他层（如SAN或NAS阵列）使用重复数据删除，因为这些操作不会影响ZFS内存使用和性能。
+如果使用SAN，NAS或其他硬件RAID技术，则应继续遵循在ZFS中使用它们现有的最佳实践。
 
-- **ZFS Caching**. ZFS caches disk blocks in a memory structure called the
-adaptive replacement cache (ARC). The *Single Copy ARC* feature of ZFS allows a
- single cached copy of a block to be shared by multiple clones of a filesystem.
- This means that multiple running containers can share a single copy of cached
-block. This means that ZFS is a good option for PaaS and other high density use
- cases.
+- **ZFS缓存**。ZFS在内存中高速缓存磁盘块的功能被称为adaptive replacement cache (ARC)。
+ZFS *Single Copy ARC* 的特性允许块的单个缓存副本由文件系统中的多个克隆共享。
+这意味着多个正在运行的容器可以共享缓存块的单个副本。这意味着ZFS是PaaS和其他高密度使用场景的一个很好选择。
 
-- **Fragmentation**. Fragmentation is a natural byproduct of copy-on-write
-filesystems like ZFS. However, ZFS writes in 128K blocks and allocates *slabs*
-(multiple 128K blocks) to CoW operations in an attempt to reduce fragmentation.
- The ZFS intent log (ZIL) and the coalescing of writes (delayed writes) also
-help to reduce fragmentation.
+- **碎片**。碎片是像ZFS这样的写时复制文件系统的自然产物。
+ZFS使用128K的块用于写入，也会为Cob操作分配 *slabs*（多个128K块），以减少碎片。
+ZFS intent log（ZIL）和写入合并（延迟写入）也有助于减少碎片。
 
-- **Use the native ZFS driver for Linux**. Although the Docker `zfs` storage
-driver supports the ZFS FUSE implementation, it is not recommended when high
-performance is required. The native ZFS on Linux driver tends to perform better
- than the FUSE implementation.
+- **Linux的原生ZFS驱动程序**。尽管Docker`zfs`存储驱动程序支持ZFS FUSE实现，但对高性能有要求时不推荐使用。
+Linux原生ZFS驱动的性能优于FUSE实现。
 
-The following generic performance best practices also apply to ZFS.
+以下通用的性能最佳实践也适用于ZFS。
 
-- **Use of SSD**. For best performance it is always a good idea to use fast
-storage media such as solid state devices (SSD). However, if you only have a
-limited amount of SSD storage available it is recommended to place the ZIL on
-SSD.
+- **使用SSD**。为了获得最佳性能，使用快速存储介质（例如固态设备（SSD））总是管用的。
+但是，在您的SSD存储有限时，建议优先将ZIL放在SSD上。
 
-- **Use Data Volumes**. Data volumes provide the best and most predictable
-performance. This is because they bypass the storage driver and do not incur
-any of the potential overheads introduced by thin provisioning and
-copy-on-write. For this reason, you should place heavy write workloads on data
-volumes.
+- **使用数据卷**。数据量提供了最佳和最可预期的性能。
+因为它们绕过了存储驱动程序，并且不会因为精简配置和写时复制而引入的任何潜在的开销。
+因为这些原因，您可能会希望让数据卷承担比较大的负载。

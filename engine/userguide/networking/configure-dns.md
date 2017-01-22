@@ -4,25 +4,19 @@ keywords: docker, DNS, network
 title: Embedded DNS server in user-defined networks
 ---
 
-The information in this section covers the embedded DNS server operation for
-containers in user-defined networks. DNS lookup for containers connected to
-user-defined networks works differently compared to the containers connected
-to `default bridge` network.
+本节中的信息，涵盖了在用户定义网络中对容器嵌入式DNS服务器的一些操作。
+连接到用户定义网络的容器的DNS服务与连接到`default bridge`网络提供的host绑定不同。
 
-> **Note**: In order to maintain backward compatibility, the DNS configuration
-> in `default bridge` network is retained with no behavioral change.
-> Please refer to the [DNS in default bridge network](default_network/configure-dns.md)
-> for more information on DNS configuration in the `default bridge` network.
+> **Note**: 为了保持向后兼容，在`default bridge`网络中的DNS配置保留了原有的行为。
+> 有关`default bridge`网络中的DNS配置的详细信息，请参阅[DNS in default bridge network](default_network/configure-dns.md)。
 
-As of Docker 1.10, the docker daemon implements an embedded DNS server which
-provides built-in service discovery for any container created with a valid
-`name` or `net-alias` or aliased by `link`. The exact details of how Docker
-manages the DNS configurations inside the container can change from one Docker
-version to the next. So you should not assume the way the files such as
-`/etc/hosts`, `/etc/resolv.conf` are managed inside the containers and leave
-the files alone and use the following Docker options instead.
+从Docker 1.10开始，docker daemon实现了一个嵌入式DNS服务器，
+它为使用了有效的`name`或`net-alias`或`link`参数创建的任何容器，提供内置的服务发现功能。
+了解Docker如何管理容器自带的DNS服务，可以帮助你从当前的Docker版本升级到新的版本。
+所以你不应该假设`/etc/hosts`，`/etc/resolv.conf`这样的文件在容器内部被管理。
+放弃使用这些文件，改换成使用下面这些Docker选项。
 
-Various container options that affect container domain name services.
+影响容器DNS服务的各种选项。
 
 <table>
   <tr>
@@ -33,9 +27,8 @@ Various container options that affect container domain name services.
     </td>
     <td>
     <p>
-     Container name configured using <code>--name</code> is used to discover a container within
-     an user-defined docker network. The embedded DNS server maintains the mapping between
-     the container name and its IP address (on the network the container is connected to).
+     在用户定义的docker网络中，使用 <code>-name</code> 配置的容器名称。
+     内置DNS服务器会维护容器名称到其IP地址（容器连接的网络上）之间的映射。
     </p>
     </td>
   </tr>
@@ -47,12 +40,9 @@ Various container options that affect container domain name services.
     </td>
     <td>
     <p>
-     In addition to <code>--name</code> as described above, a container is discovered by one or more 
-     of its configured <code>--network-alias</code> (or <code>--alias</code> in <code>docker network connect</code> command)
-     within the user-defined network. The embedded DNS server maintains the mapping between
-     all of the container aliases and its IP address on a specific user-defined network.
-     A container can have different aliases in different networks by using the <code>--alias</code>
-     option in <code>docker network connect</code> command.
+     除了如上所述的<code>-name</code>，容器被其配置的一个或多个<code>--network-alias</code>（或在<code>docker network connect</code>命令中使用<code>-alias</code>参数）。
+     内置DNS服务器维护所有容器别名到其指定用户定义网络上的IP地址之间的映射。
+     通过使用<code>docker network connect</code>命令中的<code>-alias</code>选项，容器可以在不同的网络中具有不同的别名。
     </p>
     </td>
   </tr>
@@ -64,12 +54,10 @@ Various container options that affect container domain name services.
     </td>
     <td>
     <p>
-      Using this option as you <code>run</code> a container gives the embedded DNS
-      an extra entry named <code>ALIAS</code> that points to the IP address
-      of the container identified by <code>CONTAINER_NAME</code>. When using <code>--link</code>
-      the embedded DNS will guarantee that localized lookup result only on that
-      container where the <code>--link</code> is used. This lets processes inside the new container 
-      connect to container without having to know its name or IP.
+      当你使用<code>run</code>命令启动容器时，这个参数将给内置DNS一条记录。
+      该记录将解析<code>ALIAS</code>指向由<code>CONTAINER_NAME</code>标识的容器的IP地址。
+      当使用<code>-link</code>时，内置DNS将保证本地服务查找的结果指向使用<code>-link</code>的容器上。
+      这使得新容器中的进程不必知道其他容器的名称或IP，就能够连接到其他容器。
     </p>
     </td>
   </tr>
@@ -78,23 +66,18 @@ Various container options that affect container domain name services.
     <code>--dns=[IP_ADDRESS...]</code>
     </p></td>
     <td><p>
-     The IP addresses passed via the <code>--dns</code> option is used by the embedded DNS
-     server to forward the DNS query if embedded DNS server is unable to resolve a name
-     resolution request from the containers.
-     These  <code>--dns</code> IP addresses are managed by the embedded DNS server and
-     will not be updated in the container's <code>/etc/resolv.conf</code> file.
+     如果内置DNS服务器无法解析容器的名称解析请求，内置DNS服务器将使用通过<code>-dns</code>选项传递的IP地址转发DNS查询。
+     这些<code>-dns</code>中设置的IP地址由内置DNS服务器管理，并且不会在容器的<code>/etc/resolv.conf</code>文件中更新。
   </tr>
   <tr>
     <td><p>
     <code>--dns-search=DOMAIN...</code>
     </p></td>
     <td><p>
-    Sets the domain names that are searched when a bare unqualified hostname is
-    used inside of the container. These <code>--dns-search</code> options are managed by the
-    embedded DNS server and will not be updated in the container's <code>/etc/resolv.conf</code> file.
-    When a container process attempts to access <code>host</code> and the search
-    domain <code>example.com</code> is set, for instance, the DNS logic will not only
-    look up <code>host</code> but also <code>host.example.com</code>.
+    当一个独立的主机名被搜索时，设置这个主机名的搜索域名。
+    <code>--dns-search</code>选项中设置的域名将由内置DNS服务器管理，不会在容器的<code>/etc/resolv.conf</code>文件中更新。
+    例如，当容器进程尝试访问<code>host</code>并且搜索域名<code>example.com</code>被设置时。
+    DNS服务不仅会尝试查找<code>host</code>主机，也会尝试查找<code>host.example.com</code>。
     </p>
     </td>
   </tr>
@@ -103,30 +86,23 @@ Various container options that affect container domain name services.
     <code>--dns-opt=OPTION...</code>
     </p></td>
     <td><p>
-      Sets the options used by DNS resolvers. These options are managed by the embedded
-      DNS server and will not be updated in the container's <code>/etc/resolv.conf</code> file.
+      设置DNS服务的使用选项。这些选项由内置DNS服务器管理，并且不会在容器的<code>/etc/resolv.conf</code>文件中更新。
     </p>
     <p>
-    See documentation for <code>resolv.conf</code> for a list of valid options
+    查看<code>resolv.conf</code>的文档，可以了解其可用参数
     </p></td>
   </tr>
 </table>
 
 
-In the absence of the `--dns=IP_ADDRESS...`, `--dns-search=DOMAIN...`, or
-`--dns-opt=OPTION...` options, Docker uses the `/etc/resolv.conf` of the
-host machine (where the `docker` daemon runs). While doing so the daemon
-filters out all localhost IP address `nameserver` entries from the host's
-original file.
+在没有使用`--dns=IP_ADDRESS...`，`--dns-search=DOMAIN...`或`--dns-opt=OPTION ...`选项的情况下，
+Docker会使用宿主机的`/etc/resolv.conf`（`docker daemon`运行的地方）。
+在这样做时，`docker daemon`会从主机的原始文件中过滤掉所有localhost IP地址的域名解析条目。
 
-Filtering is necessary because all localhost addresses on the host are
-unreachable from the container's network. After this filtering, if there are
-no more `nameserver` entries left in the container's `/etc/resolv.conf` file,
-the daemon adds public Google DNS nameservers (8.8.8.8 and 8.8.4.4) to the
-container's DNS configuration. If IPv6 is enabled on the daemon, the public
-IPv6 Google DNS nameservers will also be added (2001:4860:4860::8888 and
-2001:4860:4860::8844).
+过滤是必要的，因为主机上的所有本地主机地址都是无法从容器的网络访问的。
+在这个过滤之后，如果容器的`/etc/resolv.conf`文件中没有其他的域名解析条目，
+docker daemon会将公开的Google DNS名称服务器（8.8.8.8和8.8.4.4）添加到容器的DNS配置中。
+如果守护程序启用了IPv6，则还会添加公共IPv6 DNS DNS服务器（2001:4860:4860::8888和2001:4860:4860::8844）。
 
-> **Note**: If you need access to a host's localhost resolver, you must modify
-> your DNS service on the host to listen on a non-localhost address that is
-> reachable from within the container.
+> **Note**：如果需要容器访问主机的本地主机解析，
+> 则必须修改主机上的DNS服务，以便访问可以容器中访问的非localhost地址。

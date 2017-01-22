@@ -4,121 +4,86 @@ keywords: 'container, storage, driver, AUFS '
 title: Docker and AUFS in practice
 ---
 
-AUFS was the first storage driver in use with Docker. As a result, it has a
-long and close history with Docker, is very stable, has a lot of real-world
-deployments, and has strong community support. AUFS has several features that
-make it a good choice for Docker. These features enable:
+AUFS是Docker支持的第一个存储驱动程序。
+因此，它与Docker有着悠久而密切的历史，非常稳定，很多应用于真实的生产环境的例子，并且拥有强大的社区支持。
+AUFS有以下几个功能，使其成为Docker存储的不错选择。 这些功能包括：
 
-- Fast container startup times.
-- Efficient use of storage.
-- Efficient use of memory.
+- 容器启动快速。
+- 高效利用存储。
+- 高效利用内存。
 
-Despite its capabilities and long history with Docker, some Linux distributions
- do not support AUFS. This is usually because AUFS is not included in the
-mainline (upstream) Linux kernel.
+尽管它很强大、与Docker有悠久的历史，但是一些Linux发行版并不支持AUFS。
+这通常是因为在较早版本的一些Linux内核中没有AUFS相关的支持。
 
-The following sections examine some AUFS features and how they relate to
-Docker.
+以下章节，介绍了一些AUFS的功能以及它们如何与Docker配合使用。
 
-## Image layering and sharing with AUFS
+## 镜像分层和与AUFS共享
 
-AUFS is a *unification filesystem*. This means that it takes multiple
-directories on a single Linux host, stacks them on top of each other, and
-provides a single unified view. To achieve this, AUFS uses a *union mount*.
+AUFS是一个 *联合文件系统* 。这意味着它在单个Linux主机上使用多个目录，将它们堆叠在彼此之上，并提供单个统一视图。
+为了实现这一点，AUFS使用了 *union mount* 。
 
-AUFS stacks multiple directories and exposes them as a unified view through a
-single mount point. All of the directories in the stack, as well as the union
-mount point, must all exist on the same Linux host. AUFS refers to each
-directory that it stacks as a *branch*.
+AUFS堆叠多个目录，并通过单个挂载点将其显示为统一视图。
+堆栈中的所有目录以及挂载点必须都存在于同一Linux主机上。AUFS引用它作为*分支*堆叠的每个目录。
 
-Within Docker, AUFS union mounts enable image layering. The AUFS storage driver
- implements Docker image layers using this union mount system. AUFS branches
-correspond to Docker image layers. The diagram below shows a Docker container
-based on the `ubuntu:latest` image.
+在Docker中，AUFS联合挂载支持镜像分层。AUFS存储驱动程序使用此联合文件系统来实现Docker镜像分层。
+AUFS分支对应于Docker镜像层。下图显示了基于`ubuntu:latest`镜像的Docker容器。
 
 ![](images/aufs_layers.jpg)
 
-This diagram shows that each image layer, and the container layer, is
-represented in the Docker hosts filesystem as a directory under
-`/var/lib/docker/`. The union mount point provides the unified view of all
-layers. As of Docker 1.10, image layer IDs do not correspond to the names of
-the directories that contain their data.
+此图显示每个镜像层和容器层在Docker主机中被存储为`/var/lib/docker/`下的目录。
+联合挂载点提供所有镜像的统一视图。同时从Docker 1.10开始，镜像层ID不再使用存储其数据的目录的名称。
 
-AUFS also supports the copy-on-write technology (CoW). Not all storage drivers
-do.
+AUFS还支持写时复制（CoW）。但是不是所有存储驱动程序都支持。
 
-## Container reads and writes with AUFS
+## 使用AUFS进行容器读写
 
-Docker leverages AUFS CoW technology to enable image sharing and minimize the
-use of disk space. AUFS works at the file level. This means that all AUFS CoW
-operations copy entire files - even if only a small part of the file is being
-modified. This behavior can have a noticeable impact on container performance,
- especially if the files being copied are large, below a lot of image layers,
-or the CoW operation must search a deep directory tree.
+Docker利用AUFS写时复制技术，允许映像共享并最小化磁盘空间的使用。
+AUFS在文件层面进行工作。这意味着所有AUFS写时复制操作都复制整个文件，即使只修改了文件的一小部分。
+此特性可以对容器性能产生显着影响，特别是如果要复制的文件较大，有大量的镜像层，或者写时复制操作必须搜索一个层次复杂的目录树。
 
-Consider, for example, an application running in a container needs to add a
-single new value to a large key-value store (file). If this is the first time
-the file is modified, it does not yet exist in the container's top writable
-layer. So, the CoW must *copy up* the file from the underlying image. The AUFS
-storage driver searches each image layer for the file. The search order is from
- top to bottom. When it is found, the entire file is *copied up* to the
-container's top writable layer. From there, it can be opened and modified.
+例如，考虑在容器中运行的应用程序需要向大键值存储中添加单个新值。
+如果这是第一次修改文件，它在容器的最高可写层中将不存在。
+因此，写时复制必须 *复制并向上转移* 文件。AUFS存储驱动程序搜索每个镜像层的文件。
+搜索顺序是从上到下。当找到这个文件时，整个文件被复制到容器的最高可写层。在最高层这个文件可以被打开和修改。
 
-Larger files obviously take longer to *copy up* than smaller files, and files
-that exist in lower image layers take longer to locate than those in higher
-layers. However, a *copy up* operation only occurs once per file on any given
-container. Subsequent reads and writes happen against the file's copy already
-*copied-up* to the container's top layer.
+## 在AUFS存储中删除一个文件
 
-## Deleting files with the AUFS storage driver
-
-The AUFS storage driver deletes a file from a container by placing a *whiteout
-file* in the container's top layer. The whiteout file effectively obscures the
-existence of the file in the read-only image layers below. The simplified
-diagram below shows a container based on an image with three image layers.
+AUFS存储驱动程序通过将 *空占位文件* 放在容器的顶层中，来完成删除文件。
+空占位文件有效地掩盖了下面的只读映像层中存在的文件。下面的简化图显示了一个具有三个镜像层的镜像容器。
 
 ![](images/aufs_delete.jpg)
 
-The `file3` was deleted from the container. So, the AUFS storage driver  placed
-a whiteout file in the container's top layer. This whiteout file effectively
-"deletes" `file3` from the container by obscuring any of the original file's
-existence in the image's read-only layers. This works the same no matter which
-of the image's read-only layers the file exists in.
+`file3`从容器中删除。因此，AUFS存储驱动程序在容器的顶层中放置一个空占位文件。
+这个空占位文件有效的“删除”了存在于下面只读层的文件，从而有效地从容器中“删除”了`file3`。
+即使文件真实存在于只读层中。
 
-## Renaming directories with the AUFS storage driver
+## 使用AUFS存储驱动程序重命名目录
 
-Calling `rename(2)` for a directory is not fully supported on AUFS. It returns
-`EXDEV` ("cross-device link not permitted"), even when both of the source and
-the destination path are on a same AUFS layer, unless the directory has no
-children.
+AUFS不完全支持为目录调用`rename(2)`。
+即使源和目标路径都在同一AUFS层上，除非目录没有子节点，否则它将返回`EXDEV`（“不允许跨设备链接”）。
 
-So your application has to be designed so that it can handle `EXDEV` and fall
-back to a "copy and unlink" strategy.
+因此，您的应用程序必须设计为支持处理`EXDEV`并回退到“复制和解除链接”的策略。
 
-## Configure Docker with AUFS
+## 为Docker配置AUFS
 
-You can only use the AUFS storage driver on Linux systems with AUFS installed.
-Use the following command to determine if your system supports AUFS.
+您只能在安装了AUFS的Linux系统上使用AUFS存储驱动程序。
+使用以下命令可以用于确定系统是否支持AUFS。
 
     $ grep aufs /proc/filesystems
 
     nodev   aufs
 
-This output indicates the system supports AUFS. Once you've verified your
-system supports AUFS, you can must instruct the Docker daemon to use it. You do
-this from the command line with the `dockerd` command:
+这个输出表示系统支持AUFS。一旦您验证了系统支持AUFS，您必须让Docker Daemon使用它。
+你可以从命令行使用`dockerd`命令：
 
     $ sudo dockerd --storage-driver=aufs &
 
-
-Alternatively, you can edit the Docker config file and add the
-`--storage-driver=aufs` option to the `DOCKER_OPTS` line.
+或者，您可以将`--storage-driver=aufs`选项添加到Docker配置文件的`DOCKER_OPTS`那一行。
 
     # Use DOCKER_OPTS to modify the daemon startup options.
     DOCKER_OPTS="--storage-driver=aufs"
 
-Once your daemon is running, verify the storage driver with the `docker info`
-command.
+一旦Docker Daemon运行，请使用`docker info`命令验证存储驱动程序。
 
     $ sudo docker info
 
@@ -132,31 +97,21 @@ command.
     Execution Driver: native-0.2
     ...output truncated...
 
-The output above shows that the Docker daemon is running the AUFS storage
-driver on top of an existing `ext4` backing filesystem.
+上面的输出显示Docker Daemon正在`ext4`文件系统之上运行AUFS存储驱动程序。
 
-## Local storage and AUFS
+## 本地存储与AUFS
 
-As the `dockerd` runs with the AUFS driver, the driver stores images and
-containers within the Docker host's local storage area under
-`/var/lib/docker/aufs/`.
+由于`dockerd`使用AUFS驱动程序运行，
+驱动程序会在Docker宿主机的`/var/lib/docker/aufs/`下存储镜像和容器。
 
-### Images
+### 镜像
 
-Image layers and their contents are stored under
-`/var/lib/docker/aufs/diff/`. With Docker 1.10 and higher, image layer IDs do
-not correspond to directory names.
+镜像层及其内容存储在`/var/lib/docker/aufs/diff/`下。
+对于Docker 1.10和更高版本，镜像层ID不与目录名称相对应。
 
-The `/var/lib/docker/aufs/layers/` directory contains metadata about how image
-layers are stacked. This directory contains one file for every image or
-container layer on the Docker host (though file names no longer match image
-layer IDs). Inside each file are the names of the directories that exist below
-it in the stack
-
-The command below shows the contents of a metadata file in
-`/var/lib/docker/aufs/layers/` that lists the three directories that are
-stacked below it in the union mount. Remember, these directory names do no map
-to image layer IDs with Docker 1.10 and higher.
+`/var/lib/docker/aufs/layers/`目录中包含有关如何堆叠镜像层的元数据。
+此目录包含Docker主机上每个镜像或容器层的一个文件（尽管文件名不再与镜像层ID匹配）。
+每个文件内部是在堆叠镜像中存在于其下的目录名称。
 
     $ cat /var/lib/docker/aufs/layers/91e54dfb11794fad694460162bf0cb0a4fa710cfa3f60979c177d920813e267c
 
@@ -164,65 +119,47 @@ to image layer IDs with Docker 1.10 and higher.
     c22013c8472965aa5b62559f2b540cd440716ef149756e7b958a1b2aba421e87
     d3a1f33e8a5a513092f01bb7eb1c2abf4d711e5105390a3fe1ae2248cfde1391
 
-The base layer in an image has no image layers below it, so its file is empty.
+在镜像中的基本镜像层下面没有镜像层，因此其文件为空。
 
-### Containers
+### 容器
 
-Running containers are mounted below `/var/lib/docker/aufs/mnt/<container-id>`.
- This is where the AUFS union mount point that exposes the container and all
-underlying image layers as a single unified view exists. If a container is not
-running, it still has a directory here but it is empty. This is because AUFS
-only mounts a container when it is running. With Docker 1.10 and higher,
- container IDs no longer correspond to directory names under
-`/var/lib/docker/aufs/mnt/<container-id>`.
+运行容器挂载在`/var/lib/docker/aufs/mnt/<container-id>`下。
+这是将存在容器和所有底层镜像层作为单个统一视图的AUFS联合挂载点的位置。
+如果容器没有运行，它仍然有一个目录，但它是空的。这是因为AUFS只在其运行时装载容器。
+对于Docker 1.10和更高版本，容器ID不再对应于`/var/lib/docker/aufs/mnt/<container-id>`下的目录名称。
 
-Container metadata and various config files that are placed into the running
-container are stored in `/var/lib/docker/containers/<container-id>`. Files in
-this directory exist for all containers on the system, including ones that are
-stopped. However, when a container is running the container's log files are
-also in this directory.
+容器元数据和正在运行的容器中的各种配置文件存储在`/var/lib/docker/containers/<container-id>`中。
+此目录中的文件对于系统上的所有容器都存在，包括停止的容器。
+当容器正在运行时，容器的日志文件也在此目录中。
 
-A container's thin writable layer is stored in a directory under
-`/var/lib/docker/aufs/diff/`. With Docker 1.10 and higher, container IDs no
-longer correspond to directory names. However, the containers thin writable
-layer still exists here and is stacked by AUFS as the top writable layer
-and is where all changes to the container are stored. The directory exists even
- if the container is stopped. This means that restarting a container will not
-lose changes made to it. Once a container is deleted, it's thin writable layer
-in this directory is deleted.
+容器的可写层存储在`/var/lib/docker/aufs/diff/`下的目录中。
+对于Docker 1.10和更高版本，容器ID不再对应于目录名称。但是，容器的可写层仍然存在，并且作为AUFS存储的顶部可写层堆叠，并且存储对容器的所有改变。
+即使容器已停止，目录也存在。这意味着重新启动容器不会丢失对它所做的更改。一旦容器被删除，这个目录中的可写层被删除。
 
-## AUFS and Docker performance
+## AUFS和Docker的性能表现
 
-To summarize some of the performance related aspects already mentioned:
+总结性能相关方面提到的一些问题：
 
-- The AUFS storage driver is a good choice for PaaS and other similar use-cases
- where container density is important. This is because AUFS efficiently shares
-images between multiple running containers, enabling fast container start times
- and minimal use of disk space.
+- AUFS存储驱动程序是PaaS和其他类似场景的不错选择，其中容器密度很重要。
+这是因为AUFS能够在多个正在运行的容器之间高效地共享镜像，从而实现容器的快速启动和最小化磁盘空间的使用。
 
-- The underlying mechanics of how AUFS shares files between image layers and
-containers uses the systems page cache very efficiently.
+- AUFS在镜像层和容器之间共享文件的基本机制，使得其使用系统页缓存非常有效。
 
-- The AUFS storage driver can introduce significant latencies into container
-write performance. This is because the first time a container writes to any
-file, the file has to be located and copied into the containers top writable
-layer. These latencies increase and are compounded when these files exist below
- many image layers and the files themselves are large.
+- AUFS存储驱动程序可能给容器写入操作中带来显着的延迟。
+这是因为第一次容器写入任何文件，这个文件都必须被定位和复制到容器的最高可写层。
+当这些文件存在于许多镜像层之下并且文件本身很大时，这将带来延迟和很高的复杂性。
 
-One final point. Data volumes provide the best and most predictable
-performance. This is because they bypass the storage driver and do not incur
-any of the potential overheads introduced by thin provisioning and
-copy-on-write. For this reason, you may want to place heavy write workloads on
-data volumes.
+最后一点。数据卷提供最佳和最可预期的性能。
+因为它们绕过了存储驱动程序，并且不会因为精简配置和写时复制而引入的任何潜在的开销。
+因为这些原因，您可能会希望让数据卷承担比较大的负载。
 
-## AUFS compatibility
+## AUFS的兼容性
 
-To summarize the AUFS's aspect which is incompatible with other filesystems:
+总结AUFS与其他文件系统不兼容的方面：
 
-- The AUFS does not fully support the `rename(2)` system call. Your application
-needs to detect its failure and fall back to a "copy and unlink" strategy.
+- AUFS不完全支持`rename(2)`系统调用。您的应用程序需要检测其`EXDEV`通知，并回退到“复制和解除链接”的策略。
 
-## Related information
+## 相关参考
 
 * [Understand images, containers, and storage drivers](imagesandcontainers.md)
 * [Select a storage driver](selectadriver.md)
