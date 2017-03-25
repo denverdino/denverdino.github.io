@@ -1,29 +1,24 @@
 ---
 description: How to keep containers running when the daemon isn't available.
 keywords: docker, upgrade, daemon, dockerd, live-restore, daemonless container
-title: Keep containers alive during daemon downtime
+title: 守护进程停止时保持容器运行
 ---
 
-By default, when the Docker daemon terminates, it shuts down running containers.
-Starting with Docker Engine 1.12, you can configure the daemon so that
-containers remain running if the daemon becomes unavailable. The live restore
-option helps reduce container downtime due to daemon crashes, planned outages,
-or upgrades.
+默认设置下，当 Docker 守护进程退出时，它将关闭所有正在运行的容器。从 Docker Engine
+1.12 开始，你可以通过配置来使得容器在守护进程不可用的情况下仍然保持运行。live restore
+选项可以帮助我们减少因守护进程崩溃、维护或者升级而造成的容器停机时间。
 
-> **Note**: Live restore is not supported on Windows containers, but it does work
-for Linux containers running on Windows.
+> **注意**：Live restore 不支持 Windows 容器，但可以支持在 Windows 平台上运行的 Linux
+ 容器
 
-## Enable the live restore option
+## 启用 live restore 选项
 
-There are two ways to enable the live restore setting to keep containers alive
-when the daemon becomes unavailable:
+有两种方法启用 live restore：
 
-* If the daemon is already running and you don't want to stop it, you can add
-the configuration to the daemon configuration file. For example, on a linux
-system the default configuration file is `/etc/docker/daemon.json`.
+* 如果 Docker 守护进程已经在运行了，并且你又不想终止它，那么可以将配置添加到守护进程的
+配置文件中。例如，在 Linux 系统中默认的配置文件是 `/etc/docker/daemon.json`.
 
-Use your favorite editor to enable the `live-restore` option in the
-`daemon.json`.
+用你最喜欢的编辑器在 `daemon.json` 文件中打开 `live-restore` 选项
 
 ```bash
 {
@@ -31,48 +26,39 @@ Use your favorite editor to enable the `live-restore` option in the
 }
 ```
 
-You have to send a `SIGHUP` signal to the daemon process for it to reload the
-configuration. For more information on how to configure the Docker daemon using
-config.json, see [daemon configuration file](../reference/commandline/dockerd.md#daemon-configuration-file).
+你需要向守护进程发送一个 `SIGHUP` 信号来通知守护进程重新加载配置文件。更多关于使用
+ config.json 来配置 Docker 守护进程的信息可查看[守护进程配置文件](../reference/commandline/dockerd.md#daemon-configuration-file).
 
-* When you start the Docker daemon, pass the `--live-restore` flag:
+* 在启动 Docker 守护进程时，向命令传递 `--live-restore` 参数
 
     ```bash
     $ sudo dockerd --live-restore
     ```
 
-## Live restore during upgrades
+## 升级期间的 live restore
 
-The live restore feature supports restoring containers to the daemon for
-upgrades from one minor release to the next. For example from Docker Engine
-1.12.1 to 1.13.2.
+live restore 选项支持守护进程从一个小版本升级到下一个，例如 Docker Engine 从
+1.12.1 升级到 1.13.2.
 
-If you skip releases during an upgrade, the daemon may not restore connection
-the containers. If the daemon is unable restore connection, it ignores the
-running containers and you must manage them manually. The daemon won't shut down
-the disconnected containers.
+如果你在升级时跳过了一些版本号，那么守护进程可能无法重新连接到此前运行的容器。如果守护
+进程无法重建连接，它将无视这些运行中的容器，你必须手动管理它们。守护进程不会关闭这些失去
+连接的容器。
 
-## Live restore upon restart
+## 重启时的 live restore
 
-The live restore option only works to restore the same set of daemon options
-as the daemon had before it stopped. For example, live restore may not work if
-the daemon restarts with a different bridge IP or a different graphdriver.
+live restore 选项只能支持守护进程重启前后配置选项相同的情况。例如，如果守护进程重启后的
+bridge IP 或 graphdriver 与之前不一样，那么 live restore 可能无法工作。
 
-## Impact of live restore on running containers
+## live restore 对正在运行的容器的影响
 
-A lengthy absence of the daemon can impact running containers. The containers
-process writes to FIFO logs for daemon consumption. If the daemon is unavailable
-to consume the output, the buffer will fill up and block further writes to the
-log. A full log blocks the process until further space is available. The default
-buffer size is typically 64K.
+守护进程长时间不工作将影响到运行中的容器。容器进程会写 FIFO 的日志给守护进程，如果守护
+进程无法及时处理掉这些输出，缓冲区将被填满，并且接下来向日志的写入会被阻塞住。直到有更多的缓冲空间可用前，写满的日志会阻塞住容器进程。默认的缓冲大小一般是 64K.
 
-You must restart Docker to flush the buffers.
+你必须重新启动 Docker 来刷掉缓冲。
 
-You can modify the kernel's buffer size by changing `/proc/sys/fs/pipe-max-size`.
+你可以通过更改 `/proc/sys/fs/pipe-max-size` 来修改内核的缓冲区大小。
 
-## Live restore and swarm mode
+## live restore 和 swarm 模式
 
-The live restore option is not compatible with Docker Engine swarm mode. When
-the Docker Engine runs in swarm mode, the orchestration feature manages tasks
-and keeps containers running according to a service specification.
-
+live restore 选项不兼容 Docker Engine 的 swarm 模式。当 Docker Engine 处于 swarm 模式时，
+orchestration 功能会管理任务并且使容器根据服务规范来保持运行。
