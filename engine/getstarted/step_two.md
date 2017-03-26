@@ -1,42 +1,36 @@
 ---
-description: Getting started with Docker
+description: Docker 入门
 keywords: beginner, getting started, Docker
 redirect_from:
 - /mac/step_two/
 - /windows/step_two/
 - /linux/step_two/
-title: Learn about images and containers
+title: 什么是镜像和容器
 ---
 
-Docker Engine provides the core Docker technology that enables images and
-containers. As the last step in your installation, you ran the
-`docker run hello-world` command. The command you ran had three parts.
+Docker Engine为我们提供了能够支持 *镜像* 和 *容器* 的核心技术。
+在上一节你或许已经运行了`docker run hello-world`，这条命令的执行可以被分为三个部分。
 
 ![Container Explainer](tutimg/container_explainer.png)
 
-An *image* is a filesystem and parameters to use at runtime. It doesn't have
-state and never changes. A *container* is a running instance of an image.
-When you ran the command, Docker Engine:
+ *镜像* 是由一个文件系统和一些运行时需要的参数组成的。镜像没有状态，也不会再发生变化。
+ 而 *容器* 则是一个运行中的镜像实例。当你执行上面的命令时，Docker Engine是这样处理的：
 
-* checked to see if you had the `hello-world` software image
-* downloaded the image from the Docker Hub (more about the hub later)
-* loaded the image into the container and "ran" it
+* 检查你是否已经拥有 `hello-world` 这个软件镜像
+* 从Docker Hub下载镜像
+* 装载镜像到容器中并运行
 
-Depending on how it was built, an image might run a simple, single command and
-then exit. This is what `hello-world` did.
+一个镜像可能只运行一条简单的命令然后就退出（这也就是
+`hello-world` 这个镜像所做的），这取决于它是如何构建的。
 
-A Docker image, though, is capable of much more. An image can start software as
-complex as a database, wait for you (or someone else) to add data, store the
-data for later use, and then wait for the next person.
+然而一个Docker镜像可以胜任更多的事情。例如一个镜像可以启动数据库这样复杂的软件，等待你
+（或者其他人）来添加、存储数据，然后再等待下一个用户的操作。
 
-Who built the `hello-world` software image though? In this case, Docker did but
-anyone can. Docker Engine lets people (or companies) create and share software
-through Docker images. Using Docker Engine, you don't have to worry about
-whether your computer can run the software in a Docker image &mdash; a Docker
-container *can always run it*.
+那么是谁构建了 `hello-world` 这个镜像呢？在这个例子中是Docker，然而任何人都可以构建
+镜像。Docker Engine允许人们（或公司）创建并且分享Docker镜像。通过Docker Engine，
+你不必担心你的计算机是否能运行镜像中的软件，Docker容器 *can always run it*.
 
-## Where to go next
+## 下一步
 
-See, that was quick wasn't it? Now, you are ready to do some really fun stuff
-with Docker. Go on to the next part [to find and run the whalesay
-image](step_three.md).
+看，学习Docker很快吧？现在，你已经做好准备去用Docker做一些真正有趣的事情了。继续下一个
+部分[找到并运行whalesay镜像](step_three.md)
